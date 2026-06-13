@@ -11,11 +11,11 @@ import {
   Moon,
   Sun,
   X,
-  List,
   SquaresFour,
   GearSix,
   CaretLineLeft,
   CaretLineRight,
+  Plus,
 } from "@phosphor-icons/react";
 import type { ThemeTokens } from "./useAppTheme";
 
@@ -150,7 +150,7 @@ export default function AppSidebar({
         </div>
       </aside>
 
-      {/* Mobile Sidebar Drawer */}
+      {/* Mobile Sidebar Drawer — desktop only accessible via drawer on lg:hidden pages */}
       <div className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         {/* Backdrop overlay */}
         <div
@@ -194,19 +194,69 @@ export default function AppSidebar({
   );
 }
 
-export function MobileMenuButton({ isDarkMode, onOpen }: { isDarkMode: boolean; onOpen: () => void }) {
+/** Floating bottom navigation bar for mobile — replaces the hamburger menu. */
+export function MobileBottomNav({ onNewEntry }: { onNewEntry?: () => void }) {
+  const pathname = usePathname();
+
   return (
-    <header className="lg:hidden relative z-20 border-b border-white/5 pb-4 flex items-center gap-2">
-      <button
-        onClick={onOpen}
-        aria-label="Open menu"
-        className={`p-2.5 rounded-xl border transition-all duration-300 shrink-0 ${
-          isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10 text-white" : "bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-700"
-        } shadow-sm`}
-      >
-        <List weight="bold" className="w-5 h-5" />
-      </button>
-    </header>
+    <div className="lg:hidden fixed bottom-4 left-0 right-0 px-6 z-40">
+      <div className="bg-white/70 dark:bg-stone-900/75 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-full py-3 px-6 shadow-2xl flex items-center justify-between max-w-md mx-auto">
+
+        {/* Dashboard */}
+        <Link
+          href="/dashboard"
+          aria-label="Dashboard"
+          className={`p-2 transition duration-200 ${
+            pathname === "/dashboard" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+          }`}
+        >
+          <SquaresFour weight="duotone" className="w-6 h-6" />
+        </Link>
+
+        {/* Companion AI */}
+        <Link
+          href="/chat"
+          aria-label="Companion AI"
+          className={`p-2 transition duration-200 ${
+            pathname === "/chat" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+          }`}
+        >
+          <ChatCircleDots weight="duotone" className="w-6 h-6" />
+        </Link>
+
+        {/* Floating Plus CTA */}
+        <button
+          onClick={onNewEntry}
+          aria-label="New entry"
+          className="w-12 h-12 bg-[#6366F1] hover:bg-[#4F46E5] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#6366F1]/30 transition duration-200 transform hover:scale-105 -mt-6"
+        >
+          <Plus weight="bold" className="w-5 h-5" />
+        </button>
+
+        {/* Idea Board */}
+        <Link
+          href="/journal"
+          aria-label="Idea Board"
+          className={`p-2 transition duration-200 ${
+            pathname === "/journal" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+          }`}
+        >
+          <Notebook weight="duotone" className="w-6 h-6" />
+        </Link>
+
+        {/* Memories */}
+        <Link
+          href="/memories"
+          aria-label="Memories"
+          className={`p-2 transition duration-200 ${
+            pathname === "/memories" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+          }`}
+        >
+          <ClockCounterClockwise weight="duotone" className="w-6 h-6" />
+        </Link>
+
+      </div>
+    </div>
   );
 }
 

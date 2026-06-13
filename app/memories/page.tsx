@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+
 import { ClockCounterClockwise, ShieldCheck } from "@phosphor-icons/react";
 import { useAppTheme } from "../components/useAppTheme";
-import AppSidebar, { MobileMenuButton, BackgroundDecor } from "../components/AppSidebar";
+import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 
 export default function MemoriesPage() {
   const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className={`min-h-screen ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
@@ -17,8 +16,8 @@ export default function MemoriesPage() {
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebarCollapsed={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        isSidebarOpen={isSidebarOpen}
-        onCloseSidebar={() => setIsSidebarOpen(false)}
+        isSidebarOpen={false}
+        onCloseSidebar={() => {}}
         theme={theme}
       />
 
@@ -26,7 +25,7 @@ export default function MemoriesPage() {
       <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden transition-colors duration-500">
         <BackgroundDecor isDarkMode={isDarkMode} />
 
-        <MobileMenuButton isDarkMode={isDarkMode} onOpen={() => setIsSidebarOpen(true)} />
+        <MobileBottomNav />
 
         <main className="relative z-10 my-6 sm:my-8 flex-grow max-w-7xl mx-auto w-full flex flex-col gap-6 sm:gap-8">
 
@@ -61,15 +60,6 @@ export default function MemoriesPage() {
 
         </main>
 
-        {/* Footer */}
-        <footer className="relative z-10 border-t border-neutral-200/10 pt-6 flex flex-col md:flex-row justify-between text-xs text-[#a0a5c0] gap-4">
-          <span className="flex items-center gap-2">
-            <ShieldCheck weight="duotone" className="w-4 h-4 text-[#6366F1] shrink-0" /> Active secure sandbox session for ali@student.uthm.edu.my
-          </span>
-          <div className="text-left md:text-right">
-            <span>Final Year Project (PSM) • UTHM PCU Integration</span>
-          </div>
-        </footer>
       </div>
     </div>
   );
