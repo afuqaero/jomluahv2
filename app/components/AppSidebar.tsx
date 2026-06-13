@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,8 +16,11 @@ import {
   CaretLineLeft,
   CaretLineRight,
   Plus,
+  BookOpen,
+  CaretLeft,
 } from "@phosphor-icons/react";
 import type { ThemeTokens } from "./useAppTheme";
+import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "../dashboard/ResponsiveAssets";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: SquaresFour },
@@ -195,68 +198,251 @@ export default function AppSidebar({
 }
 
 /** Floating bottom navigation bar for mobile — replaces the hamburger menu. */
-export function MobileBottomNav({ onNewEntry }: { onNewEntry?: () => void }) {
+export function MobileBottomNav({ onNewEntry }: { onNewEntry?: (moodName?: string) => void }) {
   const pathname = usePathname();
+  const [showPopup, setShowPopup] = useState(false);
+  const [menuStep, setMenuStep] = useState<"main" | "mood" | "notebook">("main");
+  const [folders, setFolders] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (showPopup) {
+      setMenuStep("main");
+      const stored = localStorage.getItem("jomluah-folders");
+      if (stored) {
+        try {
+          setFolders(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        setFolders([
+          { id: 1, name: "Gratitude Jar" },
+          { id: 2, name: "Dream Log" },
+          { id: 3, name: "Work Tasks" },
+          { id: 4, name: "Goals & Vision" }
+        ]);
+      }
+    }
+  }, [showPopup]);
+
+  // Handle ESC key to close the popup
+  useEffect(() => {
+    if (!showPopup) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowPopup(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showPopup]);
+
+  const handleAction = (url: string, isJournalAction = false, moodParam?: string) => {
+    setShowPopup(false);
+    if (isJournalAction && onNewEntry && pathname === "/dashboard") {
+      onNewEntry(moodParam);
+    } else {
+      window.location.href = url;
+    }
+  };
+
+  const moodsList = [
+    { name: "Happy", icon: <HappyEmoji className="w-7 h-7" />, color: "from-amber-300 to-orange-400" },
+    { name: "Good", icon: <GoodEmoji className="w-7 h-7" />, color: "from-emerald-300 to-teal-400" },
+    { name: "Okay", icon: <OkayEmoji className="w-7 h-7" />, color: "from-sky-300 to-cyan-400" },
+    { name: "Sad", icon: <SadEmoji className="w-7 h-7" />, color: "from-blue-300 to-indigo-400" },
+  ];
 
   return (
-    <div className="lg:hidden fixed bottom-4 left-0 right-0 px-6 z-40">
-      <div className="bg-white/70 dark:bg-stone-900/75 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-full py-3 px-6 shadow-2xl flex items-center justify-between max-w-md mx-auto">
+    <>
+      {/* Backdrop */}
+      {showPopup && (
+        <div
+          onClick={() => setShowPopup(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-md z-45 animate-backdrop-fade"
+        />
+      )}
 
-        {/* Dashboard */}
-        <Link
-          href="/dashboard"
-          aria-label="Dashboard"
-          className={`p-2 transition duration-200 ${
-            pathname === "/dashboard" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-          }`}
-        >
-          <SquaresFour weight="duotone" className="w-6 h-6" />
-        </Link>
+      {/* Pop-up options */}
+      {showPopup && (
+        <div className="fixed bottom-24 left-0 right-0 px-6 z-50 animate-modal-pop">
+          <div className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border border-neutral-200/50 dark:border-white/10 rounded-3xl p-5 shadow-2xl max-w-xs mx-auto space-y-3 text-left">
+            
+            {menuStep === "main" && (
+              <>
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-neutral-400 dark:text-stone-500 mb-2 px-1">
+                  What would you like to do?
+                </h4>
+                
+                {/* Create Journal */}
+                <button
+                  onClick={() => setMenuStep("mood")}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl transition hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-800 dark:text-stone-100"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-[#6366F1] flex items-center justify-center shrink-0">
+                    <Notebook weight="duotone" className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-sm font-bold block">Log Mood & Journal</span>
+                    <span className="text-[10px] text-neutral-500 dark:text-stone-400 block -mt-0.5">Write down your feelings</span>
+                  </div>
+                </button>
 
-        {/* Companion AI */}
-        <Link
-          href="/chat"
-          aria-label="Companion AI"
-          className={`p-2 transition duration-200 ${
-            pathname === "/chat" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-          }`}
-        >
-          <ChatCircleDots weight="duotone" className="w-6 h-6" />
-        </Link>
+                {/* Create Note */}
+                <button
+                  onClick={() => setMenuStep("notebook")}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl transition hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-800 dark:text-stone-100"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+                    <BookOpen weight="duotone" className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-sm font-bold block">Add Notebook Note</span>
+                    <span className="text-[10px] text-neutral-500 dark:text-stone-400 block -mt-0.5">Capture a thought or task</span>
+                  </div>
+                </button>
 
-        {/* Floating Plus CTA */}
-        <button
-          onClick={onNewEntry}
-          aria-label="New entry"
-          className="w-12 h-12 bg-[#6366F1] hover:bg-[#4F46E5] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#6366F1]/30 transition duration-200 transform hover:scale-105 -mt-6"
-        >
-          <Plus weight="bold" className="w-5 h-5" />
-        </button>
+                {/* Chat with Companion AI */}
+                <button
+                  onClick={() => handleAction("/chat")}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl transition hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-800 dark:text-stone-100"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+                    <ChatCircleDots weight="duotone" className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-sm font-bold block">Chat with AI</span>
+                    <span className="text-[10px] text-neutral-500 dark:text-stone-400 block -mt-0.5">Talk to your companion</span>
+                  </div>
+                </button>
+              </>
+            )}
 
-        {/* Idea Board */}
-        <Link
-          href="/journal"
-          aria-label="Idea Board"
-          className={`p-2 transition duration-200 ${
-            pathname === "/journal" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-          }`}
-        >
-          <Notebook weight="duotone" className="w-6 h-6" />
-        </Link>
+            {menuStep === "mood" && (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    onClick={() => setMenuStep("main")}
+                    className="p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-500 dark:text-stone-400"
+                  >
+                    <CaretLeft weight="bold" className="w-4 h-4" />
+                  </button>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-neutral-400 dark:text-stone-500">
+                    How are you feeling?
+                  </h4>
+                </div>
 
-        {/* Memories */}
-        <Link
-          href="/memories"
-          aria-label="Memories"
-          className={`p-2 transition duration-200 ${
-            pathname === "/memories" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-          }`}
-        >
-          <ClockCounterClockwise weight="duotone" className="w-6 h-6" />
-        </Link>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {moodsList.map((mood) => (
+                    <button
+                      key={mood.name}
+                      onClick={() => handleAction(`/dashboard?newJournal=true&mood=${mood.name}`, true, mood.name)}
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl border border-neutral-200/50 dark:border-white/5 bg-neutral-50 dark:bg-white/2 hover:scale-105 transition-all duration-200"
+                    >
+                      <div className="w-10 h-10 flex items-center justify-center mb-1 transition-transform duration-200 hover:scale-110">
+                        {mood.icon}
+                      </div>
+                      <span className="text-xs font-bold text-neutral-800 dark:text-stone-200">{mood.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
+            {menuStep === "notebook" && (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    onClick={() => setMenuStep("main")}
+                    className="p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-500 dark:text-stone-400"
+                  >
+                    <CaretLeft weight="bold" className="w-4 h-4" />
+                  </button>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-neutral-400 dark:text-stone-500">
+                    Choose a Notebook folder
+                  </h4>
+                </div>
+
+                <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
+                  {folders.map((folder) => (
+                    <button
+                      key={folder.id}
+                      onClick={() => handleAction(`/journal?newNote=true&folderId=${folder.id}`)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 text-left border border-transparent hover:border-neutral-200/50 dark:hover:border-white/5 transition"
+                    >
+                      <span className="text-xs font-bold text-neutral-800 dark:text-stone-200 line-clamp-1">{folder.name}</span>
+                      <span className="text-[10px] text-neutral-400 dark:text-stone-500 px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 font-semibold shrink-0 uppercase tracking-wider">
+                        {folder.type || "notebook"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      <div className="lg:hidden fixed bottom-4 left-0 right-0 px-6 z-40">
+        <div className="bg-white/70 dark:bg-stone-900/75 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-full py-3 px-6 shadow-2xl flex items-center justify-between max-w-md mx-auto">
+
+          {/* Dashboard */}
+          <Link
+            href="/dashboard"
+            aria-label="Dashboard"
+            className={`p-2 transition duration-200 ${
+              pathname === "/dashboard" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+            }`}
+          >
+            <SquaresFour weight="duotone" className="w-6 h-6" />
+          </Link>
+
+          {/* Companion AI */}
+          <Link
+            href="/chat"
+            aria-label="Companion AI"
+            className={`p-2 transition duration-200 ${
+              pathname === "/chat" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+            }`}
+          >
+            <ChatCircleDots weight="duotone" className="w-6 h-6" />
+          </Link>
+
+          {/* Floating Plus CTA */}
+          <button
+            onClick={() => setShowPopup(!showPopup)}
+            aria-label="New entry menu"
+            className={`w-12 h-12 bg-[#6366F1] hover:bg-[#4F46E5] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#6366F1]/30 transition duration-300 transform hover:scale-105 -mt-6 ${
+              showPopup ? "rotate-45" : ""
+            }`}
+          >
+            <Plus weight="bold" className="w-5 h-5" />
+          </button>
+
+          {/* Idea Board */}
+          <Link
+            href="/journal"
+            aria-label="Idea Board"
+            className={`p-2 transition duration-200 ${
+              pathname === "/journal" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+            }`}
+          >
+            <Notebook weight="duotone" className="w-6 h-6" />
+          </Link>
+
+          {/* Memories */}
+          <Link
+            href="/memories"
+            aria-label="Memories"
+            className={`p-2 transition duration-200 ${
+              pathname === "/memories" ? "text-[#6366F1]" : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
+            }`}
+          >
+            <ClockCounterClockwise weight="duotone" className="w-6 h-6" />
+          </Link>
+
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

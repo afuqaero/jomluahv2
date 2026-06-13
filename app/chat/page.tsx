@@ -10,12 +10,15 @@ import {
   Gear,
   User,
   Circle,
-  TextAlignLeft
+  TextAlignLeft,
+  X,
+  ArrowBendUpLeft
 } from "@phosphor-icons/react";
 import { useState, useRef, useEffect } from "react";
 import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import { RobotAvatar } from "../dashboard/ResponsiveAssets";
+import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
 
 type Message = {
   id: string;
@@ -23,6 +26,8 @@ type Message = {
   text: string;
   timestamp: string;
   options?: string[];
+  replyToText?: string;
+  replyToSender?: "bot" | "user";
 };
 
 export default function ChatPage() {
@@ -30,7 +35,35 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const recentChats = [
+    { id: "1", title: "Feeling Overwhelmed", date: "Today", preview: "That's a heavy feeling to carry..." },
+    { id: "2", title: "Breathing Exercise Check-in", date: "Yesterday", preview: "Close your eyes. Inhale... 2, 3, 4..." },
+    { id: "3", title: "Logged Diary Entry", date: "Jun 12", preview: "I'm glad to hear that, Ali. Remember..." },
+    { id: "4", title: "Anxious thoughts & stress", date: "Jun 10", preview: "Let's sit with it. What is running through..." }
+  ];
+
+  const handleLoadChat = (chatId: string) => {
+    setIsHistoryOpen(false);
+    if (chatId === "1") {
+      setMessages([
+        { id: "101", sender: "user", text: "I've been feeling really overwhelmed today.", timestamp: "10:30 AM" },
+        { id: "102", sender: "bot", text: "That's a heavy feeling to carry. Let's try to break that down. When you think of that 'overwhelmed' feeling, where do you feel it in your body right now?", timestamp: "10:31 AM", options: ["My chest", "My shoulders", "My head", "Somewhere else"] }
+      ]);
+    } else if (chatId === "2") {
+      setMessages([
+        { id: "201", sender: "user", text: "Start breathing exercise", timestamp: "Yesterday, 3:15 PM" },
+        { id: "202", sender: "bot", text: "Close your eyes. Inhale... 2, 3, 4. Hold... 2, 3, 4. Exhale... 2, 3, 4. Take another slow breath. How does it feel now?", timestamp: "Yesterday, 3:16 PM", options: ["A bit better", "Still tense"] }
+      ]);
+    } else {
+      setMessages([
+        { id: "301", sender: "bot", text: "This is a past conversation. What other thoughts are running through your mind right now?", timestamp: "Jun 12, 11:20 AM" }
+      ]);
+    }
+  };
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -45,7 +78,7 @@ export default function ChatPage() {
     });
   };
 
-  // Simulates AI responses based on message flow
+  // Simulates AI responses based on message flow with a realistic typewriter effect
   const simulateBotResponse = (userText: string) => {
     setIsTyping(true);
     
@@ -53,7 +86,7 @@ export default function ChatPage() {
       setIsTyping(false);
       let replyText = "I hear you, Ali. Tell me more about what's going on.";
       let options: string[] | undefined;
-
+ 
       const lowerText = userText.toLowerCase();
       if (lowerText.includes("overwhelmed") || lowerText.includes("breath")) {
         replyText = "That's a heavy feeling to carry. Let's try to break that down. When you think of that 'overwhelmed' feeling, where do you feel it in your body right now?";
@@ -70,17 +103,41 @@ export default function ChatPage() {
       } else if (lowerText.includes("tense") || lowerText.includes("talk")) {
         replyText = "That's okay, Ali. There is no rush. Let's just sit with it. What other thoughts are running through your mind right now?";
       }
-
+ 
+      // Insert placeholder message for typewriter animation
+      const botMsgId = String(Date.now());
       setMessages((prev) => [
         ...prev,
         {
-          id: String(Date.now()),
+          id: botMsgId,
           sender: "bot",
-          text: replyText,
-          timestamp: getFormattedTime(),
-          options
+          text: "",
+          timestamp: getFormattedTime()
         }
       ]);
+
+      let textIndex = 0;
+      const interval = setInterval(() => {
+        textIndex += 2; // Type 2 characters at a time for natural speed
+        if (textIndex >= replyText.length) {
+          clearInterval(interval);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botMsgId
+                ? { ...msg, text: replyText, options }
+                : msg
+            )
+          );
+        } else {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botMsgId
+                ? { ...msg, text: replyText.substring(0, textIndex) }
+                : msg
+            )
+          );
+        }
+      }, 20);
     }, 1500);
   };
 
@@ -93,11 +150,14 @@ export default function ChatPage() {
       id: String(Date.now()),
       sender: "user",
       text,
-      timestamp: getFormattedTime()
+      timestamp: getFormattedTime(),
+      replyToText: replyingTo ? replyingTo.text : undefined,
+      replyToSender: replyingTo ? replyingTo.sender : undefined
     };
     
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInputValue("");
+    setReplyingTo(null); // Clear reply context
     
     // Simulate companion response
     simulateBotResponse(text);
@@ -121,34 +181,23 @@ export default function ChatPage() {
       />
 
       {/* Page Content */}
-      <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden transition-colors duration-500 pb-24 lg:pb-8">
+      <div className="flex-1 h-screen min-w-0 p-4 sm:p-6 md:p-8 flex flex-col relative overflow-hidden transition-colors duration-500 pb-24 lg:pb-8">
         <BackgroundDecor isDarkMode={isDarkMode} />
 
         <MobileBottomNav />
 
         {/* Header matching dashboard theme consistency */}
-        <header className="relative z-20 pb-4 border-b border-neutral-200/20 dark:border-white/5 flex items-center justify-between">
+        <header className="relative z-20 pb-4 border-b border-neutral-200/20 dark:border-white/5 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            {/* Sidebar toggle button (circular menu lines) */}
+            {/* Sidebar toggle button (circular menu lines) -> Opens Recent Chats history drawer */}
             <button
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              onClick={() => setIsHistoryOpen(true)}
               className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] ${
                 isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10 text-white" : "bg-white border-neutral-200/50 hover:bg-neutral-50 text-neutral-700 shadow-sm"
               }`}
-              title="Toggle sidebar"
+              title="Open recent chats"
             >
               <TextAlignLeft size={20} weight="bold" />
-            </button>
-
-            {/* New chat button (circular plus) */}
-            <button
-              onClick={() => setMessages([])}
-              className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] ${
-                isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10 text-white" : "bg-white border-neutral-200/50 hover:bg-neutral-50 text-neutral-700 shadow-sm"
-              }`}
-              title="New check-in"
-            >
-              <Plus size={20} weight="bold" />
             </button>
 
             <span className={`text-xl font-bold tracking-tight ${theme.textHeading}`}>Sanctuary Chat</span>
@@ -156,21 +205,14 @@ export default function ChatPage() {
         </header>
 
         {/* Chat Area Viewport */}
-        <main className="relative z-10 flex-grow w-full max-w-4xl mx-auto flex flex-col justify-between mt-6 min-h-[60vh]">
+        <main className="relative z-10 flex-1 w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex flex-col mt-6 min-h-0 overflow-hidden">
           
           {messages.length === 0 ? (
             /* --- LANDING PROMPT VIEW --- */
-            <div className="flex-grow flex flex-col items-center justify-center text-center px-4 animate-fade-in-up">
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-4 animate-fade-in-up overflow-y-auto">
               
-              {/* Animated 3D Glossy Purple Glassmorphic Orb */}
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 mb-6 flex items-center justify-center">
-                <div className="absolute w-24 h-24 sm:w-28 sm:h-28 bg-[#6366F1]/20 rounded-full blur-2xl pointer-events-none animate-pulse" />
-                {/* Main Orb Body */}
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-[#6366F1] via-[#A855F7] to-[#3B82F6] opacity-80 shadow-[inset_-8px_-8px_24px_rgba(0,0,0,0.3),inset_8px_8px_24px_rgba(255,255,255,0.6)] animate-float-slow" />
-                {/* 3D Curved Light Reflection Overlay */}
-                <div className="absolute top-5 left-5 w-8 h-4 rounded-full bg-white/45 rotate-[-30deg] pointer-events-none filter blur-[0.5px]" />
-                <div className="absolute bottom-5 right-5 w-6 h-3 rounded-full bg-white/15 rotate-[-30deg] pointer-events-none" />
-              </div>
+              {/* Interactive Liquid Physics Orb */}
+              <InteractiveLiquidOrb />
 
               {/* Dynamic Personalized Greetings */}
               <div>
@@ -187,30 +229,44 @@ export default function ChatPage() {
             </div>
           ) : (
             /* --- ACTIVE CHAT MESSAGE HISTORY --- */
-            <div className="flex-grow overflow-y-auto px-1 py-4 space-y-6 max-h-[60vh] scrollbar-thin">
+            <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
+              {/* Premium Gradient Top Fade to transparency */}
+              <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-[#F0F2F6] dark:from-stone-950 to-transparent pointer-events-none z-20 transition-colors duration-500" />
+              
+              <div className="flex-1 overflow-y-auto px-1 pt-4 pb-4 space-y-6">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex items-start gap-3 w-full animate-pop-in ${
+                  className={`flex items-start gap-3 w-full animate-fade-slide-up group ${
                     msg.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
                   {/* Bot Avatar */}
                   {msg.sender === "bot" && (
-                    <div className="w-9 h-9 shrink-0 rounded-full bg-white dark:bg-stone-900 border border-neutral-200/60 dark:border-white/5 flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
-                      <RobotAvatar className="w-full h-full" />
+                    <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+                      <InteractiveLiquidOrb size={36} />
                     </div>
                   )}
-
+ 
                   {/* Message Bubble Container */}
-                  <div className={`flex flex-col max-w-[85%] sm:max-w-[70%] gap-1.5 text-left`}>
+                  <div className={`flex flex-col max-w-[85%] sm:max-w-[80%] gap-1.5 text-left`}>
                     <div
                       className={`px-5 py-3.5 rounded-3xl text-sm sm:text-base leading-relaxed backdrop-blur-md ${
                         msg.sender === "user"
-                          ? "bg-[#E0D7FF]/80 dark:bg-purple-950/30 border border-purple-300/40 dark:border-purple-800/30 text-purple-950 dark:text-purple-100 rounded-tr-none shadow-lg shadow-purple-500/5"
+                          ? "bg-[#6366F1] text-white rounded-tr-none shadow-lg shadow-indigo-500/10 border border-indigo-400/20 dark:border-indigo-800/35"
                           : `${isDarkMode ? "bg-stone-900/40 border border-white/5 text-stone-200" : "bg-purple-50/40 border border-purple-100/80 text-neutral-800 shadow-lg shadow-purple-100/30"} rounded-tl-none`
                       }`}
                     >
+                      {/* Replying to preview quote inside user bubble */}
+                      {msg.replyToText && (
+                        <div className="mb-2 p-2 rounded-lg bg-black/10 dark:bg-black/20 border-l-2 border-white/40 text-xs text-indigo-100 dark:text-indigo-200 max-w-full text-left">
+                          <span className="font-bold block opacity-75 mb-0.5">
+                            Replying to {msg.replyToSender === "bot" ? "Companion AI" : "You"}
+                          </span>
+                          <span className="opacity-90 line-clamp-1 truncate block max-w-full">{msg.replyToText}</span>
+                        </div>
+                      )}
+
                       <p>{msg.text}</p>
                       
                       {/* Optional Interactive Action Pills (Quick Replies) */}
@@ -237,14 +293,25 @@ export default function ChatPage() {
                       {msg.timestamp}
                     </span>
                   </div>
+
+                  {/* Hover Reply Button (Bot messages only) */}
+                  {msg.sender === "bot" && (
+                    <button
+                      onClick={() => setReplyingTo(msg)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 rounded-full hover:bg-neutral-200/50 dark:hover:bg-white/5 text-neutral-400 hover:text-neutral-700 dark:hover:text-stone-300 self-center"
+                      title="Reply to this message"
+                    >
+                      <ArrowBendUpLeft size={16} weight="bold" />
+                    </button>
+                  )}
                 </div>
               ))}
 
               {/* Bot typing simulation */}
               {isTyping && (
                 <div className="flex items-start gap-3 justify-start animate-pulse">
-                  <div className="w-9 h-9 shrink-0 rounded-full bg-white dark:bg-stone-900 border border-neutral-200/60 dark:border-white/5 flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
-                    <RobotAvatar className="w-full h-full" />
+                  <div className="w-9 h-9 shrink-0 flex items-center justify-center">
+                    <InteractiveLiquidOrb size={36} />
                   </div>
                   <div className={`px-5 py-3.5 rounded-3xl backdrop-blur-md ${isDarkMode ? "bg-stone-900/40 border border-white/5" : "bg-purple-50/40 border border-purple-100/80 shadow-lg shadow-purple-100/30"} rounded-tl-none`}>
                     <div className="flex gap-1 items-center justify-center py-1">
@@ -258,11 +325,28 @@ export default function ChatPage() {
 
               <div ref={messagesEndRef} />
             </div>
+            </div>
           )}
 
           {/* Floating Pill Input Bar */}
-          <div className="mt-4 pb-6">
-            <div className={`relative flex items-center gap-2 max-w-3xl mx-auto rounded-full p-2 border transition-all duration-300 shadow-2xl ${
+          <div className="mt-4 pb-6 w-full max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto flex flex-col gap-2">
+            {/* Replying to Context Bar Preview */}
+            {replyingTo && (
+              <div className="w-full px-4 py-2.5 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md rounded-2xl border border-neutral-200/30 dark:border-white/5 flex items-center justify-between text-xs animate-fade-in-up">
+                <div className="flex flex-col border-l-2 border-[#6366F1] pl-2 text-left truncate">
+                  <span className="font-bold text-[#6366F1]">Replying to Companion AI</span>
+                  <span className="text-neutral-500 dark:text-stone-400 truncate line-clamp-1 block max-w-lg">{replyingTo.text}</span>
+                </div>
+                <button 
+                  onClick={() => setReplyingTo(null)}
+                  className="p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-400 hover:text-neutral-700 dark:hover:text-stone-300 transition shrink-0 ml-4"
+                >
+                  <X size={14} weight="bold" />
+                </button>
+              </div>
+            )}
+
+            <div className={`relative flex items-center gap-2 w-full rounded-full p-2 border transition-all duration-300 shadow-2xl ${
               isDarkMode ? "bg-stone-900/80 border-white/10 text-white" : "bg-white/80 border-neutral-200 text-neutral-800"
             }`}>
               {/* Plus Circle Button */}
@@ -315,6 +399,63 @@ export default function ChatPage() {
           </div>
 
         </main>
+
+        {/* Slide-out Recent Chats History Panel (Absolute to page content so it sits to the right of Sidebar) */}
+        {isHistoryOpen && (
+          <>
+            {/* Backdrop Overlay */}
+            <div 
+              onClick={() => setIsHistoryOpen(false)}
+              className="absolute inset-0 bg-black/10 dark:bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-backdrop-fade z-30"
+            />
+
+            {/* Drawer Body (Premium Glassmorphic Panel with Slide-in animation) */}
+            <div className="absolute top-0 bottom-0 left-0 z-40 w-80 max-w-[85vw] h-full flex flex-col backdrop-blur-2xl bg-white/30 dark:bg-stone-900/35 border-r border-white/20 dark:border-white/10 p-5 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] animate-slide-in-left">
+              
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between mb-6">
+                <span className={`text-lg font-extrabold tracking-tight ${theme.textHeading}`}>Recent Chats</span>
+                <button 
+                  onClick={() => setIsHistoryOpen(false)}
+                  className={`p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/5 transition text-neutral-800 dark:text-white`}
+                >
+                  <X size={18} weight="bold" />
+                </button>
+              </div>
+
+              {/* New Chat Action Button */}
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setIsHistoryOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 mb-6 rounded-2xl bg-[#6366F1]/90 hover:bg-[#4F46E5] text-white font-bold text-sm shadow-lg shadow-[#6366F1]/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Plus size={16} weight="bold" />
+                New check-in
+              </button>
+
+              {/* Chats List with Staggered Slide-in Animation */}
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+                {recentChats.map((chat, idx) => (
+                  <button
+                    key={chat.id}
+                    onClick={() => handleLoadChat(chat.id)}
+                    className="w-full text-left p-3.5 rounded-2xl border border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10 transition duration-300 flex flex-col gap-1 hover:translate-x-1 animate-slide-in-item shadow-sm"
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm font-extrabold truncate ${theme.textHeading}`}>{chat.title}</span>
+                      <span className="text-[10px] uppercase font-bold text-neutral-400 dark:text-neutral-500 shrink-0">{chat.date}</span>
+                    </div>
+                    <span className="text-xs text-neutral-500 dark:text-stone-400 line-clamp-1 truncate block">{chat.preview}</span>
+                  </button>
+                ))}
+              </div>
+
+            </div>
+          </>
+        )}
 
       </div>
     </div>

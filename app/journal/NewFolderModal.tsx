@@ -29,6 +29,7 @@ export type NewFolderPayload = {
   description: string;
   coverId: string;
   iconId: string;
+  type: "journal" | "todo";
 };
 
 interface NewFolderModalProps {
@@ -43,6 +44,7 @@ export default function NewFolderModal({ isOpen, isDarkMode, onClose, onSubmit }
   const [description, setDescription] = useState("");
   const [coverId, setCoverId] = useState(coverOptions[0].id);
   const [iconId, setIconId] = useState(iconOptions[0].id);
+  const [type, setType] = useState<"journal" | "todo">("journal");
 
   useEffect(() => {
     if (isOpen) {
@@ -51,6 +53,7 @@ export default function NewFolderModal({ isOpen, isDarkMode, onClose, onSubmit }
       setDescription("");
       setCoverId(coverOptions[0].id);
       setIconId(iconOptions[0].id);
+      setType("journal");
     }
   }, [isOpen]);
 
@@ -71,7 +74,7 @@ export default function NewFolderModal({ isOpen, isDarkMode, onClose, onSubmit }
 
   const handleCreate = () => {
     if (!name.trim()) return;
-    onSubmit({ name: name.trim(), description: description.trim(), coverId, iconId });
+    onSubmit({ name: name.trim(), description: description.trim(), coverId, iconId, type });
   };
 
   return (
@@ -132,8 +135,10 @@ export default function NewFolderModal({ isOpen, isDarkMode, onClose, onSubmit }
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Dream Log, Random Sparks..."
-                className={`w-full font-journal text-2xl sm:text-3xl bg-transparent outline-none border-b-2 pb-1.5 transition focus:border-[#6366F1] ${
-                  isDarkMode ? "border-white/10 text-white placeholder:text-neutral-600" : "border-neutral-200 text-neutral-900 placeholder:text-neutral-300"
+                className={`w-full rounded-full border px-4 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-[#6366F1]/40 ${
+                  isDarkMode
+                    ? "bg-white/5 border-white/10 text-white placeholder:text-neutral-500 focus:border-[#6366F1]"
+                    : "bg-neutral-50 border-neutral-200 text-neutral-900 placeholder:text-neutral-400 focus:border-[#6366F1]"
                 }`}
               />
             </div>
@@ -155,6 +160,39 @@ export default function NewFolderModal({ isOpen, isDarkMode, onClose, onSubmit }
                     : "bg-neutral-50 border-neutral-200 text-neutral-900 placeholder:text-neutral-400 focus:border-[#6366F1]"
                 }`}
               />
+            </div>
+
+            {/* Notebook Type */}
+            <div className="space-y-2">
+              <span className={labelClass}>Notebook Type</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setType("journal")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl border font-bold text-xs uppercase tracking-wider transition duration-300 ${
+                    type === "journal"
+                      ? "bg-[#6366F1] border-[#6366F1] text-white shadow-md shadow-indigo-500/20"
+                      : isDarkMode
+                        ? "bg-white/5 border-white/10 text-neutral-300 hover:border-white/20"
+                        : "bg-neutral-50 border-neutral-200 text-neutral-600 hover:border-neutral-300"
+                  }`}
+                >
+                  Journal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType("todo")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl border font-bold text-xs uppercase tracking-wider transition duration-300 ${
+                    type === "todo"
+                      ? "bg-[#6366F1] border-[#6366F1] text-white shadow-md shadow-indigo-500/20"
+                      : isDarkMode
+                        ? "bg-white/5 border-white/10 text-neutral-300 hover:border-white/20"
+                        : "bg-neutral-50 border-neutral-200 text-neutral-600 hover:border-neutral-300"
+                  }`}
+                >
+                  To-Do List
+                </button>
+              </div>
             </div>
 
             {/* Cover color */}

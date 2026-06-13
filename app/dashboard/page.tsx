@@ -36,6 +36,7 @@ import {
 import JournalIllustration from "./JournalIllustration";
 import MoodEntryModal, { type MoodEntryPayload, type ModalInitialEntry } from "./MoodEntryModal";
 import { RobotAvatar, HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "./ResponsiveAssets";
+import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 
 const THEME_STORAGE_KEY = "jomluah-theme";
 const SIDEBAR_COLLAPSED_KEY = "jomluah-sidebar-collapsed";
@@ -105,6 +106,36 @@ const dailyQuotes = [
   { text: "Every entry brings you closer to understanding yourself.", author: "Unknown" },
   { text: "The present moment is the only one that truly matters.", author: "Thich Nhat Hanh" },
 ];
+
+const getMoodCardBg = (moodName: string, isDarkMode: boolean) => {
+  if (isDarkMode) {
+    switch (moodName) {
+      case "Happy":
+        return "bg-gradient-to-br from-amber-500/10 via-stone-900 to-stone-900/80 border-amber-500/20 shadow-2xl";
+      case "Good":
+        return "bg-gradient-to-br from-emerald-500/10 via-stone-900 to-stone-900/80 border-emerald-500/20 shadow-2xl";
+      case "Okay":
+        return "bg-gradient-to-br from-sky-500/10 via-stone-900 to-stone-900/80 border-sky-500/20 shadow-2xl";
+      case "Sad":
+        return "bg-gradient-to-br from-blue-500/10 via-stone-900 to-stone-900/80 border-blue-500/20 shadow-2xl";
+      default:
+        return "bg-stone-900/80 border-white/5 shadow-2xl";
+    }
+  } else {
+    switch (moodName) {
+      case "Happy":
+        return "bg-gradient-to-br from-amber-50/70 via-white to-white border-amber-200/40 shadow-lg shadow-amber-100/10";
+      case "Good":
+        return "bg-gradient-to-br from-emerald-50/70 via-white to-white border-emerald-200/40 shadow-lg shadow-emerald-100/10";
+      case "Okay":
+        return "bg-gradient-to-br from-sky-50/70 via-white to-white border-sky-200/40 shadow-lg shadow-sky-100/10";
+      case "Sad":
+        return "bg-gradient-to-br from-blue-50/70 via-white to-white border-blue-200/40 shadow-lg shadow-blue-100/10";
+      default:
+        return "bg-white border border-neutral-200/50 shadow-lg shadow-neutral-100";
+    }
+  }
+};
 
 export default function StudentDashboard() {
   const pathname = usePathname();
@@ -209,6 +240,16 @@ export default function StudentDashboard() {
     const timeout = setTimeout(() => setSavedToast(null), 4000);
     return () => clearTimeout(timeout);
   }, [savedToast]);
+
+  // Handle auto-open journal log from search param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("newJournal") === "true") {
+      const selectedMood = params.get("mood") || "Good";
+      handleMoodSelect(selectedMood);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [recentEntries]);
 
   const moods = [
     { name: "Happy", icon: <HappyEmoji className="w-7 h-7" />, color: "bg-gradient-to-br from-amber-300 to-orange-400" },
@@ -508,7 +549,7 @@ export default function StudentDashboard() {
               </span>
               
               <div className="flex flex-col items-center justify-center">
-                <p className="font-journal text-2xl leading-relaxed text-white font-bold transition-all duration-300 drop-shadow-sm">
+                <p className="text-2xl leading-relaxed text-white font-bold transition-all duration-300 drop-shadow-sm">
                   &ldquo;{todayQuote.text}&rdquo;
                 </p>
                 <span className="text-[10px] font-bold uppercase tracking-widest mt-2 block text-indigo-100">
@@ -536,7 +577,7 @@ export default function StudentDashboard() {
                   <div
                     key={entry.id}
                     onClick={() => handleViewEntry(entry)}
-                    className={`${theme.card} relative p-5 rounded-3xl shadow-md flex flex-col justify-between text-left cursor-pointer transition-all duration-300 hover:scale-[1.01] hover:shadow-lg`}
+                    className={`${getMoodCardBg(entry.mood, isDarkMode)} relative p-5 rounded-3xl shadow-md flex flex-col justify-between text-left cursor-pointer transition-all duration-300 hover:scale-[1.01] hover:shadow-lg border`}
                   >
                     <div className="space-y-3">
                       {/* Top Row: Date & Time, Edit Button and Emoji */}
@@ -610,71 +651,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Floating Bottom Navigation */}
-        <div className="fixed bottom-4 left-0 right-0 px-6 z-40">
-          <div className="bg-white/70 dark:bg-stone-900/75 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-full py-3 px-6 shadow-2xl flex items-center justify-between max-w-md mx-auto">
-            
-            {/* Dashboard Link */}
-            <Link
-              href="/dashboard"
-              className={`p-2 transition duration-200 ${
-                pathname === "/dashboard"
-                  ? "text-[#6366F1]"
-                  : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-              }`}
-              aria-label="Dashboard"
-            >
-              <SquaresFour weight="duotone" className="w-6 h-6" />
-            </Link>
-
-            {/* Companion AI Link */}
-            <Link
-              href="/chat"
-              className={`p-2 transition duration-200 ${
-                pathname === "/chat"
-                  ? "text-[#6366F1]"
-                  : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-              }`}
-              aria-label="Companion AI"
-            >
-              <ChatCircleDots weight="duotone" className="w-6 h-6" />
-            </Link>
-
-            {/* Floating Plus button */}
-            <button
-              onClick={() => handleMoodSelect(activeMood)}
-              className="w-12 h-12 bg-[#6366F1] hover:bg-[#4F46E5] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#6366F1]/30 transition duration-200 transform hover:scale-105 -mt-6"
-              aria-label="Log mood"
-            >
-              <span className="text-2xl font-light">+</span>
-            </button>
-
-            {/* Idea Board Link */}
-            <Link
-              href="/journal"
-              className={`p-2 transition duration-200 ${
-                pathname === "/journal"
-                  ? "text-[#6366F1]"
-                  : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-              }`}
-              aria-label="Idea Board"
-            >
-              <Notebook weight="duotone" className="w-6 h-6" />
-            </Link>
-
-            {/* Memories Link */}
-            <Link
-              href="/memories"
-              className={`p-2 transition duration-200 ${
-                pathname === "/memories"
-                  ? "text-[#6366F1]"
-                  : "text-neutral-500 dark:text-stone-400 hover:text-[#6366F1]"
-              }`}
-              aria-label="Memories"
-            >
-              <ClockCounterClockwise weight="duotone" className="w-6 h-6" />
-            </Link>
-          </div>
-        </div>
+        <MobileBottomNav onNewEntry={() => handleMoodSelect(activeMood)} />
 
         {/* Mobile Sidebar Menu */}
         <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
@@ -869,7 +846,7 @@ export default function StudentDashboard() {
               <Quotes weight="duotone" className="w-5 h-5 text-[#6366F1] shrink-0 mt-1" />
               <div className="text-left">
                 <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 ${theme.textMuted}`}>Today&apos;s Reflection</span>
-                <p className={`font-journal text-lg sm:text-xl leading-snug ${theme.textHeading}`}>&ldquo;{todayQuote.text}&rdquo;</p>
+                <p className={`text-lg sm:text-xl leading-snug ${theme.textHeading}`}>&ldquo;{todayQuote.text}&rdquo;</p>
               </div>
             </div>
           </div>
@@ -964,7 +941,7 @@ export default function StudentDashboard() {
                   <div
                     key={entry.id}
                     onClick={() => handleViewEntry(entry)}
-                    className={`${theme.card} relative rounded-3xl p-5 flex flex-col justify-between h-56 hover:scale-[1.02] hover:shadow-xl transition duration-300 text-left group cursor-pointer ${entry.isNew ? "animate-pop-in" : ""}`}
+                    className={`${getMoodCardBg(entry.mood, isDarkMode)} relative rounded-3xl p-5 flex flex-col justify-between h-56 hover:scale-[1.02] hover:shadow-xl transition duration-300 text-left group cursor-pointer border ${entry.isNew ? "animate-pop-in" : ""}`}
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
