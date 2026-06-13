@@ -28,8 +28,7 @@ export type MoodEntryPayload = {
 };
 
 const feelingTags = [
-  "Grateful", "Anxious", "Excited", "Tired", "Hopeful", "Lonely",
-  "Proud", "Overwhelmed", "Peaceful", "Frustrated", "Motivated", "Confused",
+  "Grateful", "Excited", "Tired", "Hopeful", "Peaceful",
 ];
 
 const MAX_IMAGES = 4;

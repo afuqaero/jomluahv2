@@ -2,7 +2,7 @@
 
 import { cloneElement, useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChatCircleDots,
   Notebook,
@@ -35,8 +35,11 @@ import {
 } from "@phosphor-icons/react";
 import JournalIllustration from "./JournalIllustration";
 import MoodEntryModal, { type MoodEntryPayload, type ModalInitialEntry } from "./MoodEntryModal";
-import { RobotAvatar, HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "./ResponsiveAssets";
+import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "./ResponsiveAssets";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
+import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
+import { useAppTheme } from "../components/useAppTheme";
+import { supabase } from "../lib/supabaseClient";
 
 const THEME_STORAGE_KEY = "jomluah-theme";
 const SIDEBAR_COLLAPSED_KEY = "jomluah-sidebar-collapsed";
@@ -49,7 +52,7 @@ const navItems = [
 ];
 
 type JournalEntry = {
-  id: number;
+  id: number | string;
   timestamp: number;
   title: string;
   mood: string;
@@ -108,50 +111,52 @@ const dailyQuotes = [
 ];
 
 const getMoodCardBg = (moodName: string, isDarkMode: boolean) => {
+  const baseClass = "backdrop-blur-md transition-all duration-300 border hover:scale-[1.02]";
   if (isDarkMode) {
     switch (moodName) {
       case "Happy":
-        return "bg-gradient-to-br from-amber-500/10 via-stone-900 to-stone-900/80 border-amber-500/20 shadow-2xl";
+        return `${baseClass} bg-[#1c1917]/70 border-amber-500/20 shadow-[0_8px_30px_rgba(245,158,11,0.08)] hover:shadow-[0_8px_35px_rgba(245,158,11,0.22)] hover:border-amber-500/40`;
       case "Good":
-        return "bg-gradient-to-br from-emerald-500/10 via-stone-900 to-stone-900/80 border-emerald-500/20 shadow-2xl";
+        return `${baseClass} bg-[#14221d]/70 border-emerald-500/20 shadow-[0_8px_30px_rgba(16,185,129,0.08)] hover:shadow-[0_8px_35px_rgba(16,185,129,0.22)] hover:border-emerald-500/40`;
       case "Okay":
-        return "bg-gradient-to-br from-sky-500/10 via-stone-900 to-stone-900/80 border-sky-500/20 shadow-2xl";
+        return `${baseClass} bg-[#131e24]/70 border-sky-500/20 shadow-[0_8px_30px_rgba(14,165,233,0.08)] hover:shadow-[0_8px_35px_rgba(14,165,233,0.22)] hover:border-sky-500/40`;
       case "Sad":
-        return "bg-gradient-to-br from-blue-500/10 via-stone-900 to-stone-900/80 border-blue-500/20 shadow-2xl";
+        return `${baseClass} bg-[#18192b]/70 border-indigo-500/20 shadow-[0_8px_30px_rgba(99,102,241,0.08)] hover:shadow-[0_8px_35px_rgba(99,102,241,0.22)] hover:border-indigo-500/40`;
       default:
         return "bg-stone-900/80 border-white/5 shadow-2xl";
     }
   } else {
     switch (moodName) {
       case "Happy":
-        return "bg-gradient-to-br from-amber-50/70 via-white to-white border-amber-200/40 shadow-lg shadow-amber-100/10";
+        return `${baseClass} bg-white/75 border-amber-200/60 shadow-[0_8px_30px_rgba(245,158,11,0.06)] hover:shadow-[0_8px_35px_rgba(245,158,11,0.18)] hover:border-amber-300`;
       case "Good":
-        return "bg-gradient-to-br from-emerald-50/70 via-white to-white border-emerald-200/40 shadow-lg shadow-emerald-100/10";
+        return `${baseClass} bg-white/75 border-emerald-200/60 shadow-[0_8px_30px_rgba(16,185,129,0.06)] hover:shadow-[0_8px_35px_rgba(16,185,129,0.18)] hover:border-emerald-300`;
       case "Okay":
-        return "bg-gradient-to-br from-sky-50/70 via-white to-white border-sky-200/40 shadow-lg shadow-sky-100/10";
+        return `${baseClass} bg-white/75 border-sky-200/60 shadow-[0_8px_30px_rgba(14,165,233,0.06)] hover:shadow-[0_8px_35px_rgba(14,165,233,0.18)] hover:border-sky-300`;
       case "Sad":
-        return "bg-gradient-to-br from-blue-50/70 via-white to-white border-blue-200/40 shadow-lg shadow-blue-100/10";
+        return `${baseClass} bg-white/75 border-indigo-200/60 shadow-[0_8px_30px_rgba(99,102,241,0.06)] hover:shadow-[0_8px_35px_rgba(99,102,241,0.18)] hover:border-indigo-300`;
       default:
-        return "bg-white border border-neutral-200/50 shadow-lg shadow-neutral-100";
+        return "bg-white border-neutral-200/50 shadow-md";
     }
   }
 };
 
 export default function StudentDashboard() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
   const [activeMood, setActiveMood] = useState("Good");
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [moodModalOpen, setMoodModalOpen] = useState(false);
   const [recentEntries, setRecentEntries] = useState<JournalEntry[]>(initialEntries);
   const [savedToast, setSavedToast] = useState<string | null>(null);
-  const [editingEntryId, setEditingEntryId] = useState<number | null>(null);
+  const [editingEntryId, setEditingEntryId] = useState<number | string | null>(null);
   const [modalReadOnly, setModalReadOnly] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   // Selected date states (for mock weekly calendar view)
-  const [selectedDate, setSelectedDate] = useState("13");
+  const [selectedDate, setSelectedDate] = useState("14");
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null);
 
   // Device-type detection state
@@ -179,6 +184,82 @@ export default function StudentDashboard() {
     handleMoodSelect(activeMood);
   };
 
+  // Load entries from Supabase (or fallback to localStorage) on mount
+  useEffect(() => {
+    const fetchUserAndEntries = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        const { data, error } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .order("timestamp", { ascending: false });
+        if (!error && data && data.length > 0) {
+          const mapped = data.map((d: any) => ({
+            id: d.id,
+            timestamp: new Date(d.timestamp).getTime(),
+            title: d.title,
+            mood: d.mood,
+            excerpt: d.excerpt,
+            tags: d.tags || [],
+            favorite: d.favorite,
+            images: d.images || [],
+          }));
+          setRecentEntries(mapped);
+        } else {
+          // Seed DB with initial entries if empty
+          for (const entry of initialEntries) {
+            await supabase.from("journal_entries").insert({
+              user_id: session.user.id,
+              timestamp: new Date(entry.timestamp).toISOString(),
+              title: entry.title,
+              mood: entry.mood,
+              excerpt: entry.excerpt,
+              tags: entry.tags,
+              favorite: entry.favorite,
+              images: entry.images || [],
+            });
+          }
+          const { data: seededData } = await supabase
+            .from("journal_entries")
+            .select("*")
+            .order("timestamp", { ascending: false });
+          if (seededData) {
+            const mapped = seededData.map((d: any) => ({
+              id: d.id,
+              timestamp: new Date(d.timestamp).getTime(),
+              title: d.title,
+              mood: d.mood,
+              excerpt: d.excerpt,
+              tags: d.tags || [],
+              favorite: d.favorite,
+              images: d.images || [],
+            }));
+            setRecentEntries(mapped);
+          }
+        }
+      } else {
+        // Fallback to localStorage
+        const stored = localStorage.getItem("jomluah-entries");
+        if (stored) {
+          try {
+            setRecentEntries(JSON.parse(stored));
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    };
+    fetchUserAndEntries();
+  }, []);
+
+  // Save entries to localStorage when they change
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem("jomluah-entries", JSON.stringify(recentEntries));
+    }
+  }, [recentEntries, user]);
+
   // User-Agent & Width Device type detection
   useEffect(() => {
     const checkDevice = () => {
@@ -193,39 +274,6 @@ export default function StudentDashboard() {
     window.addEventListener("resize", checkDevice);
     return () => window.removeEventListener("resize", checkDevice);
   }, []);
-
-  // Restore saved desktop sidebar collapse preference
-  useEffect(() => {
-    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-    if (stored === "true") {
-      setIsSidebarCollapsed(true);
-    }
-  }, []);
-
-  // Persist sidebar collapse preference whenever it changes
-  useEffect(() => {
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
-
-  // Restore saved theme preference
-  useEffect(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored === "dark" || stored === "light") {
-      setIsDarkMode(stored === "dark");
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setIsDarkMode(true);
-    }
-  }, []);
-
-  // Persist theme preference
-  useEffect(() => {
-    localStorage.setItem(THEME_STORAGE_KEY, isDarkMode ? "dark" : "light");
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkMode]);
 
   // Live clock
   useEffect(() => {
@@ -258,22 +306,13 @@ export default function StudentDashboard() {
     { name: "Sad", icon: <SadEmoji className="w-7 h-7" />, color: "bg-gradient-to-br from-blue-300 to-indigo-400" },
   ];
 
-  const theme = {
-    bg: isDarkMode ? "bg-stone-950 text-stone-200" : "bg-[#F0F2F6] text-[#4a5568]",
-    card: isDarkMode ? "bg-stone-900/80 border-white/5 shadow-2xl" : "bg-white border border-neutral-200/50 shadow-lg shadow-neutral-100",
-    textHeading: isDarkMode ? "text-stone-50" : "text-[#1a202c]",
-    textMuted: isDarkMode ? "text-stone-400" : "text-neutral-500",
-    subtleBg: isDarkMode ? "bg-white/2 border-white/5" : "bg-neutral-50 border-neutral-150",
-    sidebar: isDarkMode ? "bg-stone-900 border-white/5 text-stone-200" : "bg-white border-neutral-200 text-[#4a5568]"
-  };
-
   const malaysiaHour = now
     ? Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", hourCycle: "h23" }).format(now))
     : null;
 
   const greeting =
     malaysiaHour === null ? "Hello"
-    : malaysiaHour < 5 ? "Good night"
+    : malaysiaHour < 4 ? "Good night"
     : malaysiaHour < 12 ? "Good morning"
     : malaysiaHour < 18 ? "Good afternoon"
     : malaysiaHour < 22 ? "Good evening"
@@ -281,7 +320,7 @@ export default function StudentDashboard() {
 
   const GreetingIcon =
     malaysiaHour === null ? Sparkle
-    : malaysiaHour < 5 ? MoonStars
+    : malaysiaHour < 4 ? MoonStars
     : malaysiaHour < 12 ? SunDim
     : malaysiaHour < 18 ? Sun
     : malaysiaHour < 22 ? SunHorizon
@@ -294,6 +333,20 @@ export default function StudentDashboard() {
   const malaysiaTimeLabel = now
     ? new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", minute: "2-digit", hour12: true }).format(now)
     : "--:--";
+
+  const getThrowbackEntry = () => {
+    if (recentEntries.length === 0) return null;
+    const nowMs = Date.now();
+    const oneMonthAgo = nowMs - 30 * 24 * 60 * 60 * 1000;
+    const oneYearAgo = nowMs - 365 * 24 * 60 * 60 * 1000;
+    const sorted = [...recentEntries].sort((a, b) => {
+      const distA = Math.min(Math.abs(a.timestamp - oneYearAgo), Math.abs(a.timestamp - oneMonthAgo));
+      const distB = Math.min(Math.abs(b.timestamp - oneYearAgo), Math.abs(b.timestamp - oneMonthAgo));
+      return distA - distB;
+    });
+    return sorted[0];
+  };
+  const throwbackEntry = getThrowbackEntry();
 
   const todayQuote = dailyQuotes[now ? now.getDate() % dailyQuotes.length : 0];
   const activeMoodObj = moods.find((m) => m.name === activeMood) ?? null;
@@ -340,48 +393,108 @@ export default function StudentDashboard() {
     setMoodModalOpen(true);
   };
 
-  const handleMoodSubmit = (entry: MoodEntryPayload, action: "save" | "continue") => {
+  const handleMoodSubmit = async (entry: MoodEntryPayload, action: "save" | "continue") => {
     const title = entry.title.trim() || `Feeling ${entry.mood}`;
 
-    if (editingEntryId !== null) {
-      setRecentEntries((prev) =>
-        prev.map((existing) =>
-          existing.id === editingEntryId
-            ? {
-                ...existing,
-                timestamp: entry.timestamp,
-                title,
-                mood: entry.mood,
-                excerpt: entry.description.trim() || "No additional notes for this entry.",
-                tags: entry.tags,
-                images: entry.images,
-              }
-            : existing
-        )
-      );
-      setMoodModalOpen(false);
-      setEditingEntryId(null);
-      setSelectedTimestamp(null);
-      if (action === "save") setSavedToast(`"${title}" updated`);
-      return;
+    if (user) {
+      if (editingEntryId !== null) {
+        const { error } = await supabase
+          .from("journal_entries")
+          .update({
+            timestamp: new Date(entry.timestamp).toISOString(),
+            title,
+            mood: entry.mood,
+            excerpt: entry.description.trim() || "No additional notes for this entry.",
+            tags: entry.tags,
+            images: entry.images,
+          })
+          .eq("id", editingEntryId);
+
+        if (!error) {
+          setRecentEntries((prev) =>
+            prev.map((existing) =>
+              existing.id === editingEntryId
+                ? {
+                    ...existing,
+                    timestamp: entry.timestamp,
+                    title,
+                    mood: entry.mood,
+                    excerpt: entry.description.trim() || "No additional notes for this entry.",
+                    tags: entry.tags,
+                    images: entry.images,
+                  }
+                : existing
+            )
+          );
+        }
+      } else {
+        const { data, error } = await supabase
+          .from("journal_entries")
+          .insert({
+            user_id: user.id,
+            timestamp: new Date(selectedTimestamp || entry.timestamp).toISOString(),
+            title,
+            mood: entry.mood,
+            excerpt: entry.description.trim() || "No additional notes for this entry.",
+            tags: entry.tags,
+            images: entry.images,
+            favorite: false,
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const newEntry: JournalEntry = {
+            id: data.id,
+            timestamp: new Date(data.timestamp).getTime(),
+            title: data.title,
+            mood: data.mood,
+            excerpt: data.excerpt,
+            tags: data.tags || [],
+            favorite: data.favorite,
+            isNew: true,
+            images: data.images || [],
+          };
+          setRecentEntries((prev) => [newEntry, ...prev]);
+        }
+      }
+    } else {
+      if (editingEntryId !== null) {
+        setRecentEntries((prev) =>
+          prev.map((existing) =>
+            existing.id === editingEntryId
+              ? {
+                  ...existing,
+                  timestamp: entry.timestamp,
+                  title,
+                  mood: entry.mood,
+                  excerpt: entry.description.trim() || "No additional notes for this entry.",
+                  tags: entry.tags,
+                  images: entry.images,
+                }
+              : existing
+          )
+        );
+      } else {
+        const newEntry: JournalEntry = {
+          id: Date.now(),
+          timestamp: selectedTimestamp || entry.timestamp,
+          title,
+          mood: entry.mood,
+          excerpt: entry.description.trim() || "No additional notes for this entry.",
+          tags: entry.tags,
+          favorite: false,
+          isNew: true,
+          images: entry.images,
+        };
+        setRecentEntries((prev) => [newEntry, ...prev]);
+      }
     }
 
-    const newEntry: JournalEntry = {
-      id: Date.now(),
-      timestamp: selectedTimestamp || entry.timestamp,
-      title,
-      mood: entry.mood,
-      excerpt: entry.description.trim() || "No additional notes for this entry.",
-      tags: entry.tags,
-      favorite: false,
-      isNew: true,
-      images: entry.images,
-    };
-
-    setRecentEntries((prev) => [newEntry, ...prev]);
     setMoodModalOpen(false);
+    setEditingEntryId(null);
     setSelectedTimestamp(null);
-    if (action === "save") setSavedToast(`"${newEntry.title}" added to your journal`);
+    if (action === "save") setSavedToast(`"${title}" saved`);
   };
 
   const navLinkClass = (isActive: boolean, collapsed: boolean) => `group flex items-center gap-3 rounded-xl text-sm transition ${
@@ -451,12 +564,24 @@ export default function StudentDashboard() {
         <div className="bg-gradient-to-br from-[#6366F1] to-[#4F46E5] text-white pt-6 pb-20 px-6 rounded-b-[40px] shadow-lg relative">
           
           <div className="flex items-center justify-between relative">
-            <span className="text-xl font-bold tracking-tight">JomLuah</span>
-
-            {/* Robot Avatar */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-0 flex flex-col items-center">
-              <RobotAvatar className="w-16 h-16 drop-shadow-xl animate-float-slow" />
+            <div className="flex items-center gap-2">
+              <svg viewBox="0 0 100 100" className="w-6 h-6 text-white shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <clipPath id="orb-clip">
+                    <circle cx="50" cy="50" r="41" />
+                  </clipPath>
+                </defs>
+                <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="6" />
+                <g clipPath="url(#orb-clip)">
+                  <path d="M12 55 C 30 40, 45 70, 88 55 L 88 94 L 12 94 Z" fill="currentColor" opacity="0.2" />
+                  <path d="M10 65 C 35 55, 60 75, 90 60 L 90 94 L 10 94 Z" fill="currentColor" opacity="0.4" />
+                </g>
+                <ellipse cx="40" cy="30" rx="10" ry="5" fill="currentColor" transform="rotate(-30 40 30)" opacity="0.8" />
+              </svg>
+              <span className="text-xl font-bold tracking-tight">JomLuah</span>
             </div>
+
+
 
             {/* Right side controls: Theme Toggle + Profile */}
             <div className="flex items-center gap-2">
@@ -692,75 +817,15 @@ export default function StudentDashboard() {
   return (
     <div className={`min-h-screen ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
 
-      {/* Persistent Sidebar (desktop) */}
-      <aside className={`hidden lg:flex lg:flex-col lg:shrink-0 lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-r ${theme.sidebar} p-6 justify-between transition-[width] duration-300 ${
-        isSidebarCollapsed ? "lg:w-24" : "lg:w-72"
-      }`}>
-        <button
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={`absolute top-1/2 -translate-y-1/2 right-3 z-10 w-7 h-7 rounded-full border flex items-center justify-center shadow-md transition-all duration-300 ${
-            isDarkMode ? "bg-[#1c1f2b] border-white/10 hover:bg-[#262a38] hover:border-white/20 text-neutral-300" : "bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-600"
-          }`}
-        >
-          {isSidebarCollapsed ? <CaretLineRight weight="bold" className="w-3.5 h-3.5" /> : <CaretLineLeft weight="bold" className="w-3.5 h-3.5" />}
-        </button>
-
-        <div className="space-y-8">
-          <div className={`flex items-center gap-3 ${isSidebarCollapsed ? "justify-center" : ""}`}>
-            {!isSidebarCollapsed && <span className={`text-xl font-bold tracking-tight ${theme.textHeading}`}>JomLuah</span>}
-          </div>
-
-          <nav className="space-y-1 text-left" aria-label="Main navigation">
-            {!isSidebarCollapsed && (
-              <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase block px-3 mb-2">Overview</span>
-            )}
-            {renderNavLinks(isSidebarCollapsed)}
-          </nav>
-        </div>
-
-        <div className="space-y-2">
-          {renderFooterLinks(isSidebarCollapsed)}
-        </div>
-      </aside>
-
-      {/* Mobile Sidebar Drawer */}
-      <div className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        <div
-          onClick={() => setIsSidebarOpen(false)}
-          className="absolute inset-0 bg-black/40 backdrop-blur-xs"
-          aria-hidden="true"
-        />
-
-        <aside className={`absolute left-0 top-0 bottom-0 w-72 ${theme.sidebar} p-6 flex flex-col justify-between transition-transform duration-300 transform shadow-2xl ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}>
-          <div className="space-y-8">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <span className={`text-xl font-bold tracking-tight ${theme.textHeading}`}>JomLuah</span>
-              </div>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                aria-label="Close menu"
-                className={`p-2 rounded-lg border transition ${
-                  isDarkMode ? "border-white/10 hover:bg-white/5 text-neutral-400" : "border-neutral-200 hover:bg-neutral-50 text-neutral-600"
-                }`}
-              >
-                <X weight="bold" className="w-4.5 h-4.5" />
-              </button>
-            </div>
-
-            <nav className="space-y-1 text-left" aria-label="Main navigation">
-              <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase block px-3 mb-2">Overview</span>
-              {renderNavLinks(false)}
-            </nav>
-          </div>
-
-          {renderFooterLinks(false)}
-        </aside>
-      </div>
+      <AppSidebar
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebarCollapsed={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isSidebarOpen={isSidebarOpen}
+        onCloseSidebar={() => setIsSidebarOpen(false)}
+        theme={theme}
+      />
 
       {/* Page Content */}
       <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden transition-colors duration-500">
@@ -798,7 +863,7 @@ export default function StudentDashboard() {
         {/* Main Workspace Content */}
         <main className="relative z-10 my-6 sm:my-8 flex-grow max-w-7xl mx-auto w-full flex flex-col justify-center gap-6 sm:gap-8">
 
-          {/* Greeting + Today's Reflection */}
+          {/* Greeting */}
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 sm:gap-6 animate-fade-in-up">
             <div className="text-left space-y-4">
               <div>
@@ -820,33 +885,24 @@ export default function StudentDashboard() {
               </div>
 
               {/* Weekly Date selector strip - Circular bubble designs (Desktop) */}
-              <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+              <div className="flex items-center gap-3 overflow-x-auto py-1 scrollbar-thin">
                 {weekDays.map((day) => {
                   const isSelected = day.day === selectedDate;
                   return (
                     <button
                       key={day.day}
                       onClick={() => handleDateClick(day.day)}
-                      className={`w-11 h-11 rounded-full flex flex-col justify-center items-center transition-all duration-300 hover:scale-110 shrink-0 border ${
+                      className={`w-14 h-14 rounded-full flex flex-col justify-center items-center transition-all duration-300 hover:scale-110 shrink-0 border ${
                         isSelected
                           ? "bg-[#6366F1]/15 border-[#6366F1]/30 text-[#6366F1] font-extrabold shadow-sm"
                           : `${isDarkMode ? "bg-stone-900/40 border-white/5 text-stone-400 hover:bg-white/5" : "bg-white border-neutral-200/50 text-neutral-500 hover:bg-neutral-50"}`
                       }`}
                     >
-                      <span className="text-[8px] font-bold uppercase tracking-wide">{day.name}</span>
-                      <span className="text-xs font-extrabold mt-0.5">{day.day}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wide">{day.name}</span>
+                      <span className="text-sm font-extrabold mt-0.5">{day.day}</span>
                     </button>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Today's Reflection / Quote of the day */}
-            <div className={`flex items-start gap-3 rounded-2xl px-4 py-3 border max-w-md ${isDarkMode ? "bg-white/[0.03] border-white/5" : "bg-neutral-50 border-neutral-150"}`}>
-              <Quotes weight="duotone" className="w-5 h-5 text-[#6366F1] shrink-0 mt-1" />
-              <div className="text-left">
-                <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 ${theme.textMuted}`}>Today&apos;s Reflection</span>
-                <p className={`text-lg sm:text-xl leading-snug ${theme.textHeading}`}>&ldquo;{todayQuote.text}&rdquo;</p>
               </div>
             </div>
           </div>
@@ -894,17 +950,17 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            {/* Card 2 & 3 Combined: Featured Sanctuary Space */}
+            {/* Card 2 & 3 Combined: Companion AI Invitation */}
             <div className={`${theme.card} lg:col-span-2 rounded-3xl p-5 sm:p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}>
               {isDarkMode && <div aria-hidden="true" className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none animate-float-slow" />}
 
               <div className="space-y-4 max-w-md text-left relative z-10">
                 <span className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isDarkMode ? "bg-white/5 border border-white/10" : "bg-neutral-100 border border-neutral-200/50 text-neutral-600"}`}>
-                  Featured Space
+                  AI Companion
                 </span>
-                <h2 className={`text-2xl md:text-3xl font-extrabold ${theme.textHeading}`}>Sanctuary Space</h2>
+                <h2 className={`text-2xl md:text-3xl font-extrabold ${theme.textHeading}`}>Companion AI</h2>
                 <p className={`text-xs leading-relaxed font-light ${theme.textMuted}`}>
-                  Take five minutes to breathe with our generative audio-visual landscape. Designed to reset your cognitive rhythm and alleviate campus stress levels.
+                  Meet your empathetic companion. Share your thoughts, vent safely, or practice guided mindfulness. A private, non-judgmental space designed to support your mental well-being.
                 </p>
                 <div className="pt-2">
                   <Link
@@ -913,13 +969,15 @@ export default function StudentDashboard() {
                       isDarkMode ? "bg-white hover:bg-neutral-100 text-stone-950" : "bg-[#6366F1] hover:bg-[#4F46E5] text-white"
                     }`}
                   >
-                    <ChatCircleDots weight="duotone" className="w-4 h-4" /> Enter Sanctuary
+                    <ChatCircleDots weight="duotone" className="w-4 h-4" /> Chat with AI
                   </Link>
                 </div>
               </div>
 
-              {/* Diary-themed illustration */}
-              <JournalIllustration isDarkMode={isDarkMode} />
+              {/* AI Liquid Orb Animation Container */}
+              <div className="shrink-0 flex items-center justify-center w-36 h-36 relative z-10">
+                <InteractiveLiquidOrb size={130} />
+              </div>
             </div>
 
           </section>
@@ -1000,70 +1058,108 @@ export default function StudentDashboard() {
           {/* Row 3: Weekly Mood Spectrum and Memory Lane */}
           <section className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch animate-fade-in-up [animation-delay:300ms]">
 
-            {/* Card 1: Weekly Mood Spectrum */}
-            <div className={`${theme.card} lg:col-span-3 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}>
-              {isDarkMode && <div aria-hidden="true" className="absolute bottom-[-10%] right-[-10%] w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none animate-float-delayed" />}
+            {/* Column 1: Weekly Mood Spectrum */}
+            <div className="lg:col-span-3 flex flex-col gap-3 text-left">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-stone-400 pl-1">
+                Weekly Mood Spectrum
+              </h3>
+              <div className={`${theme.card} flex-1 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}>
+                {isDarkMode && <div aria-hidden="true" className="absolute bottom-[-10%] right-[-10%] w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none animate-float-delayed" />}
 
-              <div className="space-y-4">
-                <h3 className={`text-sm font-bold uppercase tracking-wider block ${theme.textMuted}`}>{"// Weekly Mood Spectrum"}</h3>
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pt-2">
+                    <div className="space-y-2 max-w-xs">
+                      <p className={`text-xs leading-relaxed font-light ${theme.textMuted}`}>
+                        Check your consistency and streaks this week.
+                      </p>
 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pt-2">
-                  <div className="space-y-2 max-w-xs">
-                    <p className={`text-xs leading-relaxed font-light mt-2 ${theme.textMuted}`}>
-                      Check your consistency and streaks this week.
-                    </p>
-
-                    <div className="flex items-end gap-3 pt-6 h-20">
-                      <div className={`w-4 rounded-full h-10 ${isDarkMode ? "bg-[#6366F1]/15" : "bg-neutral-200"}`} />
-                      <div className="w-4 bg-emerald-500/30 rounded-full h-16 shadow-[0_0_10px_rgba(16,185,129,0.2)]" />
-                      <div className={`w-4 rounded-full h-8 ${isDarkMode ? "bg-[#6366F1]/15" : "bg-neutral-200"}`} />
-                      <div className="w-4 bg-emerald-500/30 rounded-full h-20 shadow-[0_0_12px_rgba(16,185,129,0.3)]" />
-                      <div className={`w-4 rounded-full h-12 ${isDarkMode ? "bg-[#6366F1]/15" : "bg-neutral-200"}`} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 w-full md:w-auto">
-                    <div className="border-l-2 border-orange-400 pl-4 py-1">
-                      <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block">Top Theme</span>
-                      <span className={`text-sm font-bold mt-0.5 block ${theme.textHeading}`}>Creative Growth</span>
+                      <div className="flex items-end gap-3 pt-6 h-20">
+                        <div className={`w-4 rounded-full h-10 ${isDarkMode ? "bg-[#6366F1]/15" : "bg-neutral-200"}`} />
+                        <div className="w-4 bg-emerald-500/30 rounded-full h-16 shadow-[0_0_10px_rgba(16,185,129,0.2)]" />
+                        <div className={`w-4 rounded-full h-8 ${isDarkMode ? "bg-[#6366F1]/15" : "bg-neutral-200"}`} />
+                        <div className="w-4 bg-emerald-500/30 rounded-full h-20 shadow-[0_0_12px_rgba(16,185,129,0.3)]" />
+                        <div className="w-4 bg-emerald-500/30 rounded-full h-12" />
+                      </div>
                     </div>
 
-                    <div className="border-l-2 border-emerald-400 pl-4 py-1">
-                      <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block">Consistency</span>
-                      <span className={`text-sm font-bold mt-0.5 block ${theme.textHeading}`}>4 Day Streak</span>
+                    <div className="space-y-4 w-full md:w-auto">
+                      <div className="border-l-2 border-orange-400 pl-4 py-1">
+                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block">Top Theme</span>
+                        <span className={`text-sm font-bold mt-0.5 block ${theme.textHeading}`}>Creative Growth</span>
+                      </div>
+
+                      <div className="border-l-2 border-emerald-400 pl-4 py-1">
+                        <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block">Consistency</span>
+                        <span className={`text-sm font-bold mt-0.5 block ${theme.textHeading}`}>4 Day Streak</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Card 2: Memory Lane */}
-            <div className={`${theme.card} lg:col-span-2 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}>
-              {isDarkMode && <div aria-hidden="true" className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl pointer-events-none animate-float-slow" />}
+            {/* Column 2: Memory Lane */}
+            <div className="lg:col-span-2 flex flex-col gap-3 text-left">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-stone-400 pl-1">
+                Memory Lane
+              </h3>
+              <div className={`${theme.card} flex-1 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`}>
+                {isDarkMode && <div aria-hidden="true" className="absolute top-0 right-0 w-24 h-24 bg-[#6366F1]/5 rounded-full blur-2xl pointer-events-none animate-float-slow" />}
 
-              <div className="space-y-4">
-                <h3 className={`text-sm font-bold uppercase tracking-wider block ${theme.textMuted}`}>{"// Memory Lane"}</h3>
+                <div className="space-y-4 w-full flex-1 flex flex-col justify-center">
+                  {throwbackEntry ? (
+                    <div className="flex gap-4 items-start pt-2">
+                      {/* Themed Date Box */}
+                      <div className="w-12 h-12 shrink-0 rounded-xl flex flex-col items-center justify-center font-bold text-center border border-[#6366F1]/30 bg-[#6366F1]/5 text-[#6366F1] shadow-xs">
+                        <span className="text-lg font-black leading-none">{new Date(throwbackEntry.timestamp).getDate()}</span>
+                        <span className="text-[9px] font-black tracking-widest text-[#6366F1]/80 mt-0.5 leading-none">
+                          {new Date(throwbackEntry.timestamp).toLocaleString("en-MY", { month: "short" }).toUpperCase()}
+                        </span>
+                      </div>
 
-                <div className={`h-28 rounded-2xl flex items-center justify-center border relative overflow-hidden ${isDarkMode ? "bg-stone-800/60 border-white/5" : "bg-neutral-50 border-neutral-200"}`}>
-                  <div className="absolute inset-0 bg-gradient-to-tr from-[#6366F1]/10 to-[#3b82f6]/10 flex items-center justify-center">
-                    <ClockCounterClockwise weight="duotone" className="w-10 h-10 text-indigo-400/30" />
+                      {/* Excerpt Details */}
+                      <div className="flex-grow space-y-1.5 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-neutral-400 capitalize">
+                            {new Date(throwbackEntry.timestamp).toLocaleString("en-MY", { weekday: "long" })}
+                          </span>
+                          <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                            {moods.find((m) => m.name === throwbackEntry.mood)?.icon}
+                          </span>
+                        </div>
+                        <h4 className={`text-base font-extrabold font-journal truncate ${theme.textHeading}`}>
+                          {throwbackEntry.title}
+                        </h4>
+                        <p className={`text-xs line-clamp-2 leading-relaxed ${theme.textMuted}`}>
+                          {throwbackEntry.excerpt}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`h-24 rounded-2xl flex items-center justify-center border relative overflow-hidden ${isDarkMode ? "bg-stone-800/60 border-white/5" : "bg-neutral-50 border-neutral-200"}`}>
+                      <ClockCounterClockwise weight="duotone" className="w-8 h-8 text-indigo-400/30" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-neutral-200/20 flex justify-between items-center w-full mt-4">
+                  <div>
+                    <span className={`text-[10px] uppercase tracking-wider block ${theme.textMuted}`}>Throwback Reminder</span>
+                    <span className={`text-sm font-bold mt-0.5 block ${theme.textHeading}`}>
+                      {throwbackEntry 
+                        ? (Date.now() - throwbackEntry.timestamp > 300 * 24 * 60 * 60 * 1000 ? "Revisit 1 Year Ago" : "Revisit Memory")
+                        : "No memories yet"}
+                    </span>
                   </div>
+                  <Link
+                    href="/memories"
+                    className={`group w-8 h-8 rounded-full border flex items-center justify-center transition ${
+                      isDarkMode ? "bg-white/5 border-white/10 hover:bg-[#6366F1] text-white" : "bg-neutral-100 border-neutral-300 hover:bg-[#6366F1] hover:text-white"
+                    }`}
+                  >
+                    <ArrowRight weight="bold" className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </Link>
                 </div>
-              </div>
-
-              <div className="pt-4 flex justify-between items-center">
-                <div>
-                  <span className={`text-[10px] uppercase tracking-wider block ${theme.textMuted}`}>Throwback Reminder</span>
-                  <span className={`text-sm font-bold mt-0.5 block ${theme.textHeading}`}>Revisit June 2025</span>
-                </div>
-                <Link
-                  href="/memories"
-                  className={`group w-8 h-8 rounded-full border flex items-center justify-center transition ${
-                    isDarkMode ? "bg-white/5 border-white/10 hover:bg-[#6366F1] text-white" : "bg-neutral-100 border-neutral-300 hover:bg-[#6366F1] hover:text-white"
-                  }`}
-                >
-                  <ArrowRight weight="bold" className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                </Link>
               </div>
             </div>
 

@@ -17,7 +17,6 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
-import { RobotAvatar } from "../dashboard/ResponsiveAssets";
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
 
 type Message = {

@@ -1,9 +1,50 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setErrorMsg("Email and password are required");
+      return;
+    }
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        setSuccessMsg("Success! Redirecting...");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-black font-mono border-4 md:border-8 border-black p-4 md:p-6 flex flex-col justify-between">
       {/* Navigation */}
@@ -21,15 +62,30 @@ export default function LoginPage() {
             <p className="text-xs text-neutral-600 mt-1">// Access your JomLuah profile</p>
           </div>
 
-          {/* Form placeholder */}
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          {errorMsg && (
+            <div className="bg-red-50 border-2 border-red-500 text-red-600 p-2 text-xs font-bold mb-4">
+              [ERROR] {errorMsg}
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="bg-green-50 border-2 border-green-500 text-green-600 p-2 text-xs font-bold mb-4">
+              [SUCCESS] {successMsg}
+            </div>
+          )}
+
+          {/* Form */}
+          <form className="space-y-4" onSubmit={handleLogin}>
             <div>
               <label className="block text-xs font-bold uppercase mb-1">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 w-4 h-4 text-neutral-400" />
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="student@uthm.edu.my"
+                  required
                   className="w-full border-2 border-black p-2 pl-10 focus:bg-neutral-50 outline-none text-sm"
                 />
               </div>
@@ -41,19 +97,23 @@ export default function LoginPage() {
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-neutral-400" />
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  required
                   className="w-full border-2 border-black p-2 pl-10 focus:bg-neutral-50 outline-none text-sm"
                 />
               </div>
             </div>
 
             <div className="pt-2">
-              <Link
-                href="/dashboard"
-                className="w-full border-4 border-black bg-black text-white py-3 font-bold hover:bg-white hover:text-black transition flex justify-center items-center uppercase text-sm"
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full border-4 border-black bg-black text-white py-3 font-bold hover:bg-white hover:text-black transition flex justify-center items-center uppercase text-sm disabled:opacity-50"
               >
-                Sign In
-              </Link>
+                {loading ? "Signing In..." : "Sign In"}
+              </button>
             </div>
           </form>
 

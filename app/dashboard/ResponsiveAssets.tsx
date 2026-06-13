@@ -2,134 +2,6 @@
 
 import React from "react";
 
-export function RobotAvatar({ className = "w-16 h-16" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
-      <defs>
-        <style>{`
-          @keyframes head-bob {
-            0%, 100% { transform: translateY(1.5px) rotate(1deg); }
-            50% { transform: translateY(-2.5px) rotate(-1deg); }
-          }
-          @keyframes eye-blink {
-            0%, 95%, 100% { transform: scaleY(1); }
-            97.5% { transform: scaleY(0.1); }
-          }
-          @keyframes ear-twitch {
-            0%, 90%, 100% { transform: rotate(0deg); }
-            95% { transform: rotate(-5deg); }
-          }
-          .peeking-cat {
-            transform-origin: 50px 65px;
-            animation: head-bob 4s ease-in-out infinite;
-          }
-          .cat-eye {
-            transform-origin: 50% 50%;
-            animation: eye-blink 4s infinite;
-          }
-          .cat-ear-left {
-            transform-origin: 30px 35px;
-            animation: ear-twitch 6s infinite;
-          }
-        `}</style>
-      </defs>
-
-      {/* Background soft circle highlight */}
-      <circle cx="50" cy="50" r="46" fill="#FFF" stroke="#E2E8F0" strokeWidth="1.5" />
-
-      {/* The Cat Group */}
-      <g className="peeking-cat">
-        {/* Left Ear */}
-        <path d="M 22 41 L 28 12 Q 37 20 40 28 Z" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="1" strokeLinejoin="round" className="cat-ear-left" />
-        <path d="M 26 37 L 30 17 Q 35 22 36 27 Z" fill="#FDA4AF" className="cat-ear-left" />
-
-        {/* Right Ear */}
-        <path d="M 78 41 L 72 12 Q 63 20 60 28 Z" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="1" strokeLinejoin="round" />
-        <path d="M 74 37 L 70 17 Q 65 22 64 27 Z" fill="#FDA4AF" />
-
-        {/* Head Body (Larger size) */}
-        <ellipse cx="50" cy="53" rx="31" ry="25" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="1.2" />
-
-        {/* Grey tabby patches */}
-        <path d="M 33 32 Q 36 40 32 42 Q 29 37 33 32 Z" fill="#94A3B8" opacity="0.8" />
-        <path d="M 42 31 Q 45 39 41 42 Q 38 36 42 31 Z" fill="#94A3B8" opacity="0.8" />
-        
-        {/* Blushing Cheeks */}
-        <ellipse cx="28" cy="58" rx="4" ry="2.5" fill="#FDA4AF" opacity="0.7" />
-        <ellipse cx="72" cy="58" rx="4" ry="2.5" fill="#FDA4AF" opacity="0.7" />
-
-        {/* Big Glossy Eyes */}
-        <circle cx="37" cy="48" r="7.5" fill="#0F172A" className="cat-eye" />
-        <circle cx="63" cy="46" r="7.5" fill="#0F172A" className="cat-eye" />
-        <circle cx="35.5" cy="45.5" r="2.5" fill="#FFFFFF" className="cat-eye" />
-        <circle cx="61.5" cy="43.5" r="2.5" fill="#FFFFFF" className="cat-eye" />
-        <circle cx="38.5" cy="50.5" r="0.9" fill="#FFFFFF" className="cat-eye" />
-        <circle cx="64.5" cy="48.5" r="0.9" fill="#FFFFFF" className="cat-eye" />
-
-        {/* Nose */}
-        <polygon points="48.5,54 51.5,54 50,56.5" fill="#FDA4AF" />
-
-        {/* Mouth */}
-        <path d="M 45.5 58 Q 48 59.5 50 58 Q 52 59.5 54.5 58" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-
-        {/* Whiskers */}
-        <line x1="18" y1="56" x2="5" y2="54" stroke="#CBD5E1" strokeWidth="1" />
-        <line x1="17" y1="60" x2="4" y2="60" stroke="#CBD5E1" strokeWidth="1" />
-        <line x1="82" y1="56" x2="95" y2="54" stroke="#CBD5E1" strokeWidth="1" />
-        <line x1="83" y1="60" x2="96" y2="60" stroke="#CBD5E1" strokeWidth="1" />
-
-        {/* --- Flower & Heart Crown --- */}
-        {/* Left Heart (pink) */}
-        <path d="M 15 28 C 13 24, 17 22, 19 25 C 21 22, 25 24, 23 28 L 19 32 Z" fill="#FF8DA1" />
-        {/* Bear 1 */}
-        <g transform="translate(20, 16)">
-          <circle cx="0" cy="0" r="3.2" fill="#B45309" />
-          <circle cx="-2.7" cy="-2.7" r="1.3" fill="#B45309" />
-          <circle cx="2.7" cy="-2.7" r="1.3" fill="#B45309" />
-          <circle cx="0" cy="1" r="1" fill="#FDE68A" />
-        </g>
-        {/* Emoji 1 */}
-        <g transform="translate(30, 11)">
-          <circle cx="0" cy="0" r="3.2" fill="#FFCC4D" />
-          <ellipse cx="-1" cy="-0.5" rx="0.6" ry="0.9" fill="#664500" />
-          <ellipse cx="1" cy="-0.5" rx="0.6" ry="0.9" fill="#664500" />
-          <path d="M -1.5 2 Q 0 1 1.5 2" stroke="#664500" strokeWidth="0.6" strokeLinecap="round" fill="none" />
-        </g>
-        {/* Pink Flower 1 */}
-        <g transform="translate(40, 7)" fill="#F472B6">
-          <circle cx="0" cy="-2" r="1.6" />
-          <circle cx="2" cy="0" r="1.6" />
-          <circle cx="0" cy="2" r="1.6" />
-          <circle cx="-2" cy="0" r="1.6" />
-          <circle cx="0" cy="0" r="1.2" fill="#FCD34D" />
-        </g>
-        {/* Heart 2 */}
-        <path d="M 50 8 C 49 4, 52 3, 54 5 C 56 3, 59 4, 58 8 L 54 11 Z" fill="#FF8DA1" />
-        {/* Bear 2 */}
-        <g transform="translate(61, 9)">
-          <circle cx="0" cy="0" r="3.2" fill="#B45309" />
-          <circle cx="-2.7" cy="-2.7" r="1.3" fill="#B45309" />
-          <circle cx="2.7" cy="-2.7" r="1.3" fill="#B45309" />
-          <circle cx="0" cy="1" r="1" fill="#FDE68A" />
-        </g>
-        {/* Pink Flower 2 */}
-        <g transform="translate(71, 13)" fill="#F472B6">
-          <circle cx="0" cy="-2" r="1.6" />
-          <circle cx="2" cy="0" r="1.6" />
-          <circle cx="0" cy="2" r="1.6" />
-          <circle cx="-2" cy="0" r="1.6" />
-          <circle cx="0" cy="0" r="1.2" fill="#FCD34D" />
-        </g>
-        {/* Emoji 2 */}
-        <g transform="translate(79, 20)">
-          <circle cx="0" cy="0" r="3.2" fill="#FFCC4D" />
-          <ellipse cx="-1" cy="-0.5" rx="0.6" ry="0.9" fill="#664500" />
-          <ellipse cx="1" cy="-0.5" rx="0.6" ry="0.9" fill="#664500" />
-        </g>
-      </g>
-    </svg>
-  );
-}
 
 export function FloralIllustration({ className = "w-16 h-16" }: { className?: string }) {
   return (
@@ -188,15 +60,11 @@ export function HappyEmoji({ className = "w-6 h-6" }: { className?: string }) {
     <svg viewBox="0 0 36 36" className={className} aria-hidden="true">
       {/* Face Base */}
       <circle cx="18" cy="18" r="16" fill="#FFCC4D" />
-      {/* Squinting Happy Eyes */}
-      <path d="M10.5 16.5c.3-.5 1-1 1.7-.8s1 .8.8 1.5-.7 1.1-1.4 1.1h-.3c-.6-.2-.8-1.3-.8-1.8zm15 0c-.3-.5-1-1-1.7-.8s-1 .8-.8 1.5.7 1.1 1.4 1.1h.3c.6-.2.8-1.3.8-1.8z" fill="#664500" />
-      {/* Laughing Open Mouth */}
-      <path d="M18 21c-4.4 0-7 2.4-7 4.5 0 2 2.6 3.5 7 3.5s7-1.5 7-3.5c0-2.1-2.6-4.5-7-4.5z" fill="#D72828" />
-      {/* Tongue */}
-      <path d="M18 29c-2.8 0-4.6-.7-5-1.7.9 1 2.8 1.7 5 1.7s4.1-.7 5-1.7c-.4 1-2.2 1.7-5 1.7z" fill="#FF7878" />
-      {/* Cheeks */}
-      <circle cx="9" cy="20" r="2" fill="#FF7878" opacity="0.7" />
-      <circle cx="27" cy="20" r="2" fill="#FF7878" opacity="0.7" />
+      {/* Simple Happy Eyes */}
+      <circle cx="12" cy="16" r="2.5" fill="#664500" />
+      <circle cx="24" cy="16" r="2.5" fill="#664500" />
+      {/* Big Open Happy Grin */}
+      <path d="M11 20c0 4 3.1 7 7 7s7-3 7-7H11z" fill="#664500" />
     </svg>
   );
 }

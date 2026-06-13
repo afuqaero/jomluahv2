@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { supabase } from "../lib/supabaseClient";
 import {
   ChatCircleDots,
   Notebook,
@@ -13,11 +14,10 @@ import {
   X,
   SquaresFour,
   GearSix,
-  CaretLineLeft,
-  CaretLineRight,
+  CaretLeft,
+  CaretRight,
   Plus,
   BookOpen,
-  CaretLeft,
 } from "@phosphor-icons/react";
 import type { ThemeTokens } from "./useAppTheme";
 import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "../dashboard/ResponsiveAssets";
@@ -77,7 +77,7 @@ export default function AppSidebar({
       aria-label={collapsed ? label : undefined}
       className={navLinkClass(pathname === href, collapsed)}
     >
-      <Icon weight="duotone" className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" /> {!collapsed && label}
+      <Icon weight="duotone" className={`${collapsed ? "w-[22px] h-[22px]" : "w-4 h-4"} shrink-0 transition-transform duration-200 group-hover:scale-110`} /> {!collapsed && label}
     </Link>
   ));
 
@@ -108,6 +108,9 @@ export default function AppSidebar({
       </Link>
       <Link
         href="/"
+        onClick={async () => {
+          await supabase.auth.signOut();
+        }}
         title={collapsed ? "Logout" : undefined}
         aria-label={collapsed ? "Logout" : undefined}
         className={`group flex items-center gap-3 rounded-lg text-rose-500 hover:text-rose-700 text-sm font-bold transition ${collapsed ? "justify-center px-0 py-2" : "px-3 py-2"}`}
@@ -120,7 +123,7 @@ export default function AppSidebar({
   return (
     <>
       {/* Persistent Sidebar (desktop) */}
-      <aside className={`hidden lg:flex lg:flex-col lg:shrink-0 lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-r ${theme.sidebar} p-6 justify-between transition-[width] duration-300 ${
+      <aside className={`hidden lg:flex lg:flex-col lg:shrink-0 lg:sticky lg:top-0 lg:h-screen lg:self-start lg:border-r ${theme.sidebar} relative transition-[width] duration-300 ${
         isSidebarCollapsed ? "lg:w-24" : "lg:w-72"
       }`}>
         {/* Floating collapse/expand toggle — always anchored to the same spot on the sidebar's edge */}
@@ -128,28 +131,53 @@ export default function AppSidebar({
           onClick={onToggleSidebarCollapsed}
           aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={`absolute top-1/2 -translate-y-1/2 right-3 z-10 w-7 h-7 rounded-full border flex items-center justify-center shadow-md transition-all duration-300 ${
-            isDarkMode ? "bg-[#1c1f2b] border-white/10 hover:bg-[#262a38] hover:border-white/20 text-neutral-300" : "bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-600"
+          className={`absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/2 z-20 w-8 h-8 rounded-full border flex items-center justify-center shadow-md transition-all duration-300 hover:scale-110 ${
+            isDarkMode 
+              ? "bg-[#1c1f2b] border-white/10 hover:bg-[#262a38] hover:border-white/20 text-neutral-300" 
+              : "bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-600"
           }`}
         >
-          {isSidebarCollapsed ? <CaretLineRight weight="bold" className="w-3.5 h-3.5" /> : <CaretLineLeft weight="bold" className="w-3.5 h-3.5" />}
+          {isSidebarCollapsed ? <CaretRight weight="bold" className="w-4 h-4" /> : <CaretLeft weight="bold" className="w-4 h-4" />}
         </button>
 
-        <div className="space-y-8">
-          <div className={`flex items-center gap-3 ${isSidebarCollapsed ? "justify-center" : ""}`}>
-            {!isSidebarCollapsed && <span className={`text-xl font-bold tracking-tight ${theme.textHeading}`}>JomLuah</span>}
+        {/* Scrollable contents inside to prevent button clipping */}
+        <div className="flex-1 flex flex-col justify-between overflow-y-auto p-6 scrollbar-none h-full w-full">
+          <div className="space-y-8">
+            <div className={`flex items-center gap-3 ${isSidebarCollapsed ? "justify-center" : ""}`}>
+              {!isSidebarCollapsed && <span className={`text-xl font-bold tracking-tight ${theme.textHeading}`}>JomLuah</span>}
+            </div>
+
+            <nav className="space-y-1 text-left" aria-label="Main navigation">
+              {!isSidebarCollapsed && (
+                <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase block px-3 mb-2">Overview</span>
+              )}
+              {renderNavLinks(isSidebarCollapsed)}
+            </nav>
+
+            {/* Quote of the Day Card */}
+            {!isSidebarCollapsed && (
+              <div className="mt-6 px-3 animate-fade-in-up">
+                <div className="relative overflow-hidden rounded-2xl p-5 text-white bg-gradient-to-br from-[#6366F1] to-[#4F46E5] shadow-lg shadow-[#6366F1]/20 border-none text-center flex flex-col items-center justify-center">
+                  <span className="text-[8px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-white/20 border border-white/25 text-white mb-3 select-none">
+                    Quote of the Day
+                  </span>
+                  <p className="text-xs font-bold leading-relaxed italic">
+                    &ldquo;Every entry brings you closer to understanding yourself.&rdquo;
+                  </p>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-150 mt-1.5">
+                    — UNKNOWN —
+                  </span>
+                  <p className="text-[9px] text-indigo-200/90 font-light mt-2 leading-relaxed max-w-[180px] mx-auto">
+                    Take a deep breath and let this message guide your thoughts as you journal today.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          <nav className="space-y-1 text-left" aria-label="Main navigation">
-            {!isSidebarCollapsed && (
-              <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase block px-3 mb-2">Overview</span>
-            )}
-            {renderNavLinks(isSidebarCollapsed)}
-          </nav>
-        </div>
-
-        <div className="space-y-2">
-          {renderFooterLinks(isSidebarCollapsed)}
+          <div className="space-y-2 mt-8">
+            {renderFooterLinks(isSidebarCollapsed)}
+          </div>
         </div>
       </aside>
 
@@ -188,6 +216,24 @@ export default function AppSidebar({
               <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase block px-3 mb-2">Overview</span>
               {renderNavLinks(false)}
             </nav>
+
+            {/* Quote of the Day Card */}
+            <div className="mt-4 px-3 animate-fade-in-up">
+              <div className="relative overflow-hidden rounded-2xl p-5 text-white bg-gradient-to-br from-[#6366F1] to-[#4F46E5] shadow-lg shadow-[#6366F1]/20 border-none text-center flex flex-col items-center justify-center">
+                <span className="text-[8px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-white/20 border border-white/25 text-white mb-3 select-none">
+                  Quote of the Day
+                </span>
+                <p className="text-xs font-bold leading-relaxed italic">
+                  &ldquo;Every entry brings you closer to understanding yourself.&rdquo;
+                </p>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-150 mt-1.5">
+                  — UNKNOWN —
+                </span>
+                <p className="text-[9px] text-indigo-200/90 font-light mt-2 leading-relaxed max-w-[180px] mx-auto">
+                  Take a deep breath and let this message guide your thoughts as you journal today.
+                </p>
+              </div>
+            </div>
           </div>
 
           {renderFooterLinks(false)}
@@ -205,8 +251,21 @@ export function MobileBottomNav({ onNewEntry }: { onNewEntry?: (moodName?: strin
   const [folders, setFolders] = useState<any[]>([]);
 
   useEffect(() => {
-    if (showPopup) {
+    const loadFolders = async () => {
+      if (!showPopup) return;
       setMenuStep("main");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data, error } = await supabase
+          .from("folders")
+          .select("id, name, type")
+          .order("created_at", { ascending: true });
+        if (!error && data) {
+          setFolders(data);
+          return;
+        }
+      }
+
       const stored = localStorage.getItem("jomluah-folders");
       if (stored) {
         try {
@@ -216,13 +275,14 @@ export function MobileBottomNav({ onNewEntry }: { onNewEntry?: (moodName?: strin
         }
       } else {
         setFolders([
-          { id: 1, name: "Gratitude Jar" },
-          { id: 2, name: "Dream Log" },
-          { id: 3, name: "Work Tasks" },
-          { id: 4, name: "Goals & Vision" }
+          { id: 1, name: "Gratitude Jar", type: "journal" },
+          { id: 2, name: "Dream Log", type: "journal" },
+          { id: 3, name: "Work Tasks", type: "todo" },
+          { id: 4, name: "Goals & Vision", type: "todo" }
         ]);
       }
-    }
+    };
+    loadFolders();
   }, [showPopup]);
 
   // Handle ESC key to close the popup
@@ -277,36 +337,80 @@ export function MobileBottomNav({ onNewEntry }: { onNewEntry?: (moodName?: strin
                   onClick={() => setMenuStep("mood")}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl transition hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-800 dark:text-stone-100"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-[#6366F1] flex items-center justify-center shrink-0">
-                    <Notebook weight="duotone" className="w-5 h-5" />
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="journalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#818CF8" />
+                          <stop offset="100%" stopColor="#4F46E5" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M4 3h12a3 3 0 013 3v12a3 3 0 01-3 3H4V3z" fill="url(#journalGrad)" />
+                      <rect x="2" y="5" width="2" height="1.5" rx="0.5" fill="#C7D2FE" />
+                      <rect x="2" y="9" width="2" height="1.5" rx="0.5" fill="#C7D2FE" />
+                      <rect x="2" y="13" width="2" height="1.5" rx="0.5" fill="#C7D2FE" />
+                      <rect x="2" y="17" width="2" height="1.5" rx="0.5" fill="#C7D2FE" />
+                      <path d="M12 8.5c-.8-1-2.2-1.3-3-.3a2.2 2.2 0 000 3.2l3 3.1 3-3.1a2.2 2.2 0 000-3.2c-.8-1-2.2-.7-3 .3z" fill="#FFF" opacity="0.9" />
+                      <path d="M17 5.5l.5.8.8.5-.8.5-.5.8-.5-.8-.8-.5.8-.5.5-.8z" fill="#FBBF24" />
+                    </svg>
                   </div>
                   <div className="text-left">
                     <span className="text-sm font-bold block">Log Mood & Journal</span>
                     <span className="text-[10px] text-neutral-500 dark:text-stone-400 block -mt-0.5">Write down your feelings</span>
                   </div>
                 </button>
-
+ 
                 {/* Create Note */}
                 <button
                   onClick={() => setMenuStep("notebook")}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl transition hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-800 dark:text-stone-100"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
-                    <BookOpen weight="duotone" className="w-5 h-5" />
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="noteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#34D399" />
+                          <stop offset="100%" stopColor="#059669" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M6 3h8l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z" fill="url(#noteGrad)" />
+                      <path d="M14 3v5h5L14 3z" fill="#A7F3D0" opacity="0.9" />
+                      <line x1="7" y1="11" x2="13" y2="11" stroke="#FFF" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+                      <line x1="7" y1="14" x2="15" y2="14" stroke="#FFF" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+                      <line x1="7" y1="17" x2="11" y2="17" stroke="#FFF" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+                      <circle cx="15" cy="17" r="1.5" fill="#FFF" opacity="0.9" />
+                    </svg>
                   </div>
                   <div className="text-left">
                     <span className="text-sm font-bold block">Add Notebook Note</span>
                     <span className="text-[10px] text-neutral-500 dark:text-stone-400 block -mt-0.5">Capture a thought or task</span>
                   </div>
                 </button>
-
+ 
                 {/* Chat with Companion AI */}
                 <button
                   onClick={() => handleAction("/chat")}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl transition hover:bg-neutral-100 dark:hover:bg-white/5 text-neutral-800 dark:text-stone-100"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
-                    <ChatCircleDots weight="duotone" className="w-5 h-5" />
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
+                    <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#FBBF24" />
+                          <stop offset="100%" stopColor="#D97706" />
+                        </linearGradient>
+                        <linearGradient id="aiCore" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#FFF" />
+                          <stop offset="100%" stopColor="#FFE082" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="12" cy="12" r="9" fill="url(#aiGrad)" />
+                      <circle cx="12" cy="12" r="5" fill="url(#aiCore)" />
+                      <path d="M12 4a8 8 0 018 8" stroke="#FFF" strokeWidth="1.2" strokeLinecap="round" strokeDasharray="2 2" />
+                      <path d="M12 20a8 8 0 01-8-8" stroke="#FFF" strokeWidth="1.2" strokeLinecap="round" strokeDasharray="2 2" />
+                      <path d="M18 6.5l.5.5.5-.5-.5-.5-.5.5z" fill="#FFF" />
+                      <path d="M6 17.5l.5.5.5-.5-.5-.5-.5.5z" fill="#FFF" />
+                    </svg>
                   </div>
                   <div className="text-left">
                     <span className="text-sm font-bold block">Chat with AI</span>

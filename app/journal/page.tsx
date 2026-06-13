@@ -10,7 +10,6 @@ import {
   TrashSimple,
   ShieldCheck,
   Check,
-  ListTodo,
   FileText,
   MagnifyingGlass,
   CheckSquare,
@@ -21,9 +20,10 @@ import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import NoteEditorModal, { type NotePayload } from "./NoteEditorModal";
 import NewFolderModal, { coverOptions, iconOptions, type NewFolderPayload } from "./NewFolderModal";
+import { supabase } from "../lib/supabaseClient";
 
 type IdeaNote = {
-  id: number;
+  id: number | string;
   title: string;
   body: string;
   timestamp: number;
@@ -32,7 +32,7 @@ type IdeaNote = {
 };
 
 type IdeaFolder = {
-  id: number;
+  id: number | string;
   name: string;
   description: string;
   coverId: string;
@@ -132,34 +132,119 @@ const formatNoteTime = (timestamp: number) =>
 export default function IdeaBoardPage() {
   const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
   const [folders, setFolders] = useState<IdeaFolder[]>(initialFolders);
-  const [activeFolderId, setActiveFolderId] = useState<number | null>(null);
+  const [activeFolderId, setActiveFolderId] = useState<number | string | null>(null);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
-  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<number | string | null>(null);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "journal" | "todo">("all");
   const [quickTodoText, setQuickTodoText] = useState("");
   const [hideCompleted, setHideCompleted] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   const activeFolder = folders.find((folder) => folder.id === activeFolderId) ?? null;
   const editingNote = activeFolder?.notes.find((note) => note.id === editingNoteId) ?? null;
 
-  // Load folders from localStorage on mount
+  // Load folders from Supabase (or fallback to localStorage) on mount
   useEffect(() => {
-    const stored = localStorage.getItem("jomluah-folders");
-    if (stored) {
-      try {
-        setFolders(JSON.parse(stored));
-      } catch (e) {
-        console.error(e);
+    const fetchUserAndFolders = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        const { data, error } = await supabase
+          .from("folders")
+          .select("*, notes(*)")
+          .order("created_at", { ascending: true });
+        if (!error && data && data.length > 0) {
+          const mapped: IdeaFolder[] = data.map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            description: f.description,
+            coverId: f.cover_id,
+            iconId: f.icon_id,
+            type: f.type,
+            notes: (f.notes || []).map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              body: n.body || "",
+              timestamp: new Date(n.timestamp).getTime(),
+              completed: n.completed,
+            })),
+          }));
+          setFolders(mapped);
+        } else {
+          // Seed DB with initial folders and notes
+          for (const folder of initialFolders) {
+            const { data: insertedFolder } = await supabase
+              .from("folders")
+              .insert({
+                user_id: session.user.id,
+                name: folder.name,
+                description: folder.description,
+                cover_id: folder.coverId,
+                icon_id: folder.iconId,
+                type: folder.type,
+              })
+              .select()
+              .single();
+
+            if (insertedFolder && folder.notes.length > 0) {
+              for (const note of folder.notes) {
+                await supabase.from("notes").insert({
+                  folder_id: insertedFolder.id,
+                  title: note.title,
+                  body: note.body,
+                  timestamp: new Date(note.timestamp).toISOString(),
+                  completed: !!note.completed,
+                });
+              }
+            }
+          }
+          // Query again after seeding
+          const { data: seededData } = await supabase
+            .from("folders")
+            .select("*, notes(*)")
+            .order("created_at", { ascending: true });
+          if (seededData) {
+            const mapped: IdeaFolder[] = seededData.map((f: any) => ({
+              id: f.id,
+              name: f.name,
+              description: f.description,
+              coverId: f.cover_id,
+              iconId: f.icon_id,
+              type: f.type,
+              notes: (f.notes || []).map((n: any) => ({
+                id: n.id,
+                title: n.title,
+                body: n.body || "",
+                timestamp: new Date(n.timestamp).getTime(),
+                completed: n.completed,
+              })),
+            }));
+            setFolders(mapped);
+          }
+        }
+      } else {
+        // Fallback to localStorage
+        const stored = localStorage.getItem("jomluah-folders");
+        if (stored) {
+          try {
+            setFolders(JSON.parse(stored));
+          } catch (e) {
+            console.error(e);
+          }
+        }
       }
-    }
+    };
+    fetchUserAndFolders();
   }, []);
 
-  // Save folders to localStorage when they change
+  // Save folders to localStorage when they change (local only)
   useEffect(() => {
-    localStorage.setItem("jomluah-folders", JSON.stringify(folders));
-  }, [folders]);
+    if (!user) {
+      localStorage.setItem("jomluah-folders", JSON.stringify(folders));
+    }
+  }, [folders, user]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -182,7 +267,7 @@ export default function IdeaBoardPage() {
     ? { title: editingNote.title, body: editingNote.body, timestamp: editingNote.timestamp }
     : null;
 
-  const handleOpenFolder = (id: number) => setActiveFolderId(id);
+  const handleOpenFolder = (id: number | string) => setActiveFolderId(id);
   const handleBackToFolders = () => {
     setActiveFolderId(null);
     setQuickTodoText("");
@@ -202,38 +287,86 @@ export default function IdeaBoardPage() {
     setNoteModalOpen(true);
   };
 
-  const handleToggleTodo = (folderId: number, noteId: number) => {
-    setFolders((prev) =>
-      prev.map((folder) => {
-        if (folder.id !== folderId) return folder;
-        return {
-          ...folder,
-          notes: folder.notes.map((note) =>
-            note.id === noteId ? { ...note, completed: !note.completed } : note
-          ),
-        };
-      })
-    );
+  const handleToggleTodo = async (folderId: number | string, noteId: number | string) => {
+    let completedVal = false;
+    const updated = folders.map((folder) => {
+      if (folder.id !== folderId) return folder;
+      return {
+        ...folder,
+        notes: folder.notes.map((note) => {
+          if (note.id === noteId) {
+            completedVal = !note.completed;
+            return { ...note, completed: completedVal };
+          }
+          return note;
+        }),
+      };
+    });
+
+    if (user) {
+      const { error } = await supabase
+        .from("notes")
+        .update({ completed: completedVal })
+        .eq("id", noteId);
+      if (error) {
+        console.error("Error toggling todo:", error.message);
+        return;
+      }
+    }
+    setFolders(updated);
   };
 
-  const handleQuickAddTodo = (e: React.FormEvent) => {
+  const handleQuickAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeFolder || !quickTodoText.trim()) return;
-    const newNote: IdeaNote = {
-      id: Date.now(),
-      title: quickTodoText.trim(),
-      body: "",
-      timestamp: Date.now(),
-      completed: false,
-      isNew: true,
-    };
-    setFolders((prev) =>
-      prev.map((folder) =>
-        folder.id === activeFolder.id
-          ? { ...folder, notes: [newNote, ...folder.notes] }
-          : folder
-      )
-    );
+
+    if (user) {
+      const { data, error } = await supabase
+        .from("notes")
+        .insert({
+          folder_id: activeFolder.id,
+          title: quickTodoText.trim(),
+          body: "",
+          timestamp: new Date().toISOString(),
+          completed: false,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        const newNote: IdeaNote = {
+          id: data.id,
+          title: data.title,
+          body: data.body || "",
+          timestamp: new Date(data.timestamp).getTime(),
+          completed: data.completed,
+          isNew: true,
+        };
+        setFolders((prev) =>
+          prev.map((folder) =>
+            folder.id === activeFolder.id
+              ? { ...folder, notes: [newNote, ...folder.notes] }
+              : folder
+          )
+        );
+      }
+    } else {
+      const newNote: IdeaNote = {
+        id: Date.now(),
+        title: quickTodoText.trim(),
+        body: "",
+        timestamp: Date.now(),
+        completed: false,
+        isNew: true,
+      };
+      setFolders((prev) =>
+        prev.map((folder) =>
+          folder.id === activeFolder.id
+            ? { ...folder, notes: [newNote, ...folder.notes] }
+            : folder
+        )
+      );
+    }
     setQuickTodoText("");
   };
 
@@ -242,42 +375,113 @@ export default function IdeaBoardPage() {
     setEditingNoteId(null);
   };
 
-  const handleSubmitNote = (payload: NotePayload) => {
+  const handleSubmitNote = async (payload: NotePayload) => {
     if (!activeFolder) return;
 
-    setFolders((prev) =>
-      prev.map((folder) => {
-        if (folder.id !== activeFolder.id) return folder;
+    if (user) {
+      if (editingNoteId !== null) {
+        const { error } = await supabase
+          .from("notes")
+          .update({
+            title: payload.title.trim(),
+            body: payload.body,
+            timestamp: new Date(payload.timestamp).toISOString(),
+          })
+          .eq("id", editingNoteId);
 
-        if (editingNoteId !== null) {
-          return {
-            ...folder,
-            notes: folder.notes.map((note) =>
-              note.id === editingNoteId
-                ? { ...note, title: payload.title.trim(), body: payload.body, timestamp: payload.timestamp }
-                : note
-            ),
-          };
+        if (!error) {
+          setFolders((prev) =>
+            prev.map((folder) => {
+              if (folder.id !== activeFolder.id) return folder;
+              return {
+                ...folder,
+                notes: folder.notes.map((note) =>
+                  note.id === editingNoteId
+                    ? { ...note, title: payload.title.trim(), body: payload.body, timestamp: payload.timestamp }
+                    : note
+                ),
+              };
+            })
+          );
         }
+      } else {
+        const { data, error } = await supabase
+          .from("notes")
+          .insert({
+            folder_id: activeFolder.id,
+            title: payload.title.trim(),
+            body: payload.body,
+            timestamp: new Date(payload.timestamp).toISOString(),
+            completed: false,
+          })
+          .select()
+          .single();
 
-        const newNote: IdeaNote = {
-          id: Date.now(),
-          title: payload.title.trim(),
-          body: payload.body,
-          timestamp: payload.timestamp,
-          isNew: true,
-          completed: false,
-        };
+        if (!error && data) {
+          const newNote: IdeaNote = {
+            id: data.id,
+            title: data.title,
+            body: data.body || "",
+            timestamp: new Date(data.timestamp).getTime(),
+            completed: data.completed,
+            isNew: true,
+          };
+          setFolders((prev) =>
+            prev.map((folder) =>
+              folder.id === activeFolder.id
+                ? { ...folder, notes: [newNote, ...folder.notes] }
+                : folder
+            )
+          );
+        }
+      }
+    } else {
+      setFolders((prev) =>
+        prev.map((folder) => {
+          if (folder.id !== activeFolder.id) return folder;
 
-        return { ...folder, notes: [newNote, ...folder.notes] };
-      })
-    );
+          if (editingNoteId !== null) {
+            return {
+              ...folder,
+              notes: folder.notes.map((note) =>
+                note.id === editingNoteId
+                  ? { ...note, title: payload.title.trim(), body: payload.body, timestamp: payload.timestamp }
+                  : note
+              ),
+            };
+          }
+
+          const newNote: IdeaNote = {
+            id: Date.now(),
+            title: payload.title.trim(),
+            body: payload.body,
+            timestamp: payload.timestamp,
+            isNew: true,
+            completed: false,
+          };
+
+          return { ...folder, notes: [newNote, ...folder.notes] };
+        })
+      );
+    }
 
     closeNoteModal();
   };
 
-  const handleDeleteNote = () => {
+  const handleDeleteNote = async () => {
     if (!activeFolder || editingNoteId === null) return;
+
+    if (user) {
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq("id", editingNoteId);
+      if (error) {
+        console.error("Error deleting note:", error.message);
+        return;
+      }
+    }
+
     setFolders((prev) =>
       prev.map((folder) =>
         folder.id === activeFolder.id ? { ...folder, notes: folder.notes.filter((note) => note.id !== editingNoteId) } : folder
@@ -286,25 +490,68 @@ export default function IdeaBoardPage() {
     closeNoteModal();
   };
 
-  const handleCreateFolder = (payload: NewFolderPayload) => {
-    const newFolder: IdeaFolder = {
-      id: Date.now(),
-      name: payload.name,
-      description: payload.description || "A fresh space for new thoughts.",
-      coverId: payload.coverId,
-      iconId: payload.iconId,
-      notes: [],
-      isNew: true,
-    };
-    setFolders((prev) => [...prev, newFolder]);
+  const handleCreateFolder = async (payload: NewFolderPayload) => {
+    if (user) {
+      const { data, error } = await supabase
+        .from("folders")
+        .insert({
+          user_id: user.id,
+          name: payload.name,
+          description: payload.description || "A fresh space for new thoughts.",
+          cover_id: payload.coverId,
+          icon_id: payload.iconId,
+          type: payload.type,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        const newFolder: IdeaFolder = {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          coverId: data.cover_id,
+          iconId: data.icon_id,
+          type: data.type,
+          notes: [],
+          isNew: true,
+        };
+        setFolders((prev) => [...prev, newFolder]);
+        setActiveFolderId(newFolder.id);
+      }
+    } else {
+      const newFolder: IdeaFolder = {
+        id: Date.now(),
+        name: payload.name,
+        description: payload.description || "A fresh space for new thoughts.",
+        coverId: payload.coverId,
+        iconId: payload.iconId,
+        type: payload.type,
+        notes: [],
+        isNew: true,
+      };
+      setFolders((prev) => [...prev, newFolder]);
+      setActiveFolderId(newFolder.id);
+    }
     setFolderModalOpen(false);
-    setActiveFolderId(newFolder.id);
   };
 
-  const handleDeleteFolder = (id: number) => {
+  const handleDeleteFolder = async (id: number | string) => {
     const folder = folders.find((f) => f.id === id);
     if (!folder) return;
     if (!window.confirm(`Delete "${folder.name}" and all its notes?`)) return;
+
+    if (user) {
+      const { error } = await supabase
+        .from("folders")
+        .delete()
+        .eq("id", id);
+      if (error) {
+        console.error("Error deleting folder:", error.message);
+        return;
+      }
+    }
+
     setFolders((prev) => prev.filter((f) => f.id !== id));
     if (activeFolderId === id) setActiveFolderId(null);
   };
