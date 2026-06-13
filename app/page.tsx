@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, LayoutDashboard, MessageSquare, BookOpen, History, Users } from "lucide-react";
+import { Sparkles, ArrowRight, LayoutDashboard, MessageSquare, BookOpen, History } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -33,14 +33,11 @@ export default function LandingPage() {
             Let&apos;s Express: Safe, Private, and Intelligent Emotional Support
           </h2>
           <p className="text-sm leading-relaxed text-neutral-700">
-            A Progressive Web Application (PWA) designed as an emotional management companion for UTHM students. Integrates AI reflection, secure journaling, throwback memory indexing, and a direct counsellor bridge.
+            A Progressive Web Application (PWA) designed as an emotional management companion for UTHM students. Integrates AI reflection, secure journaling, and memory indexing.
           </p>
           <div className="pt-4 flex flex-wrap gap-4">
             <Link href="/dashboard" className="border-4 border-black bg-black text-white px-6 py-3 hover:bg-white hover:text-black transition font-bold flex items-center gap-2">
               ENTER APPLICATION <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/counselor" className="border-2 border-black px-6 py-3 hover:bg-neutral-100 transition font-bold flex items-center gap-2">
-              COUNSELLOR PORTAL <Users className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -55,7 +52,7 @@ export default function LandingPage() {
                 <MessageSquare className="w-6 h-6" />
                 <span className="text-xs font-bold">[ MODULE 01 ]</span>
               </div>
-              <h4 className="font-bold uppercase group-hover:underline">Empathetic Chat</h4>
+              <h4 className="font-bold uppercase group-hover:underline">Companion AI</h4>
               <p className="text-xs text-neutral-600 mt-1">AI trained to listen & guide reflection.</p>
             </Link>
 
@@ -75,18 +72,8 @@ export default function LandingPage() {
                 <History className="w-6 h-6" />
                 <span className="text-xs font-bold">[ MODULE 03 ]</span>
               </div>
-              <h4 className="font-bold uppercase group-hover:underline">Throwback Memories</h4>
+              <h4 className="font-bold uppercase group-hover:underline">Memories</h4>
               <p className="text-xs text-neutral-600 mt-1">Revisit past entries and growth.</p>
-            </Link>
-
-            {/* Module 4 */}
-            <Link href="/counselor" className="border-2 border-black p-4 hover:bg-neutral-50 block transition group">
-              <div className="flex justify-between items-center mb-2">
-                <Users className="w-6 h-6" />
-                <span className="text-xs font-bold">[ MODULE 04 ]</span>
-              </div>
-              <h4 className="font-bold uppercase group-hover:underline">Counsellor Bridge</h4>
-              <p className="text-xs text-neutral-600 mt-1">Pre-session intake & district reporting.</p>
             </Link>
           </div>
         </div>

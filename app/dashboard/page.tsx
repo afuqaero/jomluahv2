@@ -7,23 +7,16 @@ import {
   ChatCircleDots,
   Notebook,
   ClockCounterClockwise,
-  UsersThree,
   SignOut,
   Sparkle,
   ArrowRight,
-  Plus,
   CaretRight,
   ShieldCheck,
-  Smiley,
-  Cloud,
   MoonStars,
   Sun,
   SunDim,
   SunHorizon,
   Moon,
-  Wind,
-  Drop,
-  Lightning,
   Star,
   Quotes,
   CalendarBlank,
@@ -34,39 +27,39 @@ import {
   SquaresFour,
   GearSix,
   CaretLineLeft,
-  CaretLineRight
+  CaretLineRight,
+  PencilSimple
 } from "@phosphor-icons/react";
+import { Sparkles, CloudMoon, Waves, Wind, CloudRain, Zap } from "lucide-react";
 import JournalIllustration from "./JournalIllustration";
-import MoodEntryModal, { type MoodEntryPayload } from "./MoodEntryModal";
+import MoodEntryModal, { type MoodEntryPayload, type ModalInitialEntry } from "./MoodEntryModal";
 
 const THEME_STORAGE_KEY = "jomluah-theme";
 const SIDEBAR_COLLAPSED_KEY = "jomluah-sidebar-collapsed";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: SquaresFour },
-  { href: "/chat", label: "Chat AI", icon: ChatCircleDots },
-  { href: "/journal", label: "Journaling", icon: Notebook },
-  { href: "/memories", label: "Throwback", icon: ClockCounterClockwise },
-  { href: "/counselor", label: "PCU Bridge", icon: UsersThree },
+  { href: "/chat", label: "Companion AI", icon: ChatCircleDots },
+  { href: "/journal", label: "Idea Board", icon: Notebook },
+  { href: "/memories", label: "Memories", icon: ClockCounterClockwise },
 ];
 
 type JournalEntry = {
   id: number;
-  date: string;
-  time: string;
+  timestamp: number;
   title: string;
   mood: string;
   excerpt: string;
   tags: string[];
   favorite: boolean;
   isNew?: boolean;
+  images?: string[];
 };
 
 const initialEntries: JournalEntry[] = [
   {
     id: 1,
-    date: "June 09",
-    time: "11:48 PM",
+    timestamp: new Date("2026-06-09T23:48:00+08:00").getTime(),
     title: "Midnight Reverie",
     mood: "Dreamy",
     excerpt: "Thoughts about the shifting light across the city skyline at 2 AM. Balancing final documentation...",
@@ -75,8 +68,7 @@ const initialEntries: JournalEntry[] = [
   },
   {
     id: 2,
-    date: "June 07",
-    time: "7:20 AM",
+    timestamp: new Date("2026-06-07T07:20:00+08:00").getTime(),
     title: "The Sound of Rain",
     mood: "Calm",
     excerpt: "Listening to the rhythm against the window. It feels like natural grounding white noise...",
@@ -85,8 +77,7 @@ const initialEntries: JournalEntry[] = [
   },
   {
     id: 3,
-    date: "June 05",
-    time: "4:35 PM",
+    timestamp: new Date("2026-06-05T16:35:00+08:00").getTime(),
     title: "Project Breakthrough",
     mood: "Radiant",
     excerpt: "Finally figured out the architecture for the new UI. The flow feels very organic and nice...",
@@ -94,6 +85,12 @@ const initialEntries: JournalEntry[] = [
     favorite: false,
   },
 ];
+
+const formatEntryDate = (timestamp: number) =>
+  new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", month: "long", day: "numeric" }).format(timestamp);
+
+const formatEntryTime = (timestamp: number) =>
+  new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", minute: "2-digit", hour12: true }).format(timestamp);
 
 const dailyQuotes = [
   "Calmness is the cradle of power.",
@@ -116,6 +113,7 @@ export default function StudentDashboard() {
   const [moodModalOpen, setMoodModalOpen] = useState(false);
   const [recentEntries, setRecentEntries] = useState<JournalEntry[]>(initialEntries);
   const [savedToast, setSavedToast] = useState<string | null>(null);
+  const [editingEntryId, setEditingEntryId] = useState<number | null>(null);
 
   // Restore saved desktop sidebar collapse preference
   useEffect(() => {
@@ -175,12 +173,12 @@ export default function StudentDashboard() {
   }, [savedToast]);
 
   const moods = [
-    { name: "Radiant", icon: <Smiley weight="duotone" className="w-5 h-5" />, color: "text-emerald-400" },
-    { name: "Dreamy", icon: <Cloud weight="duotone" className="w-5 h-5" />, color: "text-orange-400" },
-    { name: "Calm", icon: <MoonStars weight="duotone" className="w-5 h-5" />, color: "text-indigo-400" },
-    { name: "Restless", icon: <Wind weight="duotone" className="w-5 h-5" />, color: "text-sky-400" },
-    { name: "Pensive", icon: <Drop weight="duotone" className="w-5 h-5" />, color: "text-blue-400" },
-    { name: "Charged", icon: <Lightning weight="duotone" className="w-5 h-5" />, color: "text-yellow-400" },
+    { name: "Radiant", icon: <Sparkles className="w-5 h-5" strokeWidth={2.5} />, color: "bg-gradient-to-br from-amber-400 to-orange-500" },
+    { name: "Dreamy", icon: <CloudMoon className="w-5 h-5" strokeWidth={2.5} />, color: "bg-gradient-to-br from-violet-400 to-purple-500" },
+    { name: "Calm", icon: <Waves className="w-5 h-5" strokeWidth={2.5} />, color: "bg-gradient-to-br from-sky-400 to-cyan-500" },
+    { name: "Restless", icon: <Wind className="w-5 h-5" strokeWidth={2.5} />, color: "bg-gradient-to-br from-emerald-400 to-teal-500" },
+    { name: "Pensive", icon: <CloudRain className="w-5 h-5" strokeWidth={2.5} />, color: "bg-gradient-to-br from-blue-400 to-indigo-500" },
+    { name: "Charged", icon: <Zap className="w-5 h-5" strokeWidth={2.5} />, color: "bg-gradient-to-br from-yellow-300 to-amber-500" },
   ];
 
   // Colors theme styles helpers based on isDarkMode toggle.
@@ -228,29 +226,68 @@ export default function StudentDashboard() {
 
   const activeMoodObj = moods.find((m) => m.name === activeMood) ?? null;
 
+  const editingEntry = editingEntryId !== null ? recentEntries.find((entry) => entry.id === editingEntryId) ?? null : null;
+
+  const modalInitialEntry: ModalInitialEntry | null = editingEntry
+    ? {
+        title: editingEntry.title,
+        tags: editingEntry.tags,
+        description: editingEntry.excerpt,
+        images: editingEntry.images ?? [],
+        timestamp: editingEntry.timestamp,
+      }
+    : null;
+
   const handleMoodSelect = (name: string) => {
     setActiveMood(name);
+    setEditingEntryId(null);
+    setMoodModalOpen(true);
+  };
+
+  const handleEditEntry = (entry: JournalEntry) => {
+    setActiveMood(entry.mood);
+    setEditingEntryId(entry.id);
     setMoodModalOpen(true);
   };
 
   const handleMoodSubmit = (entry: MoodEntryPayload, action: "save" | "continue") => {
-    const entryDate = now
-      ? new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", month: "long", day: "numeric" }).format(now)
-      : "Today";
-    const entryTime = now
-      ? new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", minute: "2-digit", hour12: true }).format(now)
-      : "";
+    const title = entry.title.trim() || `Feeling ${entry.mood}`;
+
+    if (editingEntryId !== null) {
+      setRecentEntries((prev) =>
+        prev.map((existing) =>
+          existing.id === editingEntryId
+            ? {
+                ...existing,
+                timestamp: entry.timestamp,
+                title,
+                mood: entry.mood,
+                excerpt: entry.description.trim() || "No additional notes for this entry.",
+                tags: entry.tags,
+                images: entry.images,
+              }
+            : existing
+        )
+      );
+      setMoodModalOpen(false);
+      setEditingEntryId(null);
+
+      if (action === "save") {
+        setSavedToast(`"${title}" updated`);
+      }
+      return;
+    }
 
     const newEntry: JournalEntry = {
       id: Date.now(),
-      date: entryDate,
-      time: entryTime,
-      title: entry.title.trim() || `Feeling ${entry.mood}`,
+      timestamp: entry.timestamp,
+      title,
       mood: entry.mood,
       excerpt: entry.description.trim() || "No additional notes for this entry.",
       tags: entry.tags,
       favorite: false,
       isNew: true,
+      images: entry.images,
     };
 
     setRecentEntries((prev) => [newEntry, ...prev]);
@@ -339,9 +376,6 @@ export default function StudentDashboard() {
 
         <div className="space-y-8">
           <div className={`flex items-center gap-3 ${isSidebarCollapsed ? "justify-center" : ""}`}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#3B82F6] to-[#00d2ff] flex items-center justify-center text-white shrink-0">
-              <Sparkle weight="duotone" className="w-5 h-5" />
-            </div>
             {!isSidebarCollapsed && <span className={`text-xl font-bold tracking-tight ${theme.textHeading}`}>JomLuah</span>}
           </div>
 
@@ -375,9 +409,6 @@ export default function StudentDashboard() {
             {/* Drawer Header with Close Button */}
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#3B82F6] to-[#00d2ff] flex items-center justify-center text-white">
-                  <Sparkle weight="duotone" className="w-5 h-5" />
-                </div>
                 <span className={`text-xl font-bold tracking-tight ${theme.textHeading}`}>JomLuah</span>
               </div>
               <button
@@ -496,7 +527,7 @@ export default function StudentDashboard() {
                       >
                         <div
                           key={isActive ? `${mood.name}-active` : mood.name}
-                          className={isActive ? "text-[#6366F1] animate-pop-in" : mood.color}
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-white shadow-md transition-transform duration-300 ${mood.color} ${isActive ? "scale-110 animate-pop-in" : ""}`}
                         >
                           {mood.icon}
                         </div>
@@ -553,27 +584,44 @@ export default function StudentDashboard() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
               {recentEntries.map((entry) => {
                 const entryMood = moods.find((m) => m.name === entry.mood);
                 return (
                   <div
                     key={entry.id}
-                    className={`${theme.card} rounded-3xl p-5 flex flex-col justify-between h-56 hover:scale-[1.02] hover:shadow-xl transition duration-300 text-left group ${entry.isNew ? "animate-pop-in" : ""}`}
+                    className={`${theme.card} relative rounded-3xl p-5 flex flex-col justify-between h-56 hover:scale-[1.02] hover:shadow-xl transition duration-300 text-left group ${entry.isNew ? "animate-pop-in" : ""}`}
                   >
+                    {entry.images && entry.images.length > 0 && (
+                      <div className={`absolute -top-3 -right-3 w-14 h-14 p-1 pb-2.5 rotate-6 rounded-sm shadow-md ${isDarkMode ? "bg-stone-800" : "bg-white"}`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={entry.images[0]} alt="" className="w-full h-full object-cover rounded-sm" />
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide ${theme.textMuted}`}>
-                          <CalendarBlank weight="duotone" className="w-3.5 h-3.5" /> {entry.date}
+                          <CalendarBlank weight="duotone" className="w-3.5 h-3.5" /> {formatEntryDate(entry.timestamp)}
                           <span className="opacity-30">•</span>
-                          <Clock weight="duotone" className="w-3.5 h-3.5" /> {entry.time}
+                          <Clock weight="duotone" className="w-3.5 h-3.5" /> {formatEntryTime(entry.timestamp)}
                         </span>
-                        {entryMood && (
-                          <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${entryMood.color} ${isDarkMode ? "bg-white/5" : "bg-neutral-50"}`}>
-                            {cloneElement(entryMood.icon, { className: "w-4 h-4" })}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleEditEntry(entry)}
+                            aria-label="Edit entry"
+                            className={`p-1 rounded-full opacity-0 group-hover:opacity-100 transition ${
+                              isDarkMode ? "hover:bg-white/10 text-neutral-400 hover:text-white" : "hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700"
+                            }`}
+                          >
+                            <PencilSimple weight="bold" className="w-3 h-3" />
+                          </button>
+                          {entryMood && (
+                            <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white shadow-sm ${entryMood.color}`}>
+                              {cloneElement(entryMood.icon, { className: "w-4 h-4" })}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <h4 className={`font-journal text-2xl sm:text-[26px] leading-tight line-clamp-1 ${theme.textHeading} group-hover:text-[#6366F1] transition-colors`}>
@@ -593,26 +641,6 @@ export default function StudentDashboard() {
                   </div>
                 );
               })}
-
-              {/* Dotted New Entry Placeholder */}
-              <Link
-                href="/journal"
-                className={`border-2 border-dashed rounded-3xl p-5 flex flex-col items-center justify-center h-56 transition duration-300 text-center gap-3 group ${
-                  isDarkMode
-                    ? "border-white/10 hover:border-[#6366F1]/50 bg-white/1 hover:bg-[#6366F1]/5"
-                    : "border-neutral-300 hover:border-[#6366F1]/50 bg-neutral-50/50 hover:bg-[#6366F1]/5"
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition duration-300 group-hover:rotate-90 ${
-                  isDarkMode ? "bg-white/5 border-white/10 group-hover:bg-[#6366F1]/10 group-hover:border-[#6366F1]" : "bg-white border-neutral-300 group-hover:border-[#6366F1]"
-                }`}>
-                  <Plus weight="bold" className={`w-5 h-5 transition ${isDarkMode ? "text-neutral-400 group-hover:text-white" : "text-neutral-600 group-hover:text-[#6366F1]"}`} />
-                </div>
-                <div>
-                  <h4 className={`text-sm font-bold uppercase tracking-wider ${theme.textHeading}`}>New Entry</h4>
-                  <p className={`text-xs mt-1 ${theme.textMuted}`}>What&apos;s on your mind?</p>
-                </div>
-              </Link>
 
             </div>
           </section>
@@ -691,25 +719,6 @@ export default function StudentDashboard() {
 
           </section>
 
-          {/* Bottom Counsellor Bridge portal banner */}
-          <div className={`${theme.card} rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl animate-fade-in-up [animation-delay:400ms]`}>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center gap-2 text-[#6366F1] text-xs font-bold uppercase">
-                <UsersThree weight="duotone" className="w-4 h-4" /> PCU COUNSELLOR BRIDGE LINK
-              </div>
-              <h3 className={`text-lg font-bold ${theme.textHeading}`}>Ready for your PCU appointment?</h3>
-              <p className={`text-xs leading-relaxed max-w-2xl ${theme.textMuted}`}>
-                Use the UTHM Counseling Bridge module to export a completely private, encrypted distortion report. Help your counsellor understand your cognitive state before the session.
-              </p>
-            </div>
-            <Link
-              href="/counselor"
-              className="group w-full sm:w-auto bg-[#6366F1] hover:bg-[#4F46E5] text-white text-xs font-bold uppercase tracking-wider py-3.5 px-6 rounded-full flex items-center justify-center gap-2 transition duration-300 self-stretch sm:self-center shadow-lg shadow-indigo-500/10 hover:scale-[1.03]"
-            >
-              Launch Bridge portal <CaretRight weight="bold" className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-
         </main>
 
         {/* Footer */}
@@ -729,7 +738,11 @@ export default function StudentDashboard() {
         isOpen={moodModalOpen}
         mood={activeMoodObj}
         isDarkMode={isDarkMode}
-        onClose={() => setMoodModalOpen(false)}
+        initialEntry={modalInitialEntry}
+        onClose={() => {
+          setMoodModalOpen(false);
+          setEditingEntryId(null);
+        }}
         onSubmit={handleMoodSubmit}
       />
 

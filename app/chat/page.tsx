@@ -1,129 +1,76 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Send, Sparkles, User, Settings, HelpCircle } from "lucide-react";
+import { useState } from "react";
+import { ChatCircleDots, ShieldCheck } from "@phosphor-icons/react";
+import { useAppTheme } from "../components/useAppTheme";
+import AppSidebar, { MobileMenuButton, BackgroundDecor } from "../components/AppSidebar";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState([
-    { sender: "assistant", text: "Hello Ali. I am JomLuah Assistant. Feel free to express whatever is on your mind. How are you holding up today?" },
-    { sender: "user", text: "I'm having a hard time balancing PSM documentation and preparing for finals. Feeling very anxious." },
-    { sender: "assistant", text: "It sounds like you're carrying a heavy load right now. Managing both graduation projects and exams at the same time is highly stressful. Have you tried breaking them down, or does the whole picture feel overwhelming?" }
-  ]);
-  const [input, setInput] = useState("");
-
-  const handleSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    setMessages([...messages, { sender: "user", text: input }]);
-    setInput("");
-    
-    // Simulate simple response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        sender: "assistant",
-        text: "[Placeholder AI response based on pgvector context retrieval and empathetic cognitive restructuring]"
-      }]);
-    }, 800);
-  };
+  const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-black font-mono border-4 md:border-8 border-black p-4 md:p-6 flex flex-col justify-between">
-      {/* Header */}
-      <header className="border-b-4 border-black pb-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="border-2 border-black p-2 hover:bg-neutral-100 transition flex items-center gap-1 text-xs font-bold uppercase">
-            <ArrowLeft className="w-4 h-4" /> Hub
-          </Link>
-          <div>
-            <h1 className="text-xl font-black uppercase">[ Empathetic Chat AI ]</h1>
-            <p className="text-[10px] text-neutral-600">// Active session // LLM context via OpenRouter</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button className="border-2 border-black p-2 hover:bg-neutral-100 transition text-xs font-bold uppercase flex items-center gap-1">
-            <Settings className="w-4 h-4" /> Options
-          </button>
-        </div>
-      </header>
+    <div className={`min-h-screen ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
 
-      {/* Main Layout */}
-      <main className="my-6 flex-grow grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Context / Past sessions */}
-        <section className="border-4 border-black p-4 space-y-4 lg:col-span-1 hidden lg:block">
-          <h2 className="text-xs font-bold uppercase tracking-wider">// RAG Memory Indexes</h2>
-          <div className="space-y-2 text-xs">
-            <div className="border border-black p-2 bg-neutral-100 font-bold uppercase">
-              Current Session
+      <AppSidebar
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebarCollapsed={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isSidebarOpen={isSidebarOpen}
+        onCloseSidebar={() => setIsSidebarOpen(false)}
+        theme={theme}
+      />
+
+      {/* Page Content */}
+      <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden transition-colors duration-500">
+        <BackgroundDecor isDarkMode={isDarkMode} />
+
+        <MobileMenuButton isDarkMode={isDarkMode} onOpen={() => setIsSidebarOpen(true)} />
+
+        <main className="relative z-10 my-6 sm:my-8 flex-grow max-w-7xl mx-auto w-full flex flex-col gap-6 sm:gap-8">
+
+          {/* Header */}
+          <div className="text-left animate-fade-in-up">
+            <div className={`flex items-center gap-2 text-xs sm:text-sm font-bold mb-1.5 ${theme.textMuted}`}>
+              <ChatCircleDots weight="duotone" className="w-4 h-4 sm:w-5 sm:h-5 text-[#6366F1]" />
+              <span>Your supportive AI companion</span>
             </div>
-            <div className="border border-neutral-300 p-2 text-neutral-500 hover:border-black hover:text-black cursor-pointer transition">
-              Session: 12 June 2026
-            </div>
-            <div className="border border-neutral-300 p-2 text-neutral-500 hover:border-black hover:text-black cursor-pointer transition">
-              Session: 08 June 2026
-            </div>
-            <div className="border border-neutral-300 p-2 text-neutral-500 hover:border-black hover:text-black cursor-pointer transition text-center border-dashed">
-              + New Session
-            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight leading-tight">
+              Companion <span className="font-extrabold text-[#6366F1] drop-shadow-[0_0_20px_rgba(99,102,241,0.2)]">AI</span>
+            </h1>
+            <p className={`text-sm mt-2 max-w-md leading-relaxed ${theme.textMuted}`}>
+              A calm space to talk things through, any time you need it.
+            </p>
           </div>
 
-          <div className="border-2 border-black p-3 bg-neutral-50 text-[10px] space-y-1.5">
-            <div className="flex items-center gap-1 font-bold text-neutral-800">
-              <Sparkles className="w-3.5 h-3.5" /> pgvector RAG Active
+          {/* Blank canvas, ready for the chat UI */}
+          <div
+            className={`flex-grow rounded-3xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-3 min-h-[50vh] animate-fade-in-up [animation-delay:100ms] ${
+              isDarkMode ? "border-white/10" : "border-neutral-300"
+            }`}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white shadow-md">
+              <ChatCircleDots weight="duotone" className="w-7 h-7" />
             </div>
-            <p className="text-neutral-600">Past journal logs are embedded and automatically retrieved if semantically matched to your message query.</p>
-          </div>
-        </section>
-
-        {/* Right Column: Active Chat Area */}
-        <section className="lg:col-span-3 border-4 border-black p-4 flex flex-col justify-between bg-neutral-50">
-          {/* Messages Wrapper */}
-          <div className="space-y-4 flex-grow overflow-y-auto mb-4 p-2 max-h-[50vh]">
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex gap-3 max-w-[80%] ${
-                  msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
-                }`}
-              >
-                <div className={`w-8 h-8 border-2 border-black flex items-center justify-center font-bold text-xs shrink-0 ${
-                  msg.sender === "user" ? "bg-black text-white" : "bg-white text-black"
-                }`}>
-                  {msg.sender === "user" ? "U" : "AI"}
-                </div>
-                <div className={`border-2 border-black p-3 text-xs leading-relaxed ${
-                  msg.sender === "user" ? "bg-white text-black" : "bg-neutral-100 text-black"
-                }`}>
-                  {msg.text}
-                </div>
-              </div>
-            ))}
+            <div>
+              <h3 className={`font-journal text-2xl ${theme.textHeading}`}>Coming soon</h3>
+              <p className={`text-xs mt-1 max-w-sm ${theme.textMuted}`}>The Companion AI chat experience is being designed — check back soon.</p>
+            </div>
           </div>
 
-          {/* Form Input */}
-          <form onSubmit={handleSend} className="flex gap-2 border-t-2 border-black pt-4">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Tell JomLuah what's on your mind... (Malay/English)"
-              className="flex-grow border-2 border-black p-3 outline-none focus:bg-white text-xs bg-white"
-            />
-            <button
-              type="submit"
-              className="border-4 border-black bg-black text-white px-6 hover:bg-white hover:text-black transition flex items-center justify-center font-bold uppercase text-xs"
-            >
-              Send <Send className="w-3.5 h-3.5 ml-2" />
-            </button>
-          </form>
-        </section>
-      </main>
+        </main>
 
-      {/* Footer Info */}
-      <footer className="text-xs text-neutral-500 flex justify-between border-t-2 border-black pt-2">
-        <span>*Conversation is encrypted. Standard UTHM PCU protocols.</span>
-        <span>LLM: llama-3.1-70b via OpenRouter</span>
-      </footer>
+        {/* Footer */}
+        <footer className="relative z-10 border-t border-neutral-200/10 pt-6 flex flex-col md:flex-row justify-between text-xs text-[#a0a5c0] gap-4">
+          <span className="flex items-center gap-2">
+            <ShieldCheck weight="duotone" className="w-4 h-4 text-[#6366F1] shrink-0" /> Active secure sandbox session for ali@student.uthm.edu.my
+          </span>
+          <div className="text-left md:text-right">
+            <span>Final Year Project (PSM) • UTHM PCU Integration</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

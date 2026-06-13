@@ -1,12 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Lock, Mail, Shield } from "lucide-react";
+import { ArrowLeft, Lock, Mail } from "lucide-react";
 
 export default function LoginPage() {
-  const [role, setRole] = useState<"student" | "counselor">("student");
-
   return (
     <div className="min-h-screen bg-white text-black font-mono border-4 md:border-8 border-black p-4 md:p-6 flex flex-col justify-between">
       {/* Navigation */}
@@ -22,26 +19,6 @@ export default function LoginPage() {
           <div className="text-center mb-8 border-b-2 border-black pb-4">
             <h2 className="text-2xl font-black uppercase">[ LOGIN ]</h2>
             <p className="text-xs text-neutral-600 mt-1">// Access your JomLuah profile</p>
-          </div>
-
-          {/* Role selector */}
-          <div className="flex border-2 border-black mb-6">
-            <button
-              onClick={() => setRole("student")}
-              className={`w-1/2 py-2 text-center text-xs font-bold transition uppercase ${
-                role === "student" ? "bg-black text-white" : "bg-white text-black hover:bg-neutral-100"
-              }`}
-            >
-              Student
-            </button>
-            <button
-              onClick={() => setRole("counselor")}
-              className={`w-1/2 py-2 text-center text-xs font-bold transition uppercase ${
-                role === "counselor" ? "bg-black text-white" : "bg-white text-black hover:bg-neutral-100"
-              }`}
-            >
-              Counsellor
-            </button>
           </div>
 
           {/* Form placeholder */}
@@ -72,7 +49,7 @@ export default function LoginPage() {
 
             <div className="pt-2">
               <Link
-                href={role === "student" ? "/dashboard" : "/counselor"}
+                href="/dashboard"
                 className="w-full border-4 border-black bg-black text-white py-3 font-bold hover:bg-white hover:text-black transition flex justify-center items-center uppercase text-sm"
               >
                 Sign In

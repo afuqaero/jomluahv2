@@ -1,89 +1,76 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { ArrowLeft, Search, Calendar, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { ClockCounterClockwise, ShieldCheck } from "@phosphor-icons/react";
+import { useAppTheme } from "../components/useAppTheme";
+import AppSidebar, { MobileMenuButton, BackgroundDecor } from "../components/AppSidebar";
 
 export default function MemoriesPage() {
-  const dummyMemories = [
-    { date: "13 June 2025", title: "Final year project starting stress", excerpt: "Starting PSM soon and feeling overwhelmed about supervisors...", mood: 2 },
-    { date: "24 December 2025", title: "Semester break relief", excerpt: "Finally done with exams, headed back home to rest. Feeling relaxed...", mood: 5 },
-    { date: "02 April 2026", title: "Counselling intake first visit", excerpt: "Visited Pusat Kaunseling UTHM today. Friendly counsellor...", mood: 3 }
-  ];
+  const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-black font-mono border-4 md:border-8 border-black p-4 md:p-6 flex flex-col justify-between">
-      {/* Header */}
-      <header className="border-b-4 border-black pb-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="border-2 border-black p-2 hover:bg-neutral-100 transition flex items-center gap-1 text-xs font-bold uppercase">
-            <ArrowLeft className="w-4 h-4" /> Hub
-          </Link>
-          <div>
-            <h1 className="text-xl font-black uppercase">[ Throwback Memories ]</h1>
-            <p className="text-[10px] text-neutral-600">// Index of past semantic vector references</p>
-          </div>
-        </div>
-        <div>
-          <button className="border-2 border-black p-2 hover:bg-neutral-100 transition flex items-center gap-1 text-xs font-bold uppercase">
-            <RefreshCw className="w-4 h-4" /> Refresh
-          </button>
-        </div>
-      </header>
+    <div className={`min-h-screen ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
 
-      {/* Main Area */}
-      <main className="my-6 flex-grow space-y-6">
-        {/* Search / Filters */}
-        <section className="border-4 border-black p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-neutral-400" />
-            <input
-              type="text"
-              placeholder="Search past memories..."
-              className="w-full border-2 border-black p-2 pl-10 focus:bg-neutral-50 outline-none text-xs bg-white"
-            />
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <button className="border-2 border-black px-3 py-2 text-xs font-bold uppercase hover:bg-neutral-50 transition w-1/2 sm:w-auto">
-              Filter: Mood
-            </button>
-            <button className="border-2 border-black px-3 py-2 text-xs font-bold uppercase hover:bg-neutral-50 transition w-1/2 sm:w-auto">
-              Sort: Oldest First
-            </button>
-          </div>
-        </section>
+      <AppSidebar
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebarCollapsed={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isSidebarOpen={isSidebarOpen}
+        onCloseSidebar={() => setIsSidebarOpen(false)}
+        theme={theme}
+      />
 
-        {/* Timeline Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {dummyMemories.map((mem, idx) => (
-            <div key={idx} className="border-4 border-black p-6 flex flex-col justify-between h-64 bg-neutral-50 hover:bg-white transition">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-[10px] border-b border-black pb-2">
-                  <span className="flex items-center gap-1 font-bold">
-                    <Calendar className="w-3.5 h-3.5" /> {mem.date}
-                  </span>
-                  <span className="border border-black px-1.5 py-0.5 bg-neutral-200 font-bold uppercase">
-                    Mood: {mem.mood}/5
-                  </span>
-                </div>
-                <h3 className="font-bold uppercase text-sm">{mem.title}</h3>
-                <p className="text-xs text-neutral-600 leading-relaxed italic">
-                  &ldquo;{mem.excerpt}&rdquo;
-                </p>
-              </div>
-              <div className="pt-4 border-t border-black border-dashed flex justify-between items-center text-[10px]">
-                <span className="text-neutral-500">// Saved 1 year ago</span>
-                <span className="font-bold underline cursor-pointer hover:text-neutral-700 uppercase">View full log</span>
-              </div>
+      {/* Page Content */}
+      <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative overflow-hidden transition-colors duration-500">
+        <BackgroundDecor isDarkMode={isDarkMode} />
+
+        <MobileMenuButton isDarkMode={isDarkMode} onOpen={() => setIsSidebarOpen(true)} />
+
+        <main className="relative z-10 my-6 sm:my-8 flex-grow max-w-7xl mx-auto w-full flex flex-col gap-6 sm:gap-8">
+
+          {/* Header */}
+          <div className="text-left animate-fade-in-up">
+            <div className={`flex items-center gap-2 text-xs sm:text-sm font-bold mb-1.5 ${theme.textMuted}`}>
+              <ClockCounterClockwise weight="duotone" className="w-4 h-4 sm:w-5 sm:h-5 text-[#6366F1]" />
+              <span>Your story so far</span>
             </div>
-          ))}
-        </section>
-      </main>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight leading-tight">
+              <span className="font-extrabold text-[#6366F1] drop-shadow-[0_0_20px_rgba(99,102,241,0.2)]">Memories</span>
+            </h1>
+            <p className={`text-sm mt-2 max-w-md leading-relaxed ${theme.textMuted}`}>
+              A timeline of every mood you&apos;ve logged, ready to revisit whenever you like.
+            </p>
+          </div>
 
-      {/* Footer Info */}
-      <footer className="text-xs text-neutral-500 border-t-2 border-black pt-2">
-        <p>*Memory retrieval utilizes cosine similarity comparisons on text-embeddings.</p>
-      </footer>
+          {/* Blank canvas, ready for the memories timeline UI */}
+          <div
+            className={`flex-grow rounded-3xl border-2 border-dashed flex flex-col items-center justify-center text-center gap-3 min-h-[50vh] animate-fade-in-up [animation-delay:100ms] ${
+              isDarkMode ? "border-white/10" : "border-neutral-300"
+            }`}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white shadow-md">
+              <ClockCounterClockwise weight="duotone" className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className={`font-journal text-2xl ${theme.textHeading}`}>Coming soon</h3>
+              <p className={`text-xs mt-1 max-w-sm ${theme.textMuted}`}>Your memory timeline is being designed — check back soon.</p>
+            </div>
+          </div>
+
+        </main>
+
+        {/* Footer */}
+        <footer className="relative z-10 border-t border-neutral-200/10 pt-6 flex flex-col md:flex-row justify-between text-xs text-[#a0a5c0] gap-4">
+          <span className="flex items-center gap-2">
+            <ShieldCheck weight="duotone" className="w-4 h-4 text-[#6366F1] shrink-0" /> Active secure sandbox session for ali@student.uthm.edu.my
+          </span>
+          <div className="text-left md:text-right">
+            <span>Final Year Project (PSM) • UTHM PCU Integration</span>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
