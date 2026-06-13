@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sereno | Journal Entry</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #111418;
+            color: #e1e2e8;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(29, 32, 36, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .physical-card {
+            background: #ffffff;
+            color: #111418;
+            box-shadow: 0 40px 80px -20px rgba(26, 22, 64, 0.25);
+        }
+
+        .glow-avatar {
+            box-shadow: 0 0 30px rgba(195, 192, 255, 0.4);
+            animation: pulse-glow 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        .paper-texture {
+            background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+            background-blend-mode: soft-light;
+        }
+
+        .writing-area:focus {
+            outline: none;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#37393e",
+                        "primary-container": "#8682ff",
+                        "secondary-container": "#413e83",
+                        "on-tertiary-fixed": "#1a0063",
+                        "inverse-on-surface": "#2e3135",
+                        "surface-variant": "#323539",
+                        "error-container": "#93000a",
+                        "surface-dim": "#111418",
+                        "on-secondary-fixed": "#140e56",
+                        "surface-tint": "#c3c0ff",
+                        "surface-container": "#1d2024",
+                        "on-primary-container": "#190092",
+                        "primary-fixed": "#e2dfff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "inverse-primary": "#514ad1",
+                        "tertiary-container": "#9283e7",
+                        "tertiary": "#c9bfff",
+                        "tertiary-fixed-dim": "#c9bfff",
+                        "on-surface-variant": "#c7c4d6",
+                        "on-primary-fixed-variant": "#382db9",
+                        "outline-variant": "#464554",
+                        "on-tertiary-container": "#291378",
+                        "on-secondary-fixed-variant": "#413e83",
+                        "on-primary": "#1e00a5",
+                        "inverse-surface": "#e1e2e8",
+                        "on-secondary": "#2a276b",
+                        "on-surface": "#e1e2e8",
+                        "background": "#111418",
+                        "surface-container-lowest": "#0b0e12",
+                        "secondary": "#c3c0ff",
+                        "on-secondary-container": "#b0adfa",
+                        "tertiary-fixed": "#e5deff",
+                        "on-background": "#e1e2e8",
+                        "outline": "#918fa0",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#473796",
+                        "surface": "#111418",
+                        "primary": "#c3c0ff",
+                        "on-primary-fixed": "#0f0069",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#323539",
+                        "on-tertiary": "#301c7f",
+                        "surface-container-high": "#272a2f",
+                        "secondary-fixed": "#e3dfff",
+                        "surface-container-low": "#191c20"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "0.25rem",
+                        "margin-mobile": "1.5rem",
+                        "xl": "2.5rem",
+                        "gutter": "1rem",
+                        "lg": "1.5rem",
+                        "md": "1rem",
+                        "sm": "0.5rem",
+                        "margin-desktop": "5rem",
+                        "2xl": "4rem"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="flex min-h-screen">
+<!-- Sidebar Navigation (From Shared Components) -->
+<nav class="fixed left-0 top-0 h-full w-64 p-md flex flex-col gap-lg bg-surface-container-low/60 backdrop-blur-2xl border-r border-outline-variant/10 z-50 hidden md:flex">
+<div class="flex flex-col gap-xs mb-xl px-sm">
+<span class="text-headline-md font-headline-md text-primary font-bold tracking-tight">Sereno</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Your Digital Sanctuary</span>
+</div>
+<div class="flex flex-col gap-sm flex-1">
+<a class="flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container rounded-xl font-bold shadow-lg shadow-primary/20 transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="text-label-md font-label-md">Journal</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant/30 rounded-xl transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-label-md font-label-md">Memories</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant/30 rounded-xl transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-label-md font-label-md">Insights</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant/30 rounded-xl transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="psychology_alt">psychology_alt</span>
+<span class="text-label-md font-label-md">AI Sanctuary</span>
+</a>
+</div>
+<div class="flex flex-col gap-sm mt-auto pt-md border-t border-outline-variant/10">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant/30 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-variant/30 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-label-md font-label-md">Account</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 p-lg md:p-2xl flex flex-col md:flex-row gap-xl relative">
+<!-- Background Atmospheric Effect -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden">
+
+</div>
+<!-- Journaling Area -->
+<div class="flex-1 max-w-3xl mx-auto w-full z-10">
+<header class="flex justify-between items-center mb-xl">
+<div>
+<span class="text-label-md font-label-md text-primary mb-xs block">December 14, 2023</span>
+<input class="bg-transparent border-none p-0 text-headline-lg font-headline-lg focus:ring-0 w-full placeholder-on-surface-variant/50" placeholder="Give this moment a name..." type="text" value="Untitled Moment"/>
+</div>
+<div class="flex gap-sm">
+<button class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</header>
+<div class="relative glass-panel rounded-[32px] p-xl min-h-[614px] paper-texture group">
+<!-- Floating Illustration Decoration -->
+<div class="absolute -top-6 -left-6 opacity-40 transform -rotate-12 transition-transform group-hover:rotate-0 duration-500">
+<img alt="Decorative pen illustration" class="w-16 h-16" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfkFv1qSiQqYNqP0_oaV0o4jecx-2xqZJxze_xsCR2aPrIlp5LM5YTeyBBuIzG8Urjv4aI1LFZg3LydAiyvYhlQJppGD_zYapinTZKiZ4Vn6qWcItY8vtkOzDzG1hUCcUTGqGJ51_FiAkEy3cPl5zsDYhsXqjhGQ9ajNS1m3OaFdDxpKb7ezHioAIn0UEvrNfybB-VP_F3LRtTLrSDcL5I6yhS48PcKdo7GE1k8zbF9lzIE0MhgmUlWrhLTIQmMwg_-xeD6VOqSMKm"/>
+</div>
+<textarea class="writing-area w-full h-full bg-transparent border-none resize-none text-body-lg font-body-lg leading-relaxed placeholder-on-surface-variant/30 focus:ring-0 min-h-[512px]" placeholder="Breathe in... what's on your mind?"></textarea>
+<div class="mt-lg flex justify-between items-center">
+<div class="flex gap-md">
+<button class="flex items-center gap-xs px-md py-sm rounded-full bg-surface-bright/40 text-label-md hover:bg-primary-container/20 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="mood">mood</span>
+                            Feeling peaceful
+                        </button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-surface-bright/40 hover:bg-primary-container/20 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="image">image</span>
+</button>
+</div>
+<div class="flex items-center gap-sm text-label-sm text-on-surface-variant/60">
+<span class="material-symbols-outlined text-[14px]" data-icon="history">history</span>
+                        Autosaved at 14:22
+                    </div>
+</div>
+</div>
+</div>
+<!-- AI Companion Sidebar -->
+<aside class="w-full md:w-80 flex flex-col gap-lg z-10">
+<!-- AI Avatar Box -->
+<div class="glass-panel rounded-[32px] p-lg flex flex-col items-center text-center gap-md">
+<div class="relative">
+<div class="w-20 h-20 rounded-full bg-primary-container/30 flex items-center justify-center glow-avatar overflow-hidden">
+<img alt="AI Avatar" class="w-14 h-14" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrWCZOzgFu95qHPqrMdkl65p5VODEjEFgxlhdtmcD420BHQuLkFRXpFODun3WAHesYDKt2sUxqU1OO1DEZEWgQ7H0y95L4iwMZHoqHlg-EEaM3hZOIwINEpKJGzZ4DZjfeUyFcTIBf4ELGm_RZmhPvsoR8VEDCAFOQTHORgDFYvePgktryASYw4r6fuRhuTmKE2nKBlbQqUZyAEABOMCrgk3E4Y27UN1Z1f6c0ZIxjVuGpYxsG7L1hWTDRsdiimQn8UYIOrJTPz1av"/>
+</div>
+<div class="absolute bottom-0 right-0 w-4 h-4 bg-green-400 rounded-full border-4 border-surface-container"></div>
+</div>
+<div>
+<h3 class="text-headline-md font-headline-md text-primary">Sereno Companion</h3>
+<p class="text-label-md font-label-md text-on-surface-variant">Listening to your thoughts...</p>
+</div>
+</div>
+<!-- Nudges / Prompts Section -->
+<div class="flex flex-col gap-sm">
+<span class="text-label-sm font-label-sm text-on-surface-variant/60 uppercase tracking-widest px-sm">Gentle Nudges</span>
+<div class="flex flex-col gap-sm">
+<button class="glass-panel hover:bg-primary-container/10 p-md rounded-2xl text-left transition-all border-l-4 border-primary group">
+<p class="text-body-md font-body-md group-hover:text-primary transition-colors">"Describe a physical sensation you feel right now."</p>
+</button>
+<button class="glass-panel hover:bg-primary-container/10 p-md rounded-2xl text-left transition-all border-l-4 border-transparent hover:border-primary/40 group">
+<p class="text-body-md font-body-md group-hover:text-primary transition-colors">"If today was a color, what would it be?"</p>
+</button>
+<button class="glass-panel hover:bg-primary-container/10 p-md rounded-2xl text-left transition-all border-l-4 border-transparent hover:border-primary/40 group">
+<p class="text-body-md font-body-md group-hover:text-primary transition-colors">"What's one thing you can forgive yourself for?"</p>
+</button>
+</div>
+</div>
+<!-- Insight Card (Physical Layer) -->
+<div class="physical-card rounded-[32px] p-lg mt-auto flex flex-col gap-md relative overflow-hidden group">
+<!-- Heart Illustration Decoration -->
+<div class="absolute -bottom-4 -right-4 opacity-10 transform rotate-12 transition-all group-hover:scale-110">
+<img alt="Hand-drawn heart illustration" class="w-24 h-24" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXIpTLEN54j0QmeMpvPQ_2v0Ctp9EXntIv649qVLTDljPJJzbxGSEs4Olzb0uR6VWYNIGnwIkUBTJh3pU510dHzZIJShXJGoU6tucBkmk4NooZHp-wQt1NdDh77pep3ZbqhIdHhaH4MvjMnCKJE5cJnxedErwSbxG6w-C8vOgkDFV8kxxgaCXqHUMNDWHfxVL04u6XdZ38mWsRgSSsXLM3TPxwiFRYq0LfKNsqAvz98Agpabl1rMK6-76VkvsTsqlMzIJXsaxc7c8L"/>
+</div>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary-container" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-label-md font-label-md font-bold uppercase tracking-tight">Emotional Health</span>
+</div>
+<p class="text-body-md font-body-md leading-relaxed z-10">You've journaled 4 days in a row! Taking time for yourself is a powerful act of love.</p>
+<button class="w-full py-sm bg-primary-container text-on-primary-container font-bold rounded-xl transition-all hover:shadow-lg active:scale-95 z-10">
+                    View Weekly Progress
+                </button>
+</div>
+</aside>
+<!-- Mobile Bottom Nav (From Shared Components Logic) -->
+<div class="md:hidden fixed bottom-0 left-0 w-full glass-panel py-sm px-lg flex justify-around items-center border-t border-outline-variant/10 z-50">
+<button class="flex flex-col items-center gap-xs text-primary">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="text-[10px] font-bold">Journal</span>
+</button>
+<button class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-[10px]">Memories</span>
+</button>
+<button class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-[10px]">Insights</span>
+</button>
+<button class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="psychology_alt">psychology_alt</span>
+<span class="text-[10px]">AI</span>
+</button>
+</div>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        // Simple input focus tracking for AI response simulation
+        const textarea = document.querySelector('.writing-area');
+        const aiStatus = document.querySelector('aside .text-label-md');
+        
+        textarea.addEventListener('input', (e) => {
+            if (e.target.value.length > 0) {
+                aiStatus.textContent = "Listening carefully...";
+            } else {
+                aiStatus.textContent = "Waiting for your thoughts...";
+            }
+        });
+
+        // Soft entry animation for cards
+        document.addEventListener('DOMContentLoaded', () => {
+            const panels = document.querySelectorAll('.glass-panel, .physical-card');
+            panels.forEach((panel, i) => {
+                panel.style.opacity = '0';
+                panel.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    panel.style.transition = 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                    panel.style.opacity = '1';
+                    panel.style.transform = 'translateY(0)';
+                }, i * 150);
+            });
+        });
+    </script>
+</body></html>

@@ -1,34 +1,4 @@
 # JomLuah — Technical Documentation
-
-**Project:** JomLuah – LLM-Based Assistant for Emotional Management Among University Students  
-**Developer:** Muhammad Afiq Bin Rudy Azmir (CI220139)  
-**Supervisor:** Dr Suhaila Binti Mohd Yasin  
-**Institution:** Universiti Tun Hussein Onn Malaysia (UTHM)  
-**Stakeholder:** Pusat Kaunseling Universiti (PCU), UTHM  
-**Timeline:** April 2026 – February 2027  
-
----
-
-## Table of Contents
-
-1. [Project Overview](#1-project-overview)
-2. [Problem Statement](#2-problem-statement)
-3. [System Objectives](#3-system-objectives)
-4. [System Modules](#4-system-modules)
-5. [Tech Stack](#5-tech-stack)
-6. [System Architecture](#6-system-architecture)
-7. [Database Schema Overview](#7-database-schema-overview)
-8. [LLM Pipeline & RAG Flow](#8-llm-pipeline--rag-flow)
-9. [Sentiment Analysis & Risk Detection](#9-sentiment-analysis--risk-detection)
-10. [Journal ↔ AI Integration Flow](#10-journal--ai-integration-flow)
-11. [Counsellor Dashboard Logic](#11-counsellor-dashboard-logic)
-12. [Authentication & Role Management](#12-authentication--role-management)
-13. [PWA Configuration](#13-pwa-configuration)
-14. [Environment Variables](#14-environment-variables)
-15. [Folder Structure](#15-folder-structure)
-16. [Sprint Plan Summary](#16-sprint-plan-summary)
-17. [Future Enhancements](#17-future-enhancements)
-
 ---
 
 ## 1. Project Overview
@@ -621,9 +591,10 @@ JomLuah is built as a Progressive Web Application so it installs like a native a
 ```
 
 Key PWA behaviours:
-- Installable on mobile home screen
+- Installable on mobile home screen (registered via `manifest: "/manifest.json"` in Next.js RootLayout metadata)
 - Works offline for reading past journal entries (cached via service worker)
 - Push notifications possible via Web Push API for counsellor alerts (future)
+- Responsive wireframe layout: outer container borders scale down (`border-4` on mobile, `border-8` on desktop) and paddings adapt (`p-4` on mobile, `p-6` on desktop) to prevent content overflow on portrait smartphone viewports.
 
 ---
 

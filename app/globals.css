@@ -8,8 +8,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-plus-jakarta);
+  --font-display: var(--font-plus-jakarta);
+  --font-journal: var(--font-caveat);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +24,181 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Premium Sanctuary Custom Animations */
+
+@keyframes pulseBreath {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+    box-shadow: 0 0 60px rgba(139, 92, 246, 0.6), 0 0 20px rgba(99, 102, 241, 0.2);
+  }
+}
+
+@keyframes floatBlob {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.05);
+  }
+}
+
+@keyframes shiftLights {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-pulse-breath {
+  animation: pulseBreath 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: floatBlob 12s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatBlob 16s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+/* Dashboard entrance + micro-interaction animations */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.7) rotate(-8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes penWiggle {
+  0%, 100% {
+    transform: rotate(-8deg) translateY(0px);
+  }
+  50% {
+    transform: rotate(4deg) translateY(-3px);
+  }
+}
+
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 60;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+}
+
+.animate-pop-in {
+  animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-pen-wiggle {
+  animation: penWiggle 2.8s ease-in-out infinite;
+  transform-origin: 20% 80%;
+}
+
+.animate-draw-line {
+  stroke-dasharray: 60;
+  animation: drawLine 2.5s ease-out infinite alternate;
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes backdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-modal-pop {
+  animation: modalPop 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+}
+
+.animate-backdrop-fade {
+  animation: backdropFade 0.25s ease-out both;
+}
+
+.animate-toast-in {
+  animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Glassmorphism Premium Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 20px 60px rgba(10, 10, 50, 0.3);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 30px 80px rgba(10, 10, 70, 0.45);
+  transform: translateY(-4px);
 }
