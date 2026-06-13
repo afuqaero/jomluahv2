@@ -17,8 +17,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F0F2F6] text-[#4a5568] flex flex-col relative overflow-hidden font-sans selection:bg-indigo-500/20 selection:text-indigo-900">
       {/* Background glowing decorations - soft light mode glows */}
-      <div aria-hidden="true" className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.08)_0%,transparent_70%)] pointer-events-none blur-3xl" />
-      <div aria-hidden="true" className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.05)_0%,transparent_70%)] pointer-events-none blur-3xl" />
+      <div aria-hidden="true" className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.1)_0%,transparent_70%)] pointer-events-none blur-3xl" />
+      <div aria-hidden="true" className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.08)_0%,transparent_70%)] pointer-events-none blur-3xl" />
       
       {/* Grid background overlay */}
       <div
@@ -30,8 +30,8 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Header */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center border-b border-neutral-200/50 bg-white/40 backdrop-blur-md">
+      {/* Header - Glassmorphism */}
+      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center border-b border-white/50 bg-white/50 backdrop-blur-lg">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-black tracking-tight text-[#1a202c]">
             JomLuah
@@ -62,7 +62,7 @@ export default function LandingPage() {
         
         {/* Left Column: Headline and Pitch */}
         <div className="lg:col-span-7 space-y-8 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-neutral-200 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 backdrop-blur-md border border-white/80 shadow-xs">
             <GraduationCap className="w-4 h-4 text-[#6366F1]" />
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600">
               UTHM Psychological Counseling Unit (PCU)
@@ -90,7 +90,7 @@ export default function LandingPage() {
             </Link>
             <Link 
               href="/login" 
-              className="bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-200 shadow-sm px-8 py-4 rounded-full font-bold transition hover:scale-105 active:scale-95 flex items-center gap-2"
+              className="bg-white/50 backdrop-blur-md hover:bg-white/80 text-neutral-800 border border-white/80 shadow-xs px-8 py-4 rounded-full font-bold transition hover:scale-105 active:scale-95 flex items-center gap-2"
             >
               <LockSimple weight="duotone" className="w-4 h-4 text-[#6366F1]" /> Sign In Securely
             </Link>
@@ -107,9 +107,9 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Right Column: Premium Illustration Banner */}
+        {/* Right Column: Premium Illustration Banner with Glassmorphism Wrapper */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
-          <div className="relative w-full max-w-md bg-white border border-neutral-200/50 p-4 rounded-3xl shadow-xl shadow-neutral-100">
+          <div className="relative w-full max-w-md bg-white/50 backdrop-blur-md border border-white/60 p-4 rounded-3xl shadow-xl shadow-neutral-200/50">
             {/* Ambient shadow/glow behind illustration card */}
             <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-[#6366F1]/10 to-transparent blur-xl rounded-3xl" />
             
@@ -122,8 +122,8 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Grid Features List */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto px-6 py-12 border-t border-neutral-200/60 bg-white/40 backdrop-blur-sm">
+      {/* Grid Features List - Glassmorphic section */}
+      <section className="relative z-10 w-full max-w-7xl mx-auto px-6 py-12 border-t border-white/50 bg-white/30 backdrop-blur-md">
         <h3 className="text-xs font-extrabold uppercase tracking-wider text-neutral-400 text-left mb-6">
           // Platform Modules
         </h3>
@@ -131,7 +131,7 @@ export default function LandingPage() {
           {/* Module 1: Companion AI */}
           <Link 
             href="/chat" 
-            className="group p-6 rounded-3xl border border-neutral-200/50 bg-white hover:bg-neutral-50/50 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/20 shadow-sm hover:shadow-md text-left"
+            className="group p-6 rounded-3xl border border-white/70 bg-white/55 backdrop-blur-md hover:bg-white/85 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/20 shadow-xs hover:shadow-lg text-left"
           >
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[#6366F1] group-hover:scale-110 transition duration-300 mb-4">
               <ChatCircleDots weight="duotone" className="w-5.5 h-5.5" />
@@ -147,7 +147,7 @@ export default function LandingPage() {
           {/* Module 2: Idea Board / Journal */}
           <Link 
             href="/journal" 
-            className="group p-6 rounded-3xl border border-neutral-200/50 bg-white hover:bg-neutral-50/50 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/20 shadow-sm hover:shadow-md text-left"
+            className="group p-6 rounded-3xl border border-white/70 bg-white/55 backdrop-blur-md hover:bg-white/85 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/20 shadow-xs hover:shadow-lg text-left"
           >
             <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 group-hover:scale-110 transition duration-300 mb-4">
               <Notebook weight="duotone" className="w-5.5 h-5.5" />
@@ -163,7 +163,7 @@ export default function LandingPage() {
           {/* Module 3: Memories */}
           <Link 
             href="/memories" 
-            className="group p-6 rounded-3xl border border-neutral-200/50 bg-white hover:bg-neutral-50/50 transition-all duration-300 hover:-translate-y-1 hover:border-pink-500/20 shadow-sm hover:shadow-md text-left"
+            className="group p-6 rounded-3xl border border-white/70 bg-white/55 backdrop-blur-md hover:bg-white/85 transition-all duration-300 hover:-translate-y-1 hover:border-pink-500/20 shadow-xs hover:shadow-lg text-left"
           >
             <div className="w-10 h-10 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-600 group-hover:scale-110 transition duration-300 mb-4">
               <ClockCounterClockwise weight="duotone" className="w-5.5 h-5.5" />
@@ -178,17 +178,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between text-xs text-neutral-400 border-t border-neutral-200/50 gap-4 text-left">
-        <div>
-          <p className="font-bold text-neutral-600">DEVELOPER: Muhammad Afiq Bin Rudy Azmir (CI220139)</p>
-          <p className="mt-0.5">SUPERVISOR: Dr Suhaila Binti Mohd Yasin (UTHM PCU)</p>
-        </div>
-        <div className="md:text-right flex flex-col justify-end">
-          <p className="font-bold text-neutral-700">JomLuah - UTHM Student Support Platform</p>
-          <p className="mt-0.5 text-[10px]">Securely connected to Supabase Cloud Instance</p>
-        </div>
-      </footer>
     </div>
   );
 }
