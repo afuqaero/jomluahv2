@@ -83,11 +83,13 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
 
 .animate-float-slow {
   animation: floatBlob 12s ease-in-out infinite;
+  will-change: transform;
 }
 
 .animate-float-delayed {
   animation: floatBlob 16s ease-in-out infinite;
   animation-delay: 2s;
+  will-change: transform;
 }
 
 /* Dashboard entrance + micro-interaction animations */
@@ -279,5 +281,109 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
 
 .animate-reflection-glow {
   animation: reflectionGlow 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(12deg);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle 3.2s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+/* ─── Scroll-reveal animations (landing page) ──────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1),
+    transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition-delay: var(--reveal-delay, 0s);
+  will-change: opacity, transform;
+}
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-scale {
+  transform: translateY(28px) scale(0.94);
+}
+.reveal-scale.reveal-visible {
+  transform: translateY(0) scale(1);
+}
+.reveal-left {
+  transform: translateX(-48px);
+}
+.reveal-left.reveal-visible {
+  transform: translateX(0);
+}
+.reveal-right {
+  transform: translateX(48px);
+}
+.reveal-right.reveal-visible {
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-scale, .reveal-left, .reveal-right {
+    opacity: 1; transform: none; transition: none;
+  }
+}
+
+/* ─── Landing variant 1 (/page1) illustration positioning ─────────── */
+/* Global rules: styled-jsx scoping doesn't reach SVGs rendered by
+   imported illustration components, so positioning lives here. */
+.p1-ground-svg { width: 100%; height: 100%; display: block; }
+
+.p1-scene-cloud { position: absolute; width: 90px; color: #e0e7ff; z-index: 1; }
+.p1-cloud-1 { top: 2%; left: 8%; }
+.p1-cloud-2 { top: 12%; right: 10%; width: 110px; color: #dbeafe; }
+
+.p1-scene-sparkle { position: absolute; width: 26px; z-index: 1; }
+.p1-sparkle-1 { top: 0%; left: 40%; color: #fbbf24; }
+.p1-sparkle-2 { top: 20%; right: 30%; color: #818cf8; width: 20px; }
+
+.p1-scene-plant { position: absolute; width: 90px; z-index: 2; }
+.p1-plant-left { left: 2%; bottom: 6%; }
+.p1-plant-right { right: 4%; bottom: 2%; width: 110px; }
+
+.p1-scene-mascot { position: absolute; z-index: 3; }
+.p1-mascot-main {
+  width: clamp(190px, 24vw, 270px);
+  left: 50%; bottom: 4%;
+  transform: translateX(-50%);
+  z-index: 4;
+}
+.p1-mascot-left { width: 110px; left: 12%; bottom: 12%; }
+.p1-mascot-right { width: 100px; right: 14%; bottom: 20%; }
+
+@media (max-width: 768px) {
+  .p1-scene-plant { display: none; }
+  .p1-mascot-left { left: 4%; bottom: 8%; width: 90px; }
+  .p1-mascot-right { right: 4%; bottom: 16%; width: 80px; }
+}
+
+/* ─── Extra cutesy illustrations (root landing page) ───────────────── */
+.p1-side-deco {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+.p1-side-cloud-l { left: -40px; top: 6%; width: 130px; color: #e0e7ff; }
+.p1-side-cloud-r { right: -50px; top: 2%; width: 150px; color: #ede9fe; }
+.p1-side-sparkle-l { left: 2%; top: 38%; color: #818cf8; width: 22px; }
+.p1-side-sparkle-r { right: 4%; top: 60%; color: #fbbf24; width: 28px; }
+.p1-side-plant-l { left: -20px; bottom: 0; width: 120px; }
+.p1-side-plant-r { right: -16px; bottom: -10px; width: 130px; }
+.p1-side-mascot { right: 5%; bottom: 12%; width: 100px; }
+@media (max-width: 900px) {
+  .p1-side-deco { display: none; }
 }
 
