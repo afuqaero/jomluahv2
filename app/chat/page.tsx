@@ -128,6 +128,7 @@ export default function ChatPage() {
         "there";
       setDisplayName(name);
       loadRecentChats(session.user.id);
+      handleInitialEntry(session.user.id);
     };
     checkAuth();
   }, [router]);
@@ -275,6 +276,90 @@ export default function ChatPage() {
           sender: "bot",
           text: replyText
         });
+    }
+  };
+
+  const handleInitialEntry = async (uid: string) => {
+    const params = new URLSearchParams(window.location.search);
+    const entryId = params.get("entryId");
+    const moodParam = params.get("mood");
+    const descParam = params.get("desc");
+
+    if (!entryId && !moodParam) return;
+
+    // Clear parameters from the URL immediately so it doesn't run again on refresh
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    try {
+      let mood = moodParam || "";
+      let description = descParam || "";
+
+      if (entryId) {
+        const { data: entry, error: entryErr } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("id", entryId)
+          .single();
+
+        if (entryErr || !entry) {
+          console.error("Error fetching initial journal entry:", entryErr);
+          return;
+        }
+        mood = entry.mood;
+        description = entry.excerpt;
+      }
+
+      // Create a new chat session
+      const title = `Reflection: Feeling ${mood}`;
+      const { data: newSession, error: sErr } = await supabase
+        .from("chat_sessions")
+        .insert({
+          user_id: uid,
+          title: title
+        })
+        .select()
+        .single();
+
+      if (sErr || !newSession) {
+        console.error("Failed to create chat session:", sErr);
+        return;
+      }
+
+      const sessionId = newSession.id;
+      setCurrentSessionId(sessionId);
+
+      // Format user message based on the mood/description
+      const userText = description && description !== "No additional notes for this entry."
+        ? `I logged my mood as "${mood}". Here is what's on my mind:\n\n${description}`
+        : `I logged my mood as "${mood}" today.`;
+
+      const userMsg: Message = {
+        id: String(Date.now()),
+        sender: "user",
+        text: userText,
+        timestamp: getFormattedTime()
+      };
+
+      setMessages([userMsg]);
+
+      // Save user message to database
+      const { error: msgErr } = await supabase
+        .from("chat_messages")
+        .insert({
+          session_id: sessionId,
+          sender: "user",
+          text: userText
+        });
+
+      if (msgErr) console.error("Error saving user message:", msgErr);
+
+      // Reload recent chats list to show the new session
+      loadRecentChats(uid);
+
+      // Query companion response
+      simulateBotResponse(userText, [userMsg], sessionId);
+    } catch (err) {
+      console.error("Error handling initial entry:", err);
     }
   };
 
@@ -691,53 +776,163 @@ function renderFormattedText(text: string) {
   if (!text) return null;
 
   const lines = text.split("\n");
+  const blocks: Array<{
+    type: "heading" | "bullet" | "number" | "rule" | "table" | "paragraph";
+    lines: string[];
+    level?: number;
+  }> = [];
 
-  return lines.map((line, lineIdx) => {
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
     const trimmed = line.trim();
+
     if (trimmed === "---") {
-      return <hr key={lineIdx} className="my-3 border-t border-neutral-200/20" />;
+      blocks.push({ type: "rule", lines: [line] });
+      i++;
+      continue;
     }
 
-    // Check for headings (e.g. ### Header)
+    // Headings
     const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
     if (headingMatch) {
-      const level = headingMatch[1].length;
-      const content = headingMatch[2];
-      const headingClass = level === 1 ? "text-xl font-black my-2 block" 
-                           : level === 2 ? "text-lg font-extrabold my-2 block"
-                           : "text-sm font-bold my-1.5 uppercase tracking-wide block";
-      return (
-        <span key={lineIdx} className={headingClass}>
-          {parseInlineMarkdown(content)}
-        </span>
-      );
+      blocks.push({ type: "heading", lines: [line], level: headingMatch[1].length });
+      i++;
+      continue;
     }
 
-    // Check for bullet points (e.g. * Item)
+    // Bullet points
     const bulletMatch = line.match(/^[\*\-\+]\s+(.*)$/);
     if (bulletMatch) {
-      return (
-        <ul key={lineIdx} className="list-disc pl-5 my-1">
-          <li>{parseInlineMarkdown(bulletMatch[1])}</li>
-        </ul>
-      );
+      blocks.push({ type: "bullet", lines: [line] });
+      i++;
+      continue;
     }
 
-    // Check for numbered lists (e.g. 1. Item)
+    // Numbered lists
     const numberMatch = line.match(/^\d+\.\s+(.*)$/);
     if (numberMatch) {
-      return (
-        <ol key={lineIdx} className="list-decimal pl-5 my-1">
-          <li>{parseInlineMarkdown(numberMatch[1])}</li>
-        </ol>
-      );
+      blocks.push({ type: "number", lines: [line] });
+      i++;
+      continue;
     }
 
-    // Default paragraph line
-    return (
-      <p key={lineIdx} className="mb-2 leading-relaxed">
-        {parseInlineMarkdown(line)}
-      </p>
-    );
+    // Table detection: starts with '|' and ends with '|'
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      const tableLines = [line];
+      i++;
+      // Gather consecutive lines that start with '|' and end with '|'
+      while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+        tableLines.push(lines[i]);
+        i++;
+      }
+      // Verify if there is a separator row (e.g., |---| or | :--- |)
+      const hasSeparator = tableLines.some(l => l.includes("---"));
+      if (hasSeparator) {
+        blocks.push({ type: "table", lines: tableLines });
+        continue;
+      } else {
+        // If not a real table, backtrack to handle them as paragraphs
+        i -= (tableLines.length - 1);
+      }
+    }
+
+    // Default: Paragraph
+    blocks.push({ type: "paragraph", lines: [line] });
+    i++;
+  }
+
+  // Render the blocks
+  return blocks.map((block, blockIdx) => {
+    switch (block.type) {
+      case "rule":
+        return <hr key={blockIdx} className="my-3 border-t border-neutral-200/20" />;
+
+      case "heading": {
+        const level = block.level || 3;
+        const headingMatch = block.lines[0].match(/^(#{1,6})\s+(.*)$/);
+        const content = headingMatch ? headingMatch[2] : block.lines[0];
+        const headingClass = level === 1 ? "text-xl font-black my-2 block" 
+                             : level === 2 ? "text-lg font-extrabold my-2 block"
+                             : "text-sm font-bold my-1.5 uppercase tracking-wide block";
+        return (
+          <span key={blockIdx} className={headingClass}>
+            {parseInlineMarkdown(content)}
+          </span>
+        );
+      }
+
+      case "bullet": {
+        const bulletMatch = block.lines[0].match(/^[\*\-\+]\s+(.*)$/);
+        const content = bulletMatch ? bulletMatch[1] : block.lines[0];
+        return (
+          <ul key={blockIdx} className="list-disc pl-5 my-1 text-sm sm:text-base leading-relaxed">
+            <li>{parseInlineMarkdown(content)}</li>
+          </ul>
+        );
+      }
+
+      case "number": {
+        const numberMatch = block.lines[0].match(/^\d+\.\s+(.*)$/);
+        const content = numberMatch ? numberMatch[1] : block.lines[0];
+        return (
+          <ol key={blockIdx} className="list-decimal pl-5 my-1 text-sm sm:text-base leading-relaxed">
+            <li>{parseInlineMarkdown(numberMatch[1] || content)}</li>
+          </ol>
+        );
+      }
+
+      case "table": {
+        // Parse rows
+        const parsedRows = block.lines
+          .map(l => {
+            const parts = l.split("|").map(p => p.trim());
+            if (parts[0] === "") parts.shift();
+            if (parts[parts.length - 1] === "") parts.pop();
+            return parts;
+          })
+          .filter(row => !row.every(cell => /^:?-+:?$/.test(cell)));
+
+        if (parsedRows.length === 0) return null;
+
+        const headers = parsedRows[0];
+        const bodyRows = parsedRows.slice(1);
+
+        return (
+          <div key={blockIdx} className="overflow-x-auto my-3 rounded-xl border border-neutral-200/20 dark:border-white/5 shadow-sm">
+            <table className="min-w-full divide-y divide-neutral-200/20 dark:divide-white/5 text-xs sm:text-sm text-left">
+              <thead className="bg-neutral-100/50 dark:bg-white/5 font-extrabold text-neutral-800 dark:text-neutral-200">
+                <tr>
+                  {headers.map((h, hIdx) => (
+                    <th key={hIdx} className="px-4 py-2 border-r last:border-r-0 border-neutral-200/20 dark:border-white/5">
+                      {parseInlineMarkdown(h)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-200/10 dark:divide-white/5">
+                {bodyRows.map((row, rIdx) => (
+                  <tr key={rIdx} className="hover:bg-neutral-100/30 dark:hover:bg-white/[0.02] transition">
+                    {row.map((cell, cIdx) => (
+                      <td key={cIdx} className="px-4 py-2 border-r last:border-r-0 border-neutral-200/10 dark:border-white/5">
+                        {parseInlineMarkdown(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+
+      case "paragraph":
+      default:
+        return (
+          <p key={blockIdx} className="mb-2 leading-relaxed text-sm sm:text-base">
+            {parseInlineMarkdown(block.lines[0])}
+          </p>
+        );
+    }
   });
 }

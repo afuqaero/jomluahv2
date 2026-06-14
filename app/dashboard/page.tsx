@@ -476,6 +476,9 @@ export default function StudentDashboard() {
                 : existing
             )
           );
+          if (action === "continue") {
+            router.push(`/chat?entryId=${editingEntryId}`);
+          }
         }
       } else {
         const { data, error } = await supabase
@@ -506,6 +509,9 @@ export default function StudentDashboard() {
             images: data.images || [],
           };
           setRecentEntries((prev) => [newEntry, ...prev]);
+          if (action === "continue") {
+            router.push(`/chat?entryId=${data.id}`);
+          }
         }
       }
     } else {
@@ -538,6 +544,9 @@ export default function StudentDashboard() {
           images: entry.images,
         };
         setRecentEntries((prev) => [newEntry, ...prev]);
+        if (action === "continue") {
+          router.push(`/chat?mood=${entry.mood}&desc=${encodeURIComponent(entry.description)}`);
+        }
       }
     }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { cloneElement, useEffect, useState, type ChangeEvent, type ReactElement } from "react";
-import Link from "next/link";
 import { X, ChatCircleDots, FloppyDisk, ImageSquare, CalendarBlank, PencilSimple, CaretLeft, CaretRight, Trash } from "@phosphor-icons/react";
 
 export type ModalMood = {
@@ -284,7 +283,10 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
           {/* Delete button (only for existing entries) */}
           {isEditing && (
             <button
-              onClick={() => {
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (window.confirm("Are you sure you want to delete this entry?")) {
                   onDelete?.();
                 }
@@ -403,6 +405,21 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
                   </div>
                 </div>
               )}
+
+              {/* Chat with AI Button under viewing entry */}
+              <div className="mt-8 pt-4 border-t border-neutral-200/20 dark:border-white/5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => onSubmit(payload(), "continue")}
+                  className={`flex items-center gap-2 font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-full border transition duration-300 hover:scale-[1.02] cursor-pointer ${
+                    isDarkMode 
+                      ? "border-white/10 bg-white/5 hover:bg-white/10 text-white" 
+                      : "border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 shadow-sm"
+                  }`}
+                >
+                  <ChatCircleDots weight="duotone" className="w-4 h-4 text-[#6366F1]" /> Chat with AI
+                </button>
+              </div>
             </div>
           ) : (
             <div className="mt-6 space-y-5 text-left">
@@ -711,15 +728,15 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
                 <FloppyDisk weight="bold" className="w-4 h-4" /> {isEditing ? "Save Changes" : "Save Mood"}
               </button>
               {!isEditing && (
-                <Link
-                  href="/chat"
+                <button
+                  type="button"
                   onClick={() => onSubmit(payload(), "continue")}
-                  className={`flex-1 flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-full border transition duration-300 hover:scale-[1.02] ${
+                  className={`flex-1 flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-full border transition duration-300 hover:scale-[1.02] cursor-pointer ${
                     isDarkMode ? "border-white/10 hover:bg-white/5 text-white" : "border-neutral-200 hover:bg-neutral-50 text-neutral-700"
                   }`}
                 >
-                  <ChatCircleDots weight="duotone" className="w-4 h-4" /> Continue with AI Companion
-                </Link>
+                  <ChatCircleDots weight="duotone" className="w-4 h-4" /> Chat with AI
+                </button>
               )}
             </div>
           )}

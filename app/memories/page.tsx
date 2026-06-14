@@ -223,6 +223,9 @@ export default function MemoriesPage() {
           : existing
       );
       saveToStorage(updated);
+      if (action === "continue") {
+        router.push(`/chat?entryId=${editingEntryId}`);
+      }
     }
     setMoodModalOpen(false);
     setEditingEntryId(null);
@@ -697,6 +700,7 @@ export default function MemoriesPage() {
             setEditingEntryId(null);
           }}
           onSubmit={handleMoodSubmit}
+          onDelete={() => handleDeleteEntry(editingEntryId!)}
         />
       )}
     </div>
