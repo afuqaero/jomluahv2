@@ -381,7 +381,7 @@ export default function OnboardingPage() {
               </button>
             )}
             {step === 6 && (
-              <button onClick={() => router.push("/dashboard")} className="w-full py-4 px-8 rounded-full bg-white text-indigo-600 font-extrabold text-base tracking-wider shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] hover:shadow-xl hover:bg-opacity-95 transition-all cursor-pointer">
+              <button onClick={() => { window.location.href = "/dashboard"; }} className="w-full py-4 px-8 rounded-full bg-white text-indigo-600 font-extrabold text-base tracking-wider shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] hover:shadow-xl hover:bg-opacity-95 transition-all cursor-pointer">
                 GO TO DASHBOARD
               </button>
             )}
