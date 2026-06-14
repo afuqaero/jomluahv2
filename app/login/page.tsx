@@ -1,13 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Brain } from "@phosphor-icons/react";
 import { supabase } from "../lib/supabaseClient";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const timedOut = searchParams.get("reason") === "timeout";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,7 +41,7 @@ export default function LoginPage() {
         setErrorMsg(error.message);
       } else {
         setSuccessMsg("Success! Redirecting...");
-        setTimeout(() => router.push("/dashboard"), 1500);
+        setTimeout(() => router.push(redirectTo), 1500);
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -108,6 +119,12 @@ export default function LoginPage() {
               <p className="form-subtitle">Sign in to your JomLuah profile</p>
             </div>
 
+            {timedOut && !errorMsg && (
+              <div className="alert alert-error">
+                <span className="alert-dot bg-red-400" />
+                You were signed out due to inactivity. Please sign in again.
+              </div>
+            )}
             {errorMsg && (
               <div className="alert alert-error">
                 <span className="alert-dot bg-red-400" />

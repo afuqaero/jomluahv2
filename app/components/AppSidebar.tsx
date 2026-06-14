@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from "../lib/supabaseClient";
+import { useInactivityLogout } from "../lib/useInactivityLogout";
 import {
   ChatCircleDots,
   Notebook,
@@ -49,6 +50,9 @@ export default function AppSidebar({
   theme,
 }: AppSidebarProps) {
   const pathname = usePathname();
+
+  // Auto sign-out after a period of inactivity to protect private data on unattended devices.
+  useInactivityLogout();
 
   // Allow closing the mobile drawer with Escape
   useEffect(() => {

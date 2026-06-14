@@ -29,7 +29,7 @@ CREATE POLICY "Users can view their own entries" ON public.journal_entries
     FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own entries" ON public.journal_entries
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own entries" ON public.journal_entries
     FOR DELETE USING (auth.uid() = user_id);
@@ -58,7 +58,7 @@ CREATE POLICY "Users can view their own folders" ON public.folders
     FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own folders" ON public.folders
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own folders" ON public.folders
     FOR DELETE USING (auth.uid() = user_id);
@@ -98,7 +98,12 @@ CREATE POLICY "Users can select notes in their own folders" ON public.notes
 CREATE POLICY "Users can update notes in their own folders" ON public.notes
     FOR UPDATE USING (
         EXISTS (
-            SELECT 1 FROM public.folders 
+            SELECT 1 FROM public.folders
+            WHERE folders.id = folder_id AND folders.user_id = auth.uid()
+        )
+    ) WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.folders
             WHERE folders.id = folder_id AND folders.user_id = auth.uid()
         )
     );

@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 // Use fallback values to prevent Next.js build-time prerendering crashes when env vars are unset
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co";
@@ -10,4 +10,5 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_A
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Cookie-based client so the session is also visible to middleware/server (required for route protection).
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
