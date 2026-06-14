@@ -30,21 +30,23 @@ export default function LandingPage() {
       {/* ══ PILL NAV ══ */}
       <div className="pill-nav-wrap">
         <nav className="pill-nav">
-          <Link href="/" className="pill-logo">
-            <span className="logo-icon">
-              <Sparkle weight="fill" className="w-4 h-4" />
-            </span>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="pill-logo"
+          >
             <span className="logo-text">JomLuah</span>
-          </Link>
-          <div className="pill-links">
-            <a href="#scene" className="pill-link">Companions</a>
-            <a href="#features" className="pill-link">Features</a>
-            <Link href="/login" className="pill-link">Sign In</Link>
+          </a>
+          <div className="pill-right-group">
+            <a href="#features" className="pill-link pill-link-nav">Features</a>
+            <Link href="/register" className="pill-cta">
+              Get Started
+              <ArrowRight weight="bold" className="w-3.5 h-3.5" />
+            </Link>
           </div>
-          <Link href="/register" className="pill-cta">
-            Get Started
-            <ArrowRight weight="bold" className="w-3.5 h-3.5" />
-          </Link>
         </nav>
       </div>
 
@@ -55,10 +57,7 @@ export default function LandingPage() {
         <TwinkleSparkle gradientId="sparkleHeroL" className="p1-side-deco p1-side-sparkle-l animate-twinkle" />
         <TwinkleSparkle gradientId="sparkleHeroR" className="p1-side-deco p1-side-sparkle-r animate-twinkle" />
 
-        <div className="hero1-badge reveal" style={{ "--reveal-delay": "0s" } as CSSProperties}>
-          <Sparkle weight="duotone" className="w-3.5 h-3.5" />
-          A safe space, made for UTHM students
-        </div>
+
 
         <h1 className="hero1-headline reveal" style={{ "--reveal-delay": "0.08s" } as CSSProperties}>
           Take a breath.
@@ -146,8 +145,7 @@ export default function LandingPage() {
           </p>
 
           <div className="feature-grid">
-            <Link
-              href="/chat"
+            <div
               className="feature-card feature-card-chat group reveal reveal-left"
               style={{ "--reveal-delay": "0s" } as CSSProperties}
             >
@@ -164,13 +162,9 @@ export default function LandingPage() {
                 <span className="mini-chat-bubble from-user">How was your day?</span>
                 <span className="mini-chat-bubble from-ai">Better than yesterday — proud of you.</span>
               </div>
-              <div className="feature-link group-hover:text-indigo-600">
-                Open Chat <ArrowRight weight="bold" className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-              </div>
-            </Link>
+            </div>
 
-            <Link
-              href="/journal"
+            <div
               className="feature-card feature-card-journal group feature-card-featured reveal"
               style={{ "--reveal-delay": "0.1s" } as CSSProperties}
             >
@@ -189,13 +183,9 @@ export default function LandingPage() {
                 <span className="mini-tag mini-tag-indigo">Gratitude</span>
                 <span className="mini-tag mini-tag-pink">To-do</span>
               </div>
-              <div className="feature-link group-hover:text-indigo-600">
-                Open Journal <ArrowRight weight="bold" className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-              </div>
-            </Link>
+            </div>
 
-            <Link
-              href="/memories"
+            <div
               className="feature-card feature-card-memory group reveal reveal-right"
               style={{ "--reveal-delay": "0.2s" } as CSSProperties}
             >
@@ -217,10 +207,7 @@ export default function LandingPage() {
                   <span>Bright</span>
                 </div>
               </div>
-              <div className="feature-link group-hover:text-blue-600">
-                View Memories <ArrowRight weight="bold" className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-              </div>
-            </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -254,9 +241,9 @@ export default function LandingPage() {
           color: #3730a3;
           font-family: 'Plus Jakarta Sans', sans-serif;
           position: relative;
-          overflow-x: hidden;
           display: flex;
           flex-direction: column;
+          overflow: hidden;
         }
 
         /* ─── Background blobs ─────────────────── */
@@ -266,25 +253,16 @@ export default function LandingPage() {
           filter: blur(80px);
           pointer-events: none;
           z-index: 0;
-          animation: blobFloat 8s ease-in-out infinite alternate;
-          will-change: transform;
-          transform: translateZ(0);
         }
         .blob-1 {
           width: 700px; height: 700px;
           top: -220px; left: -200px;
           background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
-          animation-delay: 0s;
         }
         .blob-2 {
           width: 600px; height: 600px;
           bottom: -200px; right: -150px;
           background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
-          animation-delay: 3s;
-        }
-        @keyframes blobFloat {
-          from { transform: translate(0, 0) scale(1); }
-          to   { transform: translate(30px, 20px) scale(1.05); }
         }
 
         /* ─── Dot grid ─────────────────────────── */
@@ -308,8 +286,8 @@ export default function LandingPage() {
           gap: 1rem;
           padding: 0.625rem 0.625rem 0.625rem 1.25rem;
           border-radius: 999px;
-          background: rgba(255,255,255,0.65); backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid rgba(255,255,255,0.9);
           box-shadow: 0 8px 32px rgba(99,102,241,0.12);
         }
@@ -327,7 +305,7 @@ export default function LandingPage() {
         .logo-text {
           font-size: 1.1rem; font-weight: 800; color: #1e1b4b; letter-spacing: -0.02em;
         }
-        .pill-links { display: flex; align-items: center; gap: 1.5rem; }
+        .pill-right-group { display: flex; align-items: center; gap: 1.5rem; }
         .pill-link {
           font-size: 0.875rem; font-weight: 700; color: #4b5563;
           text-decoration: none; transition: color 0.2s;
@@ -343,7 +321,7 @@ export default function LandingPage() {
           transition: transform 0.2s, box-shadow 0.2s;
         }
         .pill-cta:hover { transform: scale(1.04); box-shadow: 0 6px 20px rgba(99,102,241,0.45); }
-        @media (max-width: 768px) { .pill-links { display: none; } }
+        @media (max-width: 768px) { .pill-link-nav { display: none; } }
 
         /* ─── Hero ─────────────────────────────── */
         .hero1 {
@@ -496,8 +474,8 @@ export default function LandingPage() {
         .features-section {
           position: relative; z-index: 10;
           border-top: 1px solid rgba(255,255,255,0.6);
-          background: rgba(255,255,255,0.35); backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(255,255,255,0.6); backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           padding: 5rem 1.5rem;
           overflow: hidden;
         }
@@ -533,8 +511,8 @@ export default function LandingPage() {
         .feature-card {
           position: relative; overflow: hidden;
           padding: 2rem; border-radius: 1.75rem;
-          background: rgba(255,255,255,0.55); backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(255,255,255,0.75); backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1.5px solid rgba(255,255,255,0.85);
           box-shadow: 0 4px 24px rgba(99,102,241,0.07);
           text-decoration: none; display: block;
@@ -708,8 +686,8 @@ export default function LandingPage() {
           padding: 1.25rem 1.5rem 4rem;
           display: flex; align-items: center; justify-content: center;
           font-size: 0.7rem; font-weight: 600; color: #9ca3af;
-          background: rgba(255,255,255,0.45); backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(255,255,255,0.75); backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
       `}</style>
     </div>

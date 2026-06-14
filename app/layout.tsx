@@ -29,9 +29,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plusJakartaSans.variable} ${caveat.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${caveat.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-screen flex flex-col">
         <ThemeProvider>
           {children}
         </ThemeProvider>

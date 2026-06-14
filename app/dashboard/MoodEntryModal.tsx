@@ -2,7 +2,7 @@
 
 import { cloneElement, useEffect, useState, type ChangeEvent, type ReactElement } from "react";
 import Link from "next/link";
-import { X, ChatCircleDots, FloppyDisk, ImageSquare, CalendarBlank, PencilSimple, CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { X, ChatCircleDots, FloppyDisk, ImageSquare, CalendarBlank, PencilSimple, CaretLeft, CaretRight, Trash } from "@phosphor-icons/react";
 
 export type ModalMood = {
   name: string;
@@ -53,9 +53,10 @@ interface MoodEntryModalProps {
   isReadOnly?: boolean;
   onClose: () => void;
   onSubmit: (entry: MoodEntryPayload, action: "save" | "continue") => void;
+  onDelete?: () => void;
 }
 
-export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry, isReadOnly = false, onClose, onSubmit }: MoodEntryModalProps) {
+export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry, isReadOnly = false, onClose, onSubmit, onDelete }: MoodEntryModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -68,6 +69,7 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerMonth, setPickerMonth] = useState(5); // June
   const [pickerYear, setPickerYear] = useState(2026);
+  const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
 
   // Reset the form each time the modal opens, pre-filling from initialEntry when editing
   useEffect(() => {
@@ -86,6 +88,7 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
       setPickerMonth(d.getMonth());
       setPickerYear(d.getFullYear());
       setShowDatePicker(false);
+      setActiveImageIndex(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isReadOnly]);
@@ -278,6 +281,25 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
             </button>
           )}
 
+          {/* Delete button (only for existing entries) */}
+          {isEditing && (
+            <button
+              onClick={() => {
+                if (window.confirm("Are you sure you want to delete this entry?")) {
+                  onDelete?.();
+                }
+              }}
+              aria-label="Delete entry"
+              className={`absolute top-4 ${localReadOnly ? "right-28" : "right-16"} w-10 h-10 flex items-center justify-center rounded-full border transition-all duration-300 hover:scale-110 active:scale-95 ${
+                isDarkMode
+                  ? "border-white/10 hover:bg-rose-500/10 hover:border-rose-500/30 text-stone-400 hover:text-rose-400"
+                  : "border-neutral-200 hover:bg-rose-50 hover:border-rose-200 text-neutral-500 hover:text-rose-600"
+              }`}
+            >
+              <Trash weight="bold" className="w-5 h-5" />
+            </button>
+          )}
+
           {/* Header */}
           <div className="flex items-center gap-3 pr-10 text-left">
             <div className="w-12 h-12 flex items-center justify-center shrink-0">
@@ -366,14 +388,17 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
                   <span className={labelClass}>Photos</span>
                   <div className="flex flex-wrap gap-4 pt-2">
                     {images.map((src, index) => (
-                      <div
+                      <button
                         key={index}
-                        className={`relative w-24 h-24 sm:w-28 sm:h-28 p-1.5 pb-5 rounded-sm shadow-lg ${polaroidRotations[index % polaroidRotations.length]} ${
+                        type="button"
+                        onClick={() => setActiveImageIndex(index)}
+                        title="Click to view full image"
+                        className={`relative w-24 h-24 sm:w-28 sm:h-28 p-1.5 pb-5 rounded-sm shadow-lg border-0 cursor-pointer hover:scale-105 transition-all duration-300 ${polaroidRotations[index % polaroidRotations.length]} ${
                           isDarkMode ? "bg-stone-800" : "bg-white"
                         }`}
                       >
                         <img src={src} alt="" className="w-full h-full object-cover rounded-sm" />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -700,6 +725,56 @@ export default function MoodEntryModal({ isOpen, mood, isDarkMode, initialEntry,
           )}
         </div>
       </div>
+
+      {/* Fullscreen Lightbox Overlay */}
+      {activeImageIndex !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in">
+          <button
+            type="button"
+            onClick={() => setActiveImageIndex(null)}
+            className="absolute top-4 right-4 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition border border-white/10"
+            aria-label="Close Lightbox"
+          >
+            <X weight="bold" className="w-6 h-6" />
+          </button>
+          
+          {/* Previous image button */}
+          {activeImageIndex > 0 && (
+            <button
+              type="button"
+              onClick={() => setActiveImageIndex(activeImageIndex - 1)}
+              className="absolute left-4 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition border border-white/10"
+              aria-label="Previous image"
+            >
+              <CaretLeft weight="bold" className="w-6 h-6" />
+            </button>
+          )}
+
+          <div className="max-w-[90vw] max-h-[85vh] p-2 bg-white dark:bg-stone-900 rounded-2xl shadow-2xl flex flex-col justify-between items-center">
+            <img 
+              src={images[activeImageIndex]} 
+              alt="" 
+              className="max-w-full max-h-[75vh] object-contain rounded-xl"
+            />
+            <div className="text-center text-xs mt-2 text-stone-500 dark:text-stone-400 font-bold">
+              Photo {activeImageIndex + 1} of {images.length}
+            </div>
+          </div>
+
+          {/* Next image button */}
+          {activeImageIndex < images.length - 1 && (
+            <button
+              type="button"
+              onClick={() => setActiveImageIndex(activeImageIndex + 1)}
+              className="absolute right-4 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition border border-white/10"
+              aria-label="Next image"
+            >
+              <CaretRight weight="bold" className="w-6 h-6" />
+            </button>
+          )}
+        </div>
+      )}
+
     </div>
   );
 }

@@ -12,12 +12,16 @@ import {
   Circle,
   TextAlignLeft,
   X,
-  ArrowBendUpLeft
+  ArrowBendUpLeft,
+  Trash
 } from "@phosphor-icons/react";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
+import { supabase } from "../lib/supabaseClient";
+import { useInactivityLogout } from "../lib/useInactivityLogout";
 
 type Message = {
   id: string;
@@ -30,37 +34,135 @@ type Message = {
 };
 
 export default function ChatPage() {
+  const router = useRouter();
   const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
+  useInactivityLogout();
+  const [displayName, setDisplayName] = useState<string>("there");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const recentChats = [
-    { id: "1", title: "Feeling Overwhelmed", date: "Today", preview: "That's a heavy feeling to carry..." },
-    { id: "2", title: "Breathing Exercise Check-in", date: "Yesterday", preview: "Close your eyes. Inhale... 2, 3, 4..." },
-    { id: "3", title: "Logged Diary Entry", date: "Jun 12", preview: "I'm glad to hear that, Ali. Remember..." },
-    { id: "4", title: "Anxious thoughts & stress", date: "Jun 10", preview: "Let's sit with it. What is running through..." }
-  ];
+  const [recentChats, setRecentChats] = useState<{ id: string; title: string; date: string; preview: string }[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
-  const handleLoadChat = (chatId: string) => {
+  const loadRecentChats = async (uid: string) => {
+    try {
+      const { data: sessions, error } = await supabase
+        .from("chat_sessions")
+        .select(`
+          id,
+          title,
+          created_at,
+          chat_messages (
+            text,
+            created_at
+          )
+        `)
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (sessions && sessions.length > 0) {
+        const formatted = sessions.map((s: any) => {
+          const msgs = s.chat_messages || [];
+          const sortedMsgs = [...msgs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          const lastMsg = sortedMsgs[0];
+
+          const dateObj = new Date(s.created_at);
+          const dateStr = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+          return {
+            id: s.id,
+            title: s.title,
+            date: dateStr,
+            preview: lastMsg?.text || "No messages yet..."
+          };
+        });
+        setRecentChats(formatted);
+      } else {
+        setRecentChats([]);
+      }
+    } catch (err) {
+      console.error("Failed to load recent chats:", err);
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      const { error } = await supabase
+        .from("chat_sessions")
+        .delete()
+        .eq("id", chatId);
+
+      if (error) throw error;
+
+      setRecentChats((prev) => prev.filter((c) => c.id !== chatId));
+      
+      if (currentSessionId === chatId) {
+        setMessages([]);
+        setCurrentSessionId(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete chat session:", err);
+    }
+  };
+
+  // Auth guard — redirect to login if no session
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+      const meta = session.user.user_metadata;
+      const name =
+        meta?.full_name ||
+        meta?.name ||
+        session.user.email?.split("@")[0] ||
+        "there";
+      setDisplayName(name);
+      loadRecentChats(session.user.id);
+    };
+    checkAuth();
+  }, [router]);
+
+  const handleLoadChat = async (chatId: string) => {
     setIsHistoryOpen(false);
-    if (chatId === "1") {
-      setMessages([
-        { id: "101", sender: "user", text: "I've been feeling really overwhelmed today.", timestamp: "10:30 AM" },
-        { id: "102", sender: "bot", text: "That's a heavy feeling to carry. Let's try to break that down. When you think of that 'overwhelmed' feeling, where do you feel it in your body right now?", timestamp: "10:31 AM", options: ["My chest", "My shoulders", "My head", "Somewhere else"] }
-      ]);
-    } else if (chatId === "2") {
-      setMessages([
-        { id: "201", sender: "user", text: "Start breathing exercise", timestamp: "Yesterday, 3:15 PM" },
-        { id: "202", sender: "bot", text: "Close your eyes. Inhale... 2, 3, 4. Hold... 2, 3, 4. Exhale... 2, 3, 4. Take another slow breath. How does it feel now?", timestamp: "Yesterday, 3:16 PM", options: ["A bit better", "Still tense"] }
-      ]);
-    } else {
-      setMessages([
-        { id: "301", sender: "bot", text: "This is a past conversation. What other thoughts are running through your mind right now?", timestamp: "Jun 12, 11:20 AM" }
-      ]);
+    setCurrentSessionId(chatId);
+    
+    try {
+      const { data: dbMsgs, error } = await supabase
+        .from("chat_messages")
+        .select("*")
+        .eq("session_id", chatId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      if (dbMsgs) {
+        const formatted: Message[] = dbMsgs.map((m) => {
+          const dateObj = new Date(m.created_at);
+          const timeStr = dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+          return {
+            id: m.id,
+            sender: m.sender as "bot" | "user",
+            text: m.text,
+            timestamp: timeStr,
+            options: m.options || undefined,
+            replyToText: m.reply_to_text || undefined,
+            replyToSender: (m.reply_to_sender as "bot" | "user") || undefined
+          };
+        });
+        setMessages(formatted);
+      }
+    } catch (err) {
+      console.error("Failed to load chat messages:", err);
     }
   };
 
@@ -78,31 +180,26 @@ export default function ChatPage() {
   };
 
   // Simulates AI responses based on message flow with a realistic typewriter effect
-  const simulateBotResponse = (userText: string) => {
+  // Fetches AI response from local API endpoint with a realistic typewriter effect
+  const simulateBotResponse = async (userText: string, currentMessages: Message[], sessionId: string) => {
     setIsTyping(true);
-    
-    setTimeout(() => {
-      setIsTyping(false);
-      let replyText = "I hear you, Ali. Tell me more about what's going on.";
-      let options: string[] | undefined;
- 
-      const lowerText = userText.toLowerCase();
-      if (lowerText.includes("overwhelmed") || lowerText.includes("breath")) {
-        replyText = "That's a heavy feeling to carry. Let's try to break that down. When you think of that 'overwhelmed' feeling, where do you feel it in your body right now?";
-        options = ["My chest", "My shoulders", "My head", "Somewhere else"];
-      } else if (lowerText.includes("chest") || lowerText.includes("shoulders") || lowerText.includes("head")) {
-        replyText = "I hear you. Let's try a quick breathing exercise together to ease that physical tension. Breathe in for 4 seconds, hold, and release. Ready?";
-        options = ["Start breathing exercise", "I'd rather just talk"];
-      } else if (lowerText.includes("breathing") || lowerText.includes("start")) {
-        replyText = "Close your eyes. Inhale... 2, 3, 4. Hold... 2, 3, 4. Exhale... 2, 3, 4. Take another slow breath. How does it feel now?";
-        options = ["A bit better", "Still tense"];
-      } else if (lowerText.includes("better")) {
-        replyText = "I'm glad to hear that, Ali. Remember, it's completely okay to take pause. I'm here if you want to log this in your journal or keep talking.";
-        options = ["Log in diary", "Keep talking"];
-      } else if (lowerText.includes("tense") || lowerText.includes("talk")) {
-        replyText = "That's okay, Ali. There is no rush. Let's just sit with it. What other thoughts are running through your mind right now?";
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: currentMessages }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch AI response");
       }
- 
+
+      const data = await res.json();
+      const replyText = data.reply || "I am here to support you. Could you tell me more?";
+
+      setIsTyping(false);
+
       // Insert placeholder message for typewriter animation
       const botMsgId = String(Date.now());
       setMessages((prev) => [
@@ -115,6 +212,22 @@ export default function ChatPage() {
         }
       ]);
 
+      // Save bot response to DB
+      const { error: botDbErr } = await supabase
+        .from("chat_messages")
+        .insert({
+          session_id: sessionId,
+          sender: "bot",
+          text: replyText
+        });
+      if (botDbErr) console.error("Error saving bot message:", botDbErr);
+
+      // Reload sidebar list to show updated preview
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        loadRecentChats(session.user.id);
+      }
+
       let textIndex = 0;
       const interval = setInterval(() => {
         textIndex += 2; // Type 2 characters at a time for natural speed
@@ -123,7 +236,7 @@ export default function ChatPage() {
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === botMsgId
-                ? { ...msg, text: replyText, options }
+                ? { ...msg, text: replyText }
                 : msg
             )
           );
@@ -137,29 +250,103 @@ export default function ChatPage() {
           );
         }
       }, 20);
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      setIsTyping(false);
+      
+      const replyText = "I'm having a bit of trouble connecting right now, but I am still here. Take a gentle breath.";
+      const botMsgId = String(Date.now());
+      
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: botMsgId,
+          sender: "bot",
+          text: replyText,
+          timestamp: getFormattedTime()
+        }
+      ]);
+
+      // Save fallback to DB
+      await supabase
+        .from("chat_messages")
+        .insert({
+          session_id: sessionId,
+          sender: "bot",
+          text: replyText
+        });
+    }
   };
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend ?? inputValue).trim();
     if (!text) return;
 
-    // Add user message
-    const userMsg: Message = {
-      id: String(Date.now()),
-      sender: "user",
-      text,
-      timestamp: getFormattedTime(),
-      replyToText: replyingTo ? replyingTo.text : undefined,
-      replyToSender: replyingTo ? replyingTo.sender : undefined
-    };
-    
-    setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInputValue("");
-    setReplyingTo(null); // Clear reply context
-    
-    // Simulate companion response
-    simulateBotResponse(text);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const uid = session.user.id;
+
+      let sessionId = currentSessionId;
+
+      // 1. Create session if it doesn't exist
+      if (!sessionId) {
+        const words = text.split(" ");
+        const title = words.slice(0, 4).join(" ") + (words.length > 4 ? "..." : "");
+
+        const { data: newSession, error: sErr } = await supabase
+          .from("chat_sessions")
+          .insert({
+            user_id: uid,
+            title: title
+          })
+          .select()
+          .single();
+
+        if (sErr || !newSession) {
+          throw sErr || new Error("Failed to create chat session");
+        }
+
+        sessionId = newSession.id;
+        setCurrentSessionId(sessionId);
+      }
+
+      // 2. Add user message
+      const userMsg: Message = {
+        id: String(Date.now()),
+        sender: "user",
+        text,
+        timestamp: getFormattedTime(),
+        replyToText: replyingTo ? replyingTo.text : undefined,
+        replyToSender: replyingTo ? replyingTo.sender : undefined
+      };
+      
+      const updatedMessages = [...messages, userMsg];
+      setMessages(updatedMessages);
+      if (!textToSend) setInputValue("");
+      setReplyingTo(null);
+
+      // Save user message to database
+      const { error: msgErr } = await supabase
+        .from("chat_messages")
+        .insert({
+          session_id: sessionId,
+          sender: "user",
+          text,
+          reply_to_text: userMsg.replyToText || null,
+          reply_to_sender: userMsg.replyToSender || null
+        });
+
+      if (msgErr) console.error("Error saving user message:", msgErr);
+
+      // Reload sidebar list
+      loadRecentChats(uid);
+      
+      // 3. Query companion response
+      simulateBotResponse(text, updatedMessages, sessionId);
+    } catch (err) {
+      console.error("Error sending message:", err);
+    }
   };
 
   const handleOptionClick = (option: string) => {
@@ -216,7 +403,7 @@ export default function ChatPage() {
               {/* Dynamic Personalized Greetings */}
               <div>
                 <span className="text-xl sm:text-2xl font-light text-[#6366F1] dark:text-indigo-300 block mb-1">
-                  Hello, Ali
+                  Hello, {displayName}
                 </span>
                 <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${theme.textHeading}`}>
                   How can I assist you today?
@@ -232,7 +419,7 @@ export default function ChatPage() {
               {/* Premium Gradient Top Fade to transparency */}
               <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-[#F0F2F6] dark:from-stone-950 to-transparent pointer-events-none z-20 transition-colors duration-500" />
               
-              <div className="flex-1 overflow-y-auto px-1 pt-4 pb-4 space-y-6">
+              <div className="flex-1 overflow-y-auto px-1 pt-4 pb-4 space-y-6 scrollbar-none">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -266,7 +453,9 @@ export default function ChatPage() {
                         </div>
                       )}
 
-                      <p>{msg.text}</p>
+                      <div className="space-y-1">
+                        {renderFormattedText(msg.text)}
+                      </div>
                       
                       {/* Optional Interactive Action Pills (Quick Replies) */}
                       {msg.sender === "bot" && msg.options && (
@@ -296,7 +485,10 @@ export default function ChatPage() {
                   {/* Hover Reply Button (Bot messages only) */}
                   {msg.sender === "bot" && (
                     <button
-                      onClick={() => setReplyingTo(msg)}
+                      onClick={() => {
+                        setReplyingTo(msg);
+                        inputRef.current?.focus();
+                      }}
                       className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 rounded-full hover:bg-neutral-200/50 dark:hover:bg-white/5 text-neutral-400 hover:text-neutral-700 dark:hover:text-stone-300 self-center"
                       title="Reply to this message"
                     >
@@ -361,6 +553,7 @@ export default function ChatPage() {
 
               {/* Text Input Field */}
               <input
+                ref={inputRef}
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -426,6 +619,7 @@ export default function ChatPage() {
               <button
                 onClick={() => {
                   setMessages([]);
+                  setCurrentSessionId(null);
                   setIsHistoryOpen(false);
                 }}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 mb-6 rounded-2xl bg-[#6366F1]/90 hover:bg-[#4F46E5] text-white font-bold text-sm shadow-lg shadow-[#6366F1]/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
@@ -437,18 +631,36 @@ export default function ChatPage() {
               {/* Chats List with Staggered Slide-in Animation */}
               <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
                 {recentChats.map((chat, idx) => (
-                  <button
+                  <div
                     key={chat.id}
-                    onClick={() => handleLoadChat(chat.id)}
-                    className="w-full text-left p-3.5 rounded-2xl border border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10 transition duration-300 flex flex-col gap-1 hover:translate-x-1 animate-slide-in-item shadow-sm"
+                    className="w-full relative group animate-slide-in-item"
                     style={{ animationDelay: `${idx * 60}ms` }}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm font-extrabold truncate ${theme.textHeading}`}>{chat.title}</span>
-                      <span className="text-[10px] uppercase font-bold text-neutral-400 dark:text-neutral-500 shrink-0">{chat.date}</span>
-                    </div>
-                    <span className="text-xs text-neutral-500 dark:text-stone-400 line-clamp-1 truncate block">{chat.preview}</span>
-                  </button>
+                    <button
+                      onClick={() => handleLoadChat(chat.id)}
+                      className="w-full text-left p-3.5 pr-10 rounded-2xl border border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10 transition duration-300 flex flex-col gap-1 hover:translate-x-1 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className={`text-sm font-extrabold truncate max-w-[150px] ${theme.textHeading}`}>{chat.title}</span>
+                        <span className="text-[10px] uppercase font-bold text-neutral-400 dark:text-neutral-500 shrink-0">{chat.date}</span>
+                      </div>
+                      <span className="text-xs text-neutral-500 dark:text-stone-400 line-clamp-1 truncate block max-w-full">{chat.preview}</span>
+                    </button>
+                    
+                    {/* Delete chat button */}
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Delete chat "${chat.title}"?`)) {
+                          await handleDeleteChat(chat.id);
+                        }
+                      }}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      title="Delete chat session"
+                    >
+                      <Trash size={14} weight="bold" />
+                    </button>
+                  </div>
                 ))}
               </div>
 
@@ -459,4 +671,73 @@ export default function ChatPage() {
       </div>
     </div>
   );
+}
+
+function parseInlineMarkdown(text: string) {
+  // Regex to split by bold markers (**) and italic markers (*)
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={idx} className="font-extrabold text-[#6366F1] dark:text-indigo-300">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return <em key={idx} className="italic">{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+}
+
+function renderFormattedText(text: string) {
+  if (!text) return null;
+
+  const lines = text.split("\n");
+
+  return lines.map((line, lineIdx) => {
+    const trimmed = line.trim();
+    if (trimmed === "---") {
+      return <hr key={lineIdx} className="my-3 border-t border-neutral-200/20" />;
+    }
+
+    // Check for headings (e.g. ### Header)
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const content = headingMatch[2];
+      const headingClass = level === 1 ? "text-xl font-black my-2 block" 
+                           : level === 2 ? "text-lg font-extrabold my-2 block"
+                           : "text-sm font-bold my-1.5 uppercase tracking-wide block";
+      return (
+        <span key={lineIdx} className={headingClass}>
+          {parseInlineMarkdown(content)}
+        </span>
+      );
+    }
+
+    // Check for bullet points (e.g. * Item)
+    const bulletMatch = line.match(/^[\*\-\+]\s+(.*)$/);
+    if (bulletMatch) {
+      return (
+        <ul key={lineIdx} className="list-disc pl-5 my-1">
+          <li>{parseInlineMarkdown(bulletMatch[1])}</li>
+        </ul>
+      );
+    }
+
+    // Check for numbered lists (e.g. 1. Item)
+    const numberMatch = line.match(/^\d+\.\s+(.*)$/);
+    if (numberMatch) {
+      return (
+        <ol key={lineIdx} className="list-decimal pl-5 my-1">
+          <li>{parseInlineMarkdown(numberMatch[1])}</li>
+        </ol>
+      );
+    }
+
+    // Default paragraph line
+    return (
+      <p key={lineIdx} className="mb-2 leading-relaxed">
+        {parseInlineMarkdown(line)}
+      </p>
+    );
+  });
 }

@@ -113,6 +113,7 @@ export default function AppSidebar({
       <Link
         href="/"
         onClick={async () => {
+          document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
           await supabase.auth.signOut();
         }}
         title={collapsed ? "Logout" : undefined}

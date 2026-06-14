@@ -1,6 +1,7 @@
 "use client";
 
 import { cloneElement, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   ClockCounterClockwise,
   CalendarBlank,
@@ -37,35 +38,8 @@ type JournalEntry = {
   images?: string[];
 };
 
-const initialEntries: JournalEntry[] = [
-  {
-    id: 1,
-    timestamp: new Date("2026-06-09T23:48:00+08:00").getTime(),
-    title: "Midnight Reverie",
-    mood: "Good",
-    excerpt: "Thoughts about the shifting light across the city skyline at 2 AM. Balancing final documentation...",
-    tags: ["Dreamy", "Cityscape"],
-    favorite: true,
-  },
-  {
-    id: 2,
-    timestamp: new Date("2026-06-07T07:20:00+08:00").getTime(),
-    title: "The Sound of Rain",
-    mood: "Okay",
-    excerpt: "Listening to the rhythm against the window. It feels like natural grounding white noise...",
-    tags: ["Calm", "Nature"],
-    favorite: false,
-  },
-  {
-    id: 3,
-    timestamp: new Date("2026-06-05T16:35:00+08:00").getTime(),
-    title: "Project Breakthrough",
-    mood: "Happy",
-    excerpt: "Finally figured out the architecture for the new UI. The flow feels very organic and nice...",
-    tags: ["Radiant", "Work"],
-    favorite: false,
-  },
-];
+const initialEntries: JournalEntry[] = [];
+
 
 const getDayNumber = (timestamp: number) => {
   return new Date(timestamp).getDate();
@@ -122,6 +96,7 @@ const formatEntryTime = (timestamp: number) =>
   new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", minute: "2-digit", hour12: true }).format(timestamp);
 
 export default function MemoriesPage() {
+  const router = useRouter();
   const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
   
   const [entries, setEntries] = useState<JournalEntry[]>(initialEntries);
@@ -144,51 +119,43 @@ export default function MemoriesPage() {
     { name: "Sad", icon: <SadEmoji className="w-7 h-7" />, color: "bg-gradient-to-br from-blue-300 to-indigo-400" },
   ];
 
-  // Load entries from Supabase (or fallback to localStorage) on mount
+  // Load entries from Supabase on mount — authenticated users only
   useEffect(() => {
-    const fetchUserAndEntries = async () => {
+    const fetchEntries = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        const { data, error } = await supabase
-          .from("journal_entries")
-          .select("*")
-          .order("timestamp", { ascending: false });
-        if (!error && data && data.length > 0) {
-          const mapped = data.map((d: any) => ({
-            id: d.id,
-            timestamp: new Date(d.timestamp).getTime(),
-            title: d.title,
-            mood: d.mood,
-            excerpt: d.excerpt,
-            tags: d.tags || [],
-            favorite: d.favorite,
-            images: d.images || [],
-          }));
-          setEntries(mapped);
-        }
-      } else {
-        // Fallback to localStorage
-        const stored = localStorage.getItem("jomluah-entries");
-        if (stored) {
-          try {
-            setEntries(JSON.parse(stored));
-          } catch (e) {
-            console.error(e);
-          }
-        }
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+      setUser(session.user);
+      // Fetch real entries from DB — empty if none yet
+      const { data, error } = await supabase
+        .from("journal_entries")
+        .select("*")
+        .order("timestamp", { ascending: false });
+      if (!error && data) {
+        const mapped = data.map((d: any) => ({
+          id: d.id,
+          timestamp: new Date(d.timestamp).getTime(),
+          title: d.title,
+          mood: d.mood,
+          excerpt: d.excerpt,
+          tags: d.tags || [],
+          favorite: d.favorite,
+          images: d.images || [],
+        }));
+        setEntries(mapped);
       }
     };
-    fetchUserAndEntries();
+    fetchEntries();
   }, []);
 
-  // Save entries to localStorage when modified (for local mode)
+
+
   const saveToStorage = (updated: JournalEntry[]) => {
     setEntries(updated);
-    if (!user) {
-      localStorage.setItem("jomluah-entries", JSON.stringify(updated));
-    }
   };
+
 
   const handleEditEntry = (entry: JournalEntry) => {
     setActiveMood(entry.mood);

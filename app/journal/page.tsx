@@ -1,6 +1,7 @@
 "use client";
 
 import { cloneElement, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   CaretLeft,
   Plus,
@@ -42,86 +43,8 @@ type IdeaFolder = {
   isNew?: boolean;
 };
 
-const initialFolders: IdeaFolder[] = [
-  {
-    id: 1,
-    name: "Gratitude Jar",
-    description: "Little things that made today better.",
-    coverId: "rose",
-    iconId: "heart",
-    type: "journal",
-    notes: [
-      {
-        id: 1,
-        title: "Morning coffee on the balcony",
-        body: "The air was cool and the coffee was perfect. Five minutes of doing absolutely nothing felt like a small luxury.",
-        timestamp: new Date("2026-06-12T08:05:00+08:00").getTime(),
-      },
-      {
-        id: 2,
-        title: "A kind message from Aina",
-        body: "She checked in on me out of nowhere and it made my whole afternoon. Need to remember to do the same for others.",
-        timestamp: new Date("2026-06-10T19:40:00+08:00").getTime(),
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Dream Log",
-    description: "Strange, vivid, half-remembered dreams.",
-    coverId: "violet",
-    iconId: "moon",
-    type: "journal",
-    notes: [
-      {
-        id: 1,
-        title: "The library that kept growing",
-        body: "Every door led to another reading room, shelves stretching up forever. I wasn't lost, just curious. Woke up feeling oddly calm.",
-        timestamp: new Date("2026-06-11T06:50:00+08:00").getTime(),
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Work Tasks",
-    description: "Urgent check-ins and tasks.",
-    coverId: "sky",
-    iconId: "target",
-    type: "todo",
-    notes: [
-      {
-        id: 1,
-        title: "Finalize FYP presentation slides",
-        body: "",
-        timestamp: new Date("2026-06-13T10:00:00+08:00").getTime(),
-        completed: false,
-      },
-      {
-        id: 2,
-        title: "Revise literature review methodology",
-        body: "",
-        timestamp: new Date("2026-06-12T14:30:00+08:00").getTime(),
-        completed: true,
-      },
-    ],
-  },
-  {
-    id: 4,
-    name: "Goals & Vision",
-    description: "Where I'm headed, and why.",
-    coverId: "emerald",
-    iconId: "target",
-    type: "journal",
-    notes: [
-      {
-        id: 1,
-        title: "This semester, one thing at a time",
-        body: "Instead of juggling everything, pick the one task that matters most each day and actually finish it before moving on.",
-        timestamp: new Date("2026-06-08T09:00:00+08:00").getTime(),
-      },
-    ],
-  },
-];
+const initialFolders: IdeaFolder[] = [];
+
 
 const formatNoteDate = (timestamp: number) =>
   new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", month: "long", day: "numeric" }).format(timestamp);
@@ -130,8 +53,9 @@ const formatNoteTime = (timestamp: number) =>
   new Intl.DateTimeFormat("en-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "numeric", minute: "2-digit", hour12: true }).format(timestamp);
 
 export default function IdeaBoardPage() {
+  const router = useRouter();
   const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
-  const [folders, setFolders] = useState<IdeaFolder[]>(initialFolders);
+  const [folders, setFolders] = useState<IdeaFolder[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<number | string | null>(null);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | string | null>(null);
@@ -145,106 +69,42 @@ export default function IdeaBoardPage() {
   const activeFolder = folders.find((folder) => folder.id === activeFolderId) ?? null;
   const editingNote = activeFolder?.notes.find((note) => note.id === editingNoteId) ?? null;
 
-  // Load folders from Supabase (or fallback to localStorage) on mount
+  // Load folders from Supabase on mount — authenticated users only
   useEffect(() => {
-    const fetchUserAndFolders = async () => {
+    const fetchFolders = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        const { data, error } = await supabase
-          .from("folders")
-          .select("*, notes(*)")
-          .order("created_at", { ascending: true });
-        if (!error && data && data.length > 0) {
-          const mapped: IdeaFolder[] = data.map((f: any) => ({
-            id: f.id,
-            name: f.name,
-            description: f.description,
-            coverId: f.cover_id,
-            iconId: f.icon_id,
-            type: f.type,
-            notes: (f.notes || []).map((n: any) => ({
-              id: n.id,
-              title: n.title,
-              body: n.body || "",
-              timestamp: new Date(n.timestamp).getTime(),
-              completed: n.completed,
-            })),
-          }));
-          setFolders(mapped);
-        } else {
-          // Seed DB with initial folders and notes
-          for (const folder of initialFolders) {
-            const { data: insertedFolder } = await supabase
-              .from("folders")
-              .insert({
-                user_id: session.user.id,
-                name: folder.name,
-                description: folder.description,
-                cover_id: folder.coverId,
-                icon_id: folder.iconId,
-                type: folder.type,
-              })
-              .select()
-              .single();
-
-            if (insertedFolder && folder.notes.length > 0) {
-              for (const note of folder.notes) {
-                await supabase.from("notes").insert({
-                  folder_id: insertedFolder.id,
-                  title: note.title,
-                  body: note.body,
-                  timestamp: new Date(note.timestamp).toISOString(),
-                  completed: !!note.completed,
-                });
-              }
-            }
-          }
-          // Query again after seeding
-          const { data: seededData } = await supabase
-            .from("folders")
-            .select("*, notes(*)")
-            .order("created_at", { ascending: true });
-          if (seededData) {
-            const mapped: IdeaFolder[] = seededData.map((f: any) => ({
-              id: f.id,
-              name: f.name,
-              description: f.description,
-              coverId: f.cover_id,
-              iconId: f.icon_id,
-              type: f.type,
-              notes: (f.notes || []).map((n: any) => ({
-                id: n.id,
-                title: n.title,
-                body: n.body || "",
-                timestamp: new Date(n.timestamp).getTime(),
-                completed: n.completed,
-              })),
-            }));
-            setFolders(mapped);
-          }
-        }
-      } else {
-        // Fallback to localStorage
-        const stored = localStorage.getItem("jomluah-folders");
-        if (stored) {
-          try {
-            setFolders(JSON.parse(stored));
-          } catch (e) {
-            console.error(e);
-          }
-        }
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+      setUser(session.user);
+      // Fetch real folders from DB — empty if none yet
+      const { data, error } = await supabase
+        .from("folders")
+        .select("*, notes(*)")
+        .order("created_at", { ascending: true });
+      if (!error && data) {
+        const mapped: IdeaFolder[] = data.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          description: f.description,
+          coverId: f.cover_id,
+          iconId: f.icon_id,
+          type: f.type,
+          notes: (f.notes || []).map((n: any) => ({
+            id: n.id,
+            title: n.title,
+            body: n.body || "",
+            timestamp: new Date(n.timestamp).getTime(),
+            completed: n.completed,
+          })),
+        }));
+        setFolders(mapped);
       }
     };
-    fetchUserAndFolders();
+    fetchFolders();
   }, []);
 
-  // Save folders to localStorage when they change (local only)
-  useEffect(() => {
-    if (!user) {
-      localStorage.setItem("jomluah-folders", JSON.stringify(folders));
-    }
-  }, [folders, user]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

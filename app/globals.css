@@ -29,18 +29,66 @@ body {
 }
 
 /* ============================================================
-   SCROLLBARS — Hidden globally
+   SCROLLBARS — Premium custom styling
    ============================================================ */
 
-html, body, * {
+/* Sleek custom scrollbars for webkit engines */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.45);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Firefox scrollbars & viewport setup */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.25) transparent;
+  overflow-x: hidden;
+}
+body {
+  margin: 0;
+}
+
+/* Scrollbar utility classes */
+.scrollbar-none {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
-
-html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
+.scrollbar-none::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin !important;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
 }
 
 
@@ -81,15 +129,28 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
   animation: pulseBreath 6s ease-in-out infinite;
 }
 
+@keyframes slideInStep {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-step {
+  animation: slideInStep 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .animate-float-slow {
   animation: floatBlob 12s ease-in-out infinite;
-  will-change: transform;
 }
 
 .animate-float-delayed {
   animation: floatBlob 16s ease-in-out infinite;
   animation-delay: 2s;
-  will-change: transform;
 }
 
 /* Dashboard entrance + micro-interaction animations */
@@ -268,6 +329,21 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
   animation: fadeSlideUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) both;
 }
 
+@keyframes pageEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-page-entrance {
+  animation: pageEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @keyframes reflectionGlow {
   0%, 100% {
     box-shadow: 0 4px 20px rgba(99, 102, 241, 0.06);
@@ -297,7 +373,6 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
 .animate-twinkle {
   animation: twinkle 3.2s ease-in-out infinite;
   transform-origin: center;
-  will-change: transform, opacity;
 }
 
 /* ─── Scroll-reveal animations (landing page) ──────────────────────── */
@@ -307,7 +382,6 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
   transition: opacity 0.7s cubic-bezier(0.25, 0.8, 0.25, 1),
     transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
   transition-delay: var(--reveal-delay, 0s);
-  will-change: opacity, transform;
 }
 .reveal.reveal-visible {
   opacity: 1;
@@ -385,5 +459,27 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
 .p1-side-mascot { right: 5%; bottom: 12%; width: 100px; }
 @media (max-width: 900px) {
   .p1-side-deco { display: none; }
+}
+
+/* Autocomplete/autofill override for inputs to keep transparent glass styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 0 1000px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Hide HTML5 number input spinner arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 

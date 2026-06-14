@@ -1,9 +1,9 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Brain } from "@phosphor-icons/react";
+import { ArrowLeft, ShieldCheck, Eye, EyeSlash } from "@phosphor-icons/react";
 import { supabase } from "../lib/supabaseClient";
 
 export default function LoginPage() {
@@ -14,21 +14,68 @@ export default function LoginPage() {
   );
 }
 
+function CuteRobotFace({ className }: { className?: string }) {
+  return (
+    <div className={`relative w-28 h-28 rounded-full bg-white flex items-center justify-center shadow-lg ${className}`}>
+      <svg viewBox="0 0 100 100" className="w-20 h-20">
+        {/* Robot Head Base */}
+        <rect x="20" y="25" width="60" height="55" rx="26" fill="#f3f4f6" />
+        <rect x="23" y="28" width="54" height="49" rx="23" fill="#ffffff" />
+        {/* Gray top helmet strip */}
+        <path d="M 23 42 A 23 23 0 0 1 77 42 Z" fill="#e5e7eb" />
+        <line x1="50" y1="28" x2="50" y2="42" stroke="#d1d5db" strokeWidth="2" />
+        {/* Antenna */}
+        <circle cx="50" cy="18" r="4" fill="#fbbf24" />
+        <line x1="50" y1="18" x2="50" y2="25" stroke="#fbbf24" strokeWidth="2" />
+        {/* Eyes */}
+        <circle cx="38" cy="54" r="5" fill="#312e81" />
+        <circle cx="62" cy="54" r="5" fill="#312e81" />
+        {/* Blush */}
+        <circle cx="28" cy="62" r="4" fill="#fbcfe8" />
+        <circle cx="72" cy="62" r="4" fill="#fbcfe8" />
+        {/* Mouth */}
+        <path d="M 42 63 Q 50 71 58 63" stroke="#312e81" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+      </svg>
+    </div>
+  );
+}
+
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
   const timedOut = searchParams.get("reason") === "timeout";
+  const verified = searchParams.get("verified") === "true";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Redirect if already authenticated on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setSuccessMsg("Already signed in! Redirecting...");
+        setTimeout(() => router.push(redirectTo), 1200);
+      }
+    };
+    checkSession();
+  }, [router, redirectTo]);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setErrorMsg("Email and password are required");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMsg("Please enter a valid email address (e.g. name@domain.com)");
       return;
     }
     setLoading(true);
@@ -36,12 +83,32 @@ function LoginPageContent() {
     setSuccessMsg("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setErrorMsg(error.message);
       } else {
-        setSuccessMsg("Success! Redirecting...");
-        setTimeout(() => router.push(redirectTo), 1500);
+        // Read onboarding status once here → write lightweight cookie →
+        // middleware will use cookie only from now on (zero DB calls per request)
+        const userId = signInData.session?.user.id;
+        if (userId) {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("onboarding_completed")
+              .eq("id", userId)
+              .single();
+            if (profile?.onboarding_completed) {
+              document.cookie = "jl_ob=1; path=/; max-age=31536000; SameSite=Lax";
+            } else {
+              document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
+            }
+          } catch (profileErr) {
+            console.error("Error reading profile onboarding status:", profileErr);
+            document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
+          }
+        }
+        setSuccessMsg("Signed in! Redirecting...");
+        setTimeout(() => router.push(redirectTo), 800);
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "An unexpected error occurred");
@@ -51,358 +118,91 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="auth-root">
-      {/* Blobs */}
-      <div aria-hidden="true" className="blob blob-1" />
-      <div aria-hidden="true" className="blob blob-2" />
-      <div aria-hidden="true" className="dot-grid" />
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-[#6366f1] to-[#4f46e5] overflow-hidden font-sans">
+      {/* Background blobs for premium depth */}
+      <div aria-hidden="true" className="absolute -top-24 -left-24 w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] opacity-25 pointer-events-none z-0" />
+      <div aria-hidden="true" className="absolute -bottom-24 -right-24 w-[500px] h-[500px] bg-purple-500 rounded-full blur-[120px] opacity-25 pointer-events-none z-0" />
 
-      {/* Header */}
-      <header className="auth-header">
-        <Link href="/" className="back-link">
-          <ArrowLeft weight="bold" className="w-4 h-4" />
-          Back to Portal
-        </Link>
-        <div className="logo-group">
-          <div className="logo-icon">
-            <Brain weight="fill" className="w-4 h-4" />
-          </div>
-          <span className="logo-text">JomLuah</span>
-        </div>
-      </header>
+      <div className="relative z-10 w-full max-w-[460px] min-h-screen flex flex-col justify-between py-12 px-6 animate-page-entrance">
+        <header className="flex items-center justify-start w-full mb-12 min-h-[38px]">
+          <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:border-white/30 transition-all text-sm font-bold cursor-pointer decoration-transparent">
+            <ArrowLeft weight="bold" className="w-4 h-4" />
+            <span>Back to Portal</span>
+          </Link>
+        </header>
 
-      {/* Main */}
-      <main className="auth-main">
-        <div className="auth-card">
-          {/* Top gradient border */}
-          <div className="card-top-glow" />
+        <div className="flex-1 flex flex-col justify-center w-full mb-8 animate-fade-slide-up">
+          <CuteRobotFace className="mx-auto mb-8" />
 
-          {/* Left panel — branding */}
-          <div className="auth-panel auth-panel-brand">
-            <div className="brand-content">
-              <div className="brand-badge">
-                <ShieldCheck weight="duotone" className="w-5 h-5 text-emerald-500" />
-                Secured by Supabase RLS
-              </div>
-              <h2 className="brand-title">
-                Your safe space<br />
-                <span className="brand-gradient">awaits you.</span>
-              </h2>
-              <p className="brand-sub">
-                Sign in to access your private journal, AI companion, and emotional spectrum dashboard.
-              </p>
-              <div className="brand-stats">
-                <div className="brand-stat">
-                  <span className="brand-stat-num">100%</span>
-                  <span className="brand-stat-label">Private</span>
-                </div>
-                <div className="brand-stat-divider" />
-                <div className="brand-stat">
-                  <span className="brand-stat-num">AI</span>
-                  <span className="brand-stat-label">Powered</span>
-                </div>
-                <div className="brand-stat-divider" />
-                <div className="brand-stat">
-                  <span className="brand-stat-num">PCU</span>
-                  <span className="brand-stat-label">Integrated</span>
-                </div>
-              </div>
-            </div>
-            {/* Decorative orb */}
-            <div className="brand-orb" />
+          <div className="text-center text-xl font-bold text-white mb-8 leading-relaxed max-w-[360px] mx-auto">
+            Welcome back! Enter your email and password to sign in.
           </div>
 
-          {/* Right panel — form */}
-          <div className="auth-panel auth-panel-form">
-            <div className="form-header">
-              <h1 className="form-title">Welcome back</h1>
-              <p className="form-subtitle">Sign in to your JomLuah profile</p>
+          {timedOut && !errorMsg && (
+            <div className="w-full p-4 rounded-2xl bg-red-500/12 border border-red-500/30 text-red-200 text-sm font-semibold max-w-full text-center mb-4">
+              You were signed out due to inactivity. Please sign in again.
+            </div>
+          )}
+          {verified && !errorMsg && !successMsg && (
+            <div className="w-full p-4 rounded-2xl bg-emerald-500/12 border border-emerald-500/30 text-emerald-200 text-sm font-semibold max-w-full text-center mb-4">
+              Email verified successfully! Please sign in.
+            </div>
+          )}
+          {errorMsg && (
+            <div className="w-full p-4 rounded-2xl bg-red-500/12 border border-red-500/30 text-red-200 text-sm font-semibold max-w-full text-center mb-4">
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="w-full p-4 rounded-2xl bg-emerald-500/12 border border-emerald-500/30 text-emerald-200 text-sm font-semibold max-w-full text-center mb-4">
+              {successMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleLoginSubmit} className="w-full">
+            <div className="flex flex-col gap-2 mb-4">
+              <label className="text-xs font-extrabold tracking-widest text-white/60 ml-2">EMAIL ADDRESS</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="yourname@email.com"
+                required
+                className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-left outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner"
+              />
             </div>
 
-            {timedOut && !errorMsg && (
-              <div className="alert alert-error">
-                <span className="alert-dot bg-red-400" />
-                You were signed out due to inactivity. Please sign in again.
-              </div>
-            )}
-            {errorMsg && (
-              <div className="alert alert-error">
-                <span className="alert-dot bg-red-400" />
-                {errorMsg}
-              </div>
-            )}
-            {successMsg && (
-              <div className="alert alert-success">
-                <span className="alert-dot bg-emerald-400" />
-                {successMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="auth-form">
-              <div className="field">
-                <label className="field-label">Email Address</label>
-                <div className="field-input-wrap">
-                  <span className="field-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                  </span>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@uthm.edu.my"
-                    required
-                    className="field-input"
-                  />
-                </div>
-              </div>
-
-              <div className="field">
-                <label className="field-label">Password</label>
-                <div className="field-input-wrap">
-                  <span className="field-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </span>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="field-input"
-                  />
-                </div>
-              </div>
-
-              <button type="submit" disabled={loading} className="submit-btn">
-                {loading ? (
-                  <>
-                    <span className="spinner" />
-                    Signing In...
-                  </>
-                ) : "Sign In Securely"}
+            <div className="flex flex-col gap-2 mb-6 relative">
+              <label className="text-xs font-extrabold tracking-widest text-white/60 ml-2">PASSWORD</label>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-left outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-[62%] -translate-y-1/2 text-white/60 hover:text-white"
+              >
+                {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
               </button>
-            </form>
+            </div>
 
-            <p className="form-footer-text">
-              Don&apos;t have an account?{" "}
-              <Link href="/register" className="form-link">Create student account</Link>
-            </p>
-          </div>
+            <button type="submit" disabled={loading} className="w-full py-4 px-8 rounded-full bg-white text-indigo-600 font-extrabold text-base tracking-wider shadow-lg hover:-translate-y-0.5 hover:shadow-xl hover:bg-opacity-95 transition-all cursor-pointer mt-4">
+              {loading ? "SIGNING IN..." : "SIGN IN SECURELY"}
+            </button>
+          </form>
         </div>
-      </main>
 
-      <footer className="auth-footer">
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-        Secure · Sandboxed · Row-Level Security Enforced
-      </footer>
-
-      <style jsx>{`
-        /* ─── Root ─────────────────────────── */
-        .auth-root {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 40%, #ede9fe 100%);
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          display: flex; flex-direction: column;
-          position: relative; overflow: hidden;
-        }
-
-        /* ─── Blobs ─────────────────────────── */
-        .blob {
-          position: absolute; border-radius: 50%;
-          filter: blur(80px); pointer-events: none; z-index: 0;
-        }
-        .blob-1 {
-          width: 600px; height: 600px; top: -200px; left: -200px;
-          background: radial-gradient(circle, rgba(99,102,241,0.20) 0%, transparent 70%);
-        }
-        .blob-2 {
-          width: 500px; height: 500px; bottom: -150px; right: -150px;
-          background: radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%);
-        }
-        .dot-grid {
-          position: absolute; inset: 0;
-          background-image: radial-gradient(circle, rgba(99,102,241,0.10) 1px, transparent 1px);
-          background-size: 36px 36px;
-          pointer-events: none; z-index: 0;
-        }
-
-        /* ─── Header ─────────────────────────── */
-        .auth-header {
-          position: relative; z-index: 50;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 1rem 1.5rem;
-          background: rgba(255,255,255,0.5); backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255,255,255,0.7);
-        }
-        .back-link {
-          display: inline-flex; align-items: center; gap: 0.375rem;
-          font-size: 0.875rem; font-weight: 600; color: #6b7280;
-          text-decoration: none; transition: color 0.2s;
-        }
-        .back-link:hover { color: #1e1b4b; }
-        .logo-group { display: flex; align-items: center; gap: 0.5rem; }
-        .logo-icon {
-          width: 30px; height: 30px; border-radius: 9px;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          display: flex; align-items: center; justify-content: center;
-          color: white; box-shadow: 0 4px 10px rgba(99,102,241,0.35);
-        }
-        .logo-text { font-size: 1.05rem; font-weight: 800; color: #1e1b4b; }
-
-        /* ─── Main ─────────────────────────── */
-        .auth-main {
-          flex: 1; display: flex; align-items: center; justify-content: center;
-          padding: 2rem 1.5rem; position: relative; z-index: 10;
-        }
-        .auth-card {
-          width: 100%; max-width: 900px;
-          background: rgba(255,255,255,0.60); backdrop-filter: blur(24px);
-          border: 1.5px solid rgba(255,255,255,0.90);
-          border-radius: 2rem;
-          box-shadow: 0 24px 80px rgba(99,102,241,0.14), 0 4px 16px rgba(0,0,0,0.06);
-          display: grid; grid-template-columns: 1fr 1fr;
-          overflow: hidden; position: relative;
-        }
-        @media (max-width: 768px) {
-          .auth-card { grid-template-columns: 1fr; }
-          .auth-panel-brand { display: none; }
-        }
-        .card-top-glow {
-          position: absolute; top: 0; left: 0; right: 0; height: 2px;
-          background: linear-gradient(to right, transparent, #6366f1, #8b5cf6, transparent);
-          z-index: 1;
-        }
-
-        /* ─── Brand panel ─────────────────────── */
-        .auth-panel { padding: 3rem; position: relative; overflow: hidden; }
-        .auth-panel-brand {
-          background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.10));
-          border-right: 1px solid rgba(255,255,255,0.6);
-          display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .brand-content { position: relative; z-index: 1; }
-        .brand-badge {
-          display: inline-flex; align-items: center; gap: 0.375rem;
-          padding: 0.3rem 0.75rem; border-radius: 999px;
-          background: rgba(255,255,255,0.70); backdrop-filter: blur(8px);
-          border: 1px solid rgba(255,255,255,0.95);
-          font-size: 0.7rem; font-weight: 700; color: #6b7280;
-          margin-bottom: 1.5rem;
-        }
-        .brand-title {
-          font-size: 2.25rem; font-weight: 900; color: #1e1b4b;
-          line-height: 1.1; letter-spacing: -0.04em; margin-bottom: 1rem;
-        }
-        .brand-gradient {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        .brand-sub {
-          font-size: 0.875rem; color: #6b7280; line-height: 1.7; margin-bottom: 2rem;
-        }
-        .brand-stats {
-          display: flex; align-items: center; gap: 1.25rem;
-          padding: 1rem 1.25rem; border-radius: 1rem;
-          background: rgba(255,255,255,0.55); backdrop-filter: blur(8px);
-          border: 1px solid rgba(255,255,255,0.85);
-        }
-        .brand-stat { text-align: center; }
-        .brand-stat-num {
-          display: block; font-size: 1.125rem; font-weight: 900; color: #1e1b4b;
-        }
-        .brand-stat-label { font-size: 0.65rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; }
-        .brand-stat-divider { width: 1px; height: 28px; background: rgba(99,102,241,0.2); }
-        .brand-orb {
-          position: absolute; bottom: -80px; right: -80px;
-          width: 240px; height: 240px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(99,102,241,0.20) 0%, transparent 70%);
-          filter: blur(30px);
-        }
-
-        /* ─── Form panel ─────────────────────── */
-        .auth-panel-form { display: flex; flex-direction: column; justify-content: center; }
-        .form-header { margin-bottom: 1.75rem; }
-        .form-title {
-          font-size: 1.875rem; font-weight: 900; color: #1e1b4b;
-          letter-spacing: -0.035em; margin-bottom: 0.25rem;
-        }
-        .form-subtitle { font-size: 0.875rem; color: #9ca3af; font-weight: 500; }
-
-        /* Alerts */
-        .alert {
-          display: flex; align-items: center; gap: 0.5rem;
-          padding: 0.75rem 1rem; border-radius: 0.875rem;
-          font-size: 0.8125rem; font-weight: 600; margin-bottom: 1.25rem;
-        }
-        .alert-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.20); color: #dc2626; }
-        .alert-success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.20); color: #059669; }
-        .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-        /* Form */
-        .auth-form { display: flex; flex-direction: column; gap: 1.125rem; margin-bottom: 1.5rem; }
-        .field { display: flex; flex-direction: column; gap: 0.375rem; }
-        .field-label { font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; }
-        .field-input-wrap { position: relative; }
-        .field-icon {
-          position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
-          color: #9ca3af; display: flex; align-items: center;
-        }
-        .field-input {
-          width: 100%; padding: 0.8125rem 1rem 0.8125rem 2.75rem;
-          border-radius: 0.875rem;
-          background: rgba(255,255,255,0.70); backdrop-filter: blur(8px);
-          border: 1.5px solid rgba(255,255,255,0.90);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-          font-size: 0.9rem; color: #1e1b4b; outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
-          font-family: inherit;
-        }
-        .field-input::placeholder { color: #d1d5db; }
-        .field-input:focus {
-          border-color: rgba(99,102,241,0.5);
-          box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-        }
-
-        /* Submit */
-        .submit-btn {
-          width: 100%; padding: 0.9rem 1.5rem;
-          border-radius: 0.875rem; border: none;
-          background: linear-gradient(135deg, #6366f1, #7c3aed);
-          color: white; font-size: 0.9375rem; font-weight: 700;
-          cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-          box-shadow: 0 6px 20px rgba(99,102,241,0.40);
-          transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-          font-family: inherit; margin-top: 0.5rem;
-        }
-        .submit-btn:hover:not(:disabled) {
-          transform: scale(1.02); box-shadow: 0 10px 28px rgba(99,102,241,0.50);
-        }
-        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .spinner {
-          width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4);
-          border-top-color: white; border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .form-footer-text { font-size: 0.8125rem; color: #9ca3af; text-align: center; }
-        .form-link {
-          color: #6366f1; font-weight: 700; text-decoration: none;
-          transition: color 0.2s;
-        }
-        .form-link:hover { color: #4f46e5; }
-
-        /* ─── Footer ─────────────────────────── */
-        .auth-footer {
-          position: relative; z-index: 10;
-          text-align: center; font-size: 0.7rem; font-weight: 600; color: #9ca3af;
-          padding: 1rem 1.5rem;
-          display: flex; align-items: center; justify-content: center; gap: 0.375rem;
-          border-top: 1px solid rgba(255,255,255,0.6);
-          background: rgba(255,255,255,0.40); backdrop-filter: blur(16px);
-        }
-      `}</style>
+        <div className="w-full text-center">
+          <Link href="/register" className="bg-transparent border-none text-white/80 text-sm font-bold tracking-wider uppercase hover:text-white transition-all cursor-pointer py-2 decoration-transparent">
+            Don&apos;t have an account? Sign up
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
