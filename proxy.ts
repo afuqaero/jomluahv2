@@ -18,7 +18,7 @@ const AUTH_ROUTES = ["/login", "/register"];
  *  - Read a lightweight `jl_ob` cookie (set by client after onboarding) to know onboarding status.
  *  - No server-side Supabase calls here — the client pages handle real auth on mount.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
