@@ -1,0 +1,73 @@
+.visual { isolation: isolate; }
+.visual > section { margin-bottom: 68px; }
+.visual .frontNote {
+  z-index: 10;
+  top: -22px;
+  left: auto;
+  right: 18px;
+  transform: rotate(-7deg);
+  font-family: var(--font-caveat), cursive;
+  font-size: 23px;
+  font-style: normal;
+  font-weight: 400;
+  color: #5f5c88;
+  width: max-content;
+  max-width: calc(100% - 12px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.visual .frontReminder { z-index: 2; pointer-events: none; }
+.roundedButton { border-radius: 999px; }
+.brandMark { width: 34px; height: 34px; flex-shrink: 0; margin-left: 3px; }
+.mascot {
+  position: absolute;
+  z-index: 3;
+  left: -106px;
+  bottom: -3px;
+  width: 145px;
+  height: 145px;
+  display: grid;
+  place-items: end center;
+  pointer-events: none;
+  animation: buddyFloat 3.2s ease-in-out infinite;
+}
+.mascot svg { width: 141px; overflow: visible; filter: drop-shadow(0 8px 12px #302a6b1b); }
+.mascotNote {
+  position: absolute;
+  top: -4px;
+  left: 64px;
+  white-space: nowrap;
+  border: 1px solid #e5e7fb;
+  border-radius: 12px 12px 12px 3px;
+  background: #fff;
+  padding: 7px 10px;
+  color: #66628b;
+  font: 600 9px/1.2 var(--font-plus-jakarta), sans-serif;
+  box-shadow: 0 5px 15px #302a6b12;
+}
+.mascotSpark { position: absolute; top: 38px; right: 4px; color: #f4bb56; font-size: 20px; animation: buddySpark 2.4s ease-in-out infinite; }
+.mascotTail { transform-box: fill-box; transform-origin: 12% 48%; animation: tailSwish 1.9s ease-in-out infinite; }
+.mascotGills { transform-box: fill-box; transform-origin: center 70%; animation: gillFlutter 3.2s ease-in-out infinite; }
+.mascotWave { transform-box: fill-box; transform-origin: 5% 82%; animation: tinyWave 2.7s ease-in-out infinite; }
+.closedEyes { opacity: 0; transform-box: fill-box; transform-origin: center; animation: buddyBlink 4.8s 1s infinite; }
+.openEyes { animation: buddyOpen 4.8s 1s infinite; }
+@keyframes buddyFloat { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+@keyframes tailSwish { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(9deg); } }
+@keyframes gillFlutter { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.07); } }
+@keyframes tinyWave { 0%, 25%, 65%, 100% { transform: rotate(0); } 38% { transform: rotate(-19deg); } 50% { transform: rotate(5deg); } }
+@keyframes buddySpark { 0%, 100% { opacity: .45; transform: scale(.75) rotate(-10deg); } 50% { opacity: 1; transform: scale(1.15) rotate(10deg); } }
+@keyframes buddyBlink { 0%, 88%, 94%, 100% { opacity: 0; } 90%, 92% { opacity: 1; } }
+@keyframes buddyOpen { 0%, 88%, 94%, 100% { opacity: 1; } 90%, 92% { opacity: 0; } }
+@media (max-width: 700px) {
+  .visual > section { margin-bottom: 72px; }
+  .visual .frontNote { font-size: 21px; right: 14px; }
+  .brandMark { width: 30px; height: 30px; }
+  .mascot { left: -8px; bottom: -2px; width: 112px; height: 116px; }
+  .mascot svg { width: 110px; }
+  .mascotNote { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .mascot,.mascotTail,.mascotGills,.mascotWave,.mascotSpark,.closedEyes,.openEyes { animation: none; } .closedEyes { opacity: 0; } .openEyes { opacity: 1; } }
