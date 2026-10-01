@@ -1,23 +1,9 @@
-.visual { isolation: isolate; }
 .visual > section { margin-bottom: 68px; }
 .visual .frontNote {
   z-index: 10;
   top: -22px;
   left: auto;
   right: 18px;
-  transform: rotate(-7deg);
-  font-family: var(--font-caveat), cursive;
-  font-size: 23px;
-  font-style: normal;
-  font-weight: 400;
-  color: #5f5c88;
-  width: max-content;
-  max-width: calc(100% - 12px);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  white-space: nowrap;
   pointer-events: none;
 }
 .visual .frontReminder { z-index: 2; pointer-events: none; }
