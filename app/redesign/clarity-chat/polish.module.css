@@ -8,6 +8,12 @@
   pointer-events: none;
 }
 .visual .frontReminder { z-index: 2; pointer-events: none; }
+.chatHero .visual { width: 100%; }
+@media (max-width: 900px) {
+  .chatHero { grid-template-columns: 1fr; gap: 28px; }
+  .chatHero .visual { max-width: 470px; margin-inline: auto; }
+  .chatHero .frontNote { right: 68px; }
+}
 .roundedButton { border-radius: 999px; }
 .brandMark { width: 34px; height: 34px; flex-shrink: 0; margin-left: 3px; }
 .mascot {
