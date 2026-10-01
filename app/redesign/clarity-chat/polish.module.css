@@ -4,6 +4,7 @@
   top: -22px;
   left: auto;
   right: 18px;
+  color: #5f5c88;
   pointer-events: none;
 }
 .visual .frontReminder { z-index: 2; pointer-events: none; }
