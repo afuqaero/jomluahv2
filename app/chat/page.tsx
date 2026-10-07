@@ -33,6 +33,11 @@ type Message = {
   replyToSender?: "bot" | "user";
 };
 
+// Keep a small recent window in the prompt. Older turns are compressed into
+// chat_sessions.context_summary once the unsummarised portion gets too large.
+const RECENT_CONTEXT_MESSAGE_COUNT = 8;
+const SUMMARY_COMPACTION_TRIGGER = 12;
+
 export default function ChatPage() {
   const router = useRouter();
   const { isDarkMode, setIsDarkMode, isSidebarCollapsed, setIsSidebarCollapsed, theme } = useAppTheme();
@@ -48,6 +53,8 @@ export default function ChatPage() {
 
   const [recentChats, setRecentChats] = useState<{ id: string; title: string; date: string; preview: string }[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [contextSummary, setContextSummary] = useState("");
+  const [summaryMessageCount, setSummaryMessageCount] = useState(0);
 
   const loadRecentChats = async (uid: string) => {
     try {
@@ -106,6 +113,8 @@ export default function ChatPage() {
       if (currentSessionId === chatId) {
         setMessages([]);
         setCurrentSessionId(null);
+        setContextSummary("");
+        setSummaryMessageCount(0);
       }
     } catch (err) {
       console.error("Failed to delete chat session:", err);
@@ -136,8 +145,25 @@ export default function ChatPage() {
   const handleLoadChat = async (chatId: string) => {
     setIsHistoryOpen(false);
     setCurrentSessionId(chatId);
+    setContextSummary("");
+    setSummaryMessageCount(0);
     
     try {
+      const { data: sessionContext, error: sessionContextError } = await supabase
+        .from("chat_sessions")
+        .select("context_summary, summary_message_count")
+        .eq("id", chatId)
+        .single();
+
+      // The app can still display older chats if the migration has not been
+      // run yet; summary persistence will become available after migration.
+      if (sessionContextError) {
+        console.warn("Chat context summary is unavailable:", sessionContextError.message);
+      } else {
+        setContextSummary(sessionContext?.context_summary || "");
+        setSummaryMessageCount(Number(sessionContext?.summary_message_count || 0));
+      }
+
       const { data: dbMsgs, error } = await supabase
         .from("chat_messages")
         .select("*")
@@ -186,10 +212,27 @@ export default function ChatPage() {
     setIsTyping(true);
 
     try {
+      const compactBoundary = Math.max(0, currentMessages.length - RECENT_CONTEXT_MESSAGE_COUNT);
+      const canCompact =
+        currentMessages.length - summaryMessageCount > SUMMARY_COMPACTION_TRIGGER &&
+        compactBoundary > summaryMessageCount;
+      const messagesToSummarize = canCompact
+        ? currentMessages.slice(summaryMessageCount, compactBoundary)
+        : [];
+      const contextStart = canCompact
+        ? compactBoundary
+        : Math.max(0, Math.min(summaryMessageCount, currentMessages.length - RECENT_CONTEXT_MESSAGE_COUNT));
+      const contextMessages = currentMessages.slice(contextStart);
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: currentMessages }),
+        body: JSON.stringify({
+          messages: contextMessages,
+          contextSummary,
+          summaryMessageCount,
+          messagesToSummarize,
+        }),
       });
 
       if (!res.ok) {
@@ -198,6 +241,28 @@ export default function ChatPage() {
 
       const data = await res.json();
       const replyText = data.reply || "I am here to support you. Could you tell me more?";
+
+      if (
+        data.didSummarize &&
+        typeof data.contextSummary === "string" &&
+        Number.isFinite(Number(data.summaryMessageCount))
+      ) {
+        const nextSummaryMessageCount = Number(data.summaryMessageCount);
+        setContextSummary(data.contextSummary);
+        setSummaryMessageCount(nextSummaryMessageCount);
+
+        const { error: summaryDbError } = await supabase
+          .from("chat_sessions")
+          .update({
+            context_summary: data.contextSummary,
+            summary_message_count: nextSummaryMessageCount,
+          })
+          .eq("id", sessionId);
+
+        if (summaryDbError) {
+          console.warn("Could not persist chat context summary:", summaryDbError.message);
+        }
+      }
 
       setIsTyping(false);
 
@@ -327,6 +392,8 @@ export default function ChatPage() {
 
       const sessionId = newSession.id;
       setCurrentSessionId(sessionId);
+      setContextSummary("");
+      setSummaryMessageCount(0);
 
       // Format user message based on the mood/description
       const userText = description && description !== "No additional notes for this entry."
@@ -394,6 +461,8 @@ export default function ChatPage() {
 
         sessionId = newSession.id;
         setCurrentSessionId(sessionId);
+        setContextSummary("");
+        setSummaryMessageCount(0);
       }
 
       // 2. Add user message

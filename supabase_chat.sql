@@ -6,8 +6,19 @@ CREATE TABLE IF NOT EXISTS public.chat_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     title TEXT NOT NULL DEFAULT 'New chat',
+    -- Rolling context used for LLM requests. Full messages remain available
+    -- for the user's chat history, but are not resent on every AI request.
+    context_summary TEXT NOT NULL DEFAULT '',
+    summary_message_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Safe migration for projects where chat_sessions already exists.
+ALTER TABLE public.chat_sessions
+    ADD COLUMN IF NOT EXISTS context_summary TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE public.chat_sessions
+    ADD COLUMN IF NOT EXISTS summary_message_count INTEGER NOT NULL DEFAULT 0;
 
 -- Enable RLS for chat_sessions
 ALTER TABLE public.chat_sessions ENABLE ROW LEVEL SECURITY;

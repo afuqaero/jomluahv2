@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
-  try {
-    const { messages } = await req.json();
+type IncomingMessage = {
+  sender: "user" | "bot";
+  text: string;
+};
 
-    const baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-    const apiKey = process.env.OLLAMA_API_KEY;
+type ModelMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
 
-    // Default system prompt instructing local Malaysian support channels, bilingual capabilities, and Manglish support
-    const systemPrompt = `You are JomLuah, a warm, extremely friendly, and supportive AI companion helping Malaysian university students at UTHM. Act like a close, compassionate peer or an understanding friend.
+const MAX_SUMMARY_WORDS = 220;
+
+const systemPrompt = `You are JomLuah, a warm, extremely friendly, and supportive AI companion helping Malaysian university students at UTHM. Act like a close, compassionate peer or an understanding friend.
 
 CRITICAL: ONLY SPEAK IN CASUAL/INFORMAL MALAYSIAN MALAY (BAHASA MELAYU PASAR) AND ENGLISH/MANGLISH. DO NOT SPEAK INDONESIAN OR FORMAL/TEXTBOOK MALAY UNDER ANY CIRCUMSTANCES. If you are unsure, default strictly to informal Malaysian Malay or Manglish.
 
@@ -38,68 +42,173 @@ Safety Protocols:
 - If a user expresses serious distress, depression, or self-harm, gently acknowledge their feelings and guide them UTHM PCU counsellors (pcu.uthm.edu.my, +607-4537465), Befrienders Malaysia (03-76272929, 24/7 hotline), or Talian Kasih (15999, 24/7).
 - Do NOT mention US/UK resources like 988 or 116 123. If they are in immediate danger, guide them to call Malaysian emergency services at 999 instead of 911.`;
 
-    const mappedMessages = [
-      { role: "system", content: systemPrompt },
-      ...messages.map((m: any) => ({
-        role: m.sender === "user" ? "user" : "assistant",
-        content: m.text,
-      })),
+const summaryPrompt = `You maintain a compact memory for JomLuah, an emotional reflection companion. Summarise the supplied conversation turns for a future response.
+
+Keep only useful context: the user's main concerns, important facts, emotions, goals, preferences, unresolved topics, and safety-relevant signals. Preserve uncertainty instead of guessing. Do not add advice, diagnoses, or commentary. Write concise bullet points in English so the memory is easy for another AI to use. Keep it under ${MAX_SUMMARY_WORDS} words.`;
+
+function normaliseMessages(value: unknown): IncomingMessage[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter((message): message is IncomingMessage => {
+    if (!message || typeof message !== "object") return false;
+    const candidate = message as Partial<IncomingMessage>;
+    return (
+      (candidate.sender === "user" || candidate.sender === "bot") &&
+      typeof candidate.text === "string" &&
+      candidate.text.trim().length > 0
+    );
+  });
+}
+
+function limitWords(text: string, maxWords: number): string {
+  return text.trim().split(/\s+/).filter(Boolean).slice(0, maxWords).join(" ");
+}
+
+function toModelMessages(messages: IncomingMessage[]): ModelMessage[] {
+  return messages.map((message) => ({
+    role: message.sender === "user" ? "user" : "assistant",
+    content: message.text,
+  }));
+}
+
+function formatConversation(messages: IncomingMessage[]): string {
+  return messages
+    .map((message) => `${message.sender === "user" ? "User" : "JomLuah"}: ${message.text}`)
+    .join("\n");
+}
+
+async function callModel(messages: ModelMessage[], purpose: "reply" | "summary") {
+  const baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.OLLAMA_API_KEY;
+  const modelName = process.env.OLLAMA_MODEL || "llama3.2";
+  const isLocalOllama = baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1");
+  const endpoint = isLocalOllama
+    ? `${baseUrl}/api/chat`
+    : `${baseUrl}/v1/chat/completions`;
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  const model = isLocalOllama
+    ? modelName
+    : modelName === "llama3.2"
+      ? "meta-llama/llama-3.2-3b-instruct"
+      : modelName;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(
+      isLocalOllama
+        ? {
+            model,
+            messages,
+            stream: false,
+            options: {
+              temperature: purpose === "summary" ? 0.1 : 0.7,
+            },
+          }
+        : {
+            model,
+            messages,
+            stream: false,
+            temperature: purpose === "summary" ? 0.1 : 0.7,
+            max_tokens: purpose === "summary" ? 450 : 900,
+          }
+    ),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API Error: ${response.statusText} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  return isLocalOllama
+    ? data.message?.content || ""
+    : data.choices?.[0]?.message?.content || "";
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const messages = normaliseMessages(body.messages);
+    const messagesToSummarize = normaliseMessages(body.messagesToSummarize);
+    const priorSummary = typeof body.contextSummary === "string"
+      ? limitWords(body.contextSummary, MAX_SUMMARY_WORDS)
+      : "";
+    const parsedSummaryCount = Number(body.summaryMessageCount);
+    const priorSummaryCount = Number.isFinite(parsedSummaryCount) && parsedSummaryCount >= 0
+      ? Math.floor(parsedSummaryCount)
+      : 0;
+
+    let contextSummary = priorSummary;
+    let summaryMessageCount = priorSummaryCount;
+    let summaryFailed = false;
+
+    // Compact only the older, unsummarised turns supplied by the client. The
+    // complete history stays in Supabase for display, but is not sent here.
+    if (messagesToSummarize.length > 0) {
+      const summaryInput: ModelMessage[] = [
+        { role: "system", content: summaryPrompt },
+        ...(priorSummary
+          ? [{ role: "user" as const, content: `Existing memory:\n${priorSummary}` }]
+          : []),
+        {
+          role: "user",
+          content: `Conversation turns to add to memory:\n${formatConversation(messagesToSummarize)}`,
+        },
+      ];
+
+      try {
+        const generatedSummary = limitWords(
+          await callModel(summaryInput, "summary"),
+          MAX_SUMMARY_WORDS
+        );
+
+        if (generatedSummary) {
+          contextSummary = generatedSummary;
+          summaryMessageCount = priorSummaryCount + messagesToSummarize.length;
+        }
+      } catch (summaryError) {
+        // Keep the response usable if the optional compaction call fails. The
+        // unsummarised chunk is included for this one request and retried next
+        // time, rather than silently losing context.
+        summaryFailed = true;
+        console.error("Conversation summary generation failed:", summaryError);
+      }
+    }
+
+    const memoryInstruction = contextSummary
+      ? `\n\nConversation memory from earlier turns:\n${contextSummary}\nUse it only when relevant and do not claim details that are not supported by it.`
+      : "";
+
+    const answerMessages = summaryFailed
+      ? [...messagesToSummarize, ...messages]
+      : messages;
+
+    const mappedMessages: ModelMessage[] = [
+      { role: "system", content: `${systemPrompt}${memoryInstruction}` },
+      ...toModelMessages(answerMessages),
     ];
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
+    const replyText = await callModel(mappedMessages, "reply");
 
-    if (apiKey) {
-      headers["Authorization"] = `Bearer ${apiKey}`;
-    }
-
-    const modelName = process.env.OLLAMA_MODEL || "llama3.2";
-
-    // Determine the API endpoint format (Ollama native vs OpenAI compatibility)
-    // Ollama compatible endpoint usually has /v1/chat/completions or /api/chat
-    const isLocalOllama = baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1");
-    const endpoint = isLocalOllama 
-      ? `${baseUrl}/api/chat`
-      : `${baseUrl}/v1/chat/completions`;
-
-    const requestBody = isLocalOllama
-      ? {
-          model: modelName,
-          messages: mappedMessages, // Send the system prompt so it enforces Malaysian/casual rules
-          stream: false,
-        }
-      : {
-          model: modelName === "llama3.2" ? "meta-llama/llama-3.2-3b-instruct" : modelName,
-          messages: mappedMessages,
-          stream: false,
-        };
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(requestBody),
+    return NextResponse.json({
+      reply: replyText,
+      contextSummary,
+      summaryMessageCount,
+      didSummarize: summaryMessageCount !== priorSummaryCount,
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { error: `API Error: ${response.statusText} - ${errorText}` },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    let replyText = "";
-
-    if (isLocalOllama) {
-      replyText = data.message?.content || "";
-    } else {
-      replyText = data.choices?.[0]?.message?.content || "";
-    }
-
-    return NextResponse.json({ reply: replyText });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unexpected chat error" },
+      { status: 500 }
+    );
   }
 }

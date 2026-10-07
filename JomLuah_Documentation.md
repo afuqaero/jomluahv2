@@ -82,11 +82,10 @@ The student dashboard is the first screen a user sees after logging in. It is in
 - From the journal, a "Continue with AI" button opens a new chat seeded with that entry's content
 
 ### 4.5 Memory & Retrieval (RAG)
-- Every conversation turn and journal entry is embedded as a vector and stored in pgvector (via Supabase)
-- When a new conversation starts, the RAG pipeline retrieves the top-k semantically similar past entries and injects them into the LLM context window
-- This allows the AI to say things like "you mentioned feeling overwhelmed last week — is that still the case?"
-- The LLM orchestration layer (LangChain.js or custom pipeline) manages prompt assembly, memory summarisation, and retrieval
-- Rolling summaries are used to manage long conversation histories efficiently
+- The current implementation uses persisted rolling conversation summaries to control token usage. The full transcript remains available in Supabase for the user interface, while the LLM receives the summary plus a bounded recent-message window.
+- When the unsummarised part of an active chat becomes large, `/api/chat` asks the configured LLM to create a compact summary and stores it in `chat_sessions.context_summary`.
+- `chat_sessions.summary_message_count` records how much of the transcript is represented by the summary, so the next request only sends newly unsummarised turns and recent context.
+- Semantic retrieval of journal entries is a planned RAG extension. It will later embed conversation turns and journal entries in pgvector and retrieve top-k relevant memories across sessions.
 
 ### 4.6 Analytics & Report Generation
 - Sentiment scores extracted from each conversation turn using an NLP pipeline
@@ -280,13 +279,13 @@ If LangChain.js proves too heavy for the PWA context, a custom lightweight RAG p
 **Request flow for a chat message:**
 1. User sends message from the chat UI
 2. Next.js API route receives it
-3. The RAG pipeline queries pgvector for top-k similar past entries
-4. Retrieved context + user profile summary + new message assembled into a prompt
-5. Prompt sent to LLM (OpenRouter or Ollama)
-6. LLM response returned to client and displayed
-7. Conversation turn saved to Supabase, embedded and stored in pgvector
-8. Sentiment score extracted and saved to the analytics table
-9. Risk detection scans the turn for flagged keywords
+3. Client selects the recent message window and any older turns that need summarising
+4. If required, the API asks the LLM for a compact rolling summary
+5. Summary + recent context are assembled into the response prompt
+6. Prompt sent to LLM (OpenRouter or Ollama)
+7. LLM response returned to client and displayed
+8. The updated summary is saved to `chat_sessions`, while the new message and response are saved to `chat_messages`
+9. Future RAG retrieval, sentiment analysis, and risk detection can be added as separate pipeline stages
 
 ---
 
@@ -390,17 +389,16 @@ CREATE TABLE reports (
 User message received
         │
         ▼
-Embed the message using OpenAI text-embedding-3-small
+Load the saved rolling summary and recent chat window
         │
         ▼
-Query pgvector for top 5 similar past entries
-(cosine similarity, filtered by user_id)
+If the unsummarised window is too large, summarise older turns
         │
         ▼
 Assemble prompt:
-  [System prompt with user profile + disclaimer]
-  [Retrieved past context (summarised)]
-  [Last N messages in current conversation]
+  [System prompt with safety rules]
+  [Saved rolling conversation summary]
+  [Latest bounded message window]
   [User's new message]
         │
         ▼
@@ -411,10 +409,10 @@ Stream response back to client
         │
         ▼
 Save message + response to Supabase
-Embed response and save to pgvector
-Run sentiment extraction on the turn
-Check for risk keywords
 ```
+
+Semantic pgvector retrieval is planned as a later extension to this rolling
+summary flow.
 
 ### System Prompt Template
 
