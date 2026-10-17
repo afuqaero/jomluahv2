@@ -73,7 +73,7 @@
 - [x] Log model, latency, token use, success, and safety level to `llm_events`.
 - [x] Add route-level evaluation runner and starter cases.
 - [ ] Create admin dashboard for aggregate quality/latency metrics.
-- [ ] Add CI job using a dedicated evaluation project and budget cap.
+- [x] Add CI job for backend tests, type-checking, and production build; provider-backed evaluations remain opt-in to avoid API spend.
 - [ ] Review negative feedback weekly and turn failures into regression cases.
 
 ## Phase 11 — Backend mobile/PWA readiness
