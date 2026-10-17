@@ -52,6 +52,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Saturday, 17 October 2026 — 22:26 MYT
+
+#### Backend verification workflow
+
+* Added GitHub Actions checks for backend unit tests, TypeScript, and the production build.
+* Verified locally: 5 backend tests passed, TypeScript passed, and the production build passed.
+* The provider-backed chat evaluation is currently blocked by the DeepSeek account returning HTTP 402 (`Insufficient Balance`), not by an application error.
+
 ### Saturday, 17 October 2026 — 22:05 MYT
 
 #### Vercel Analytics enabled
