@@ -104,13 +104,13 @@
 - [x] Apply the verified migration to the Neon `production` branch and re-verify RLS/schema counts.
 - [x] Remove direct Supabase dependencies and obsolete local Supabase environment variables.
 - [x] Rotate the exposed `neondb_owner` password on production and the migration branch; refresh local migration credentials (2026-10-17 21:22 MYT).
-- [x] Authenticate Vercel, recreate/link `afuqaeros-projects/jom-luah` after the stale project returned `404`, and upload the production Neon variables (2026-10-17 21:31 MYT).
+- [x] Authenticate Vercel, resolve the stale project, and configure the actual Git-connected `afuqaeros-projects/jomluahv2` project with production Neon variables (2026-10-17 22:01 MYT).
 - [x] Connect `https://github.com/afuqaero/jomluahv2` to the Vercel project and verify the connection (2026-10-17 21:49 MYT).
 - [ ] Rotate the exposed local DeepSeek and Gemini keys, then upload the replacements to Vercel.
-- [ ] Review, commit, and push the current Neon/AI migration so Git-based deployments contain it.
-- [ ] Create the first production Vercel deployment.
-- [x] Add and verify `https://jom-luah.vercel.app` in the Neon `production` branch trusted domains (2026-10-17 21:31 MYT).
-- [ ] Run post-deployment production authentication, CRUD, RLS, and chat smoke tests.
+- [x] Review, commit, and push the Neon/AI migration so Git-based deployments contain it (2026-10-17 21:56 MYT).
+- [x] Create the first production Vercel deployment and resolve its missing-environment failure (2026-10-17 22:01 MYT).
+- [x] Add and verify `https://jomluahv2.vercel.app` in the Neon `production` branch trusted domains (2026-10-17 22:01 MYT).
+- [ ] Run authenticated production authentication, CRUD, RLS, memory, embedding, and chat smoke tests.
 
 ## Required environment variables
 

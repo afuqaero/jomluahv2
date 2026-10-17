@@ -52,6 +52,21 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Saturday, 17 October 2026 — 22:01 MYT
+
+#### First production deployment ready
+
+* Fixed the Vercel TypeScript failure where `sessionId` could be `null` at the `simulateBotResponse` call site.
+* Found and corrected a Vercel project mismatch: Git was deploying `jomluahv2`, while environment variables had been attached to the unavailable `jom-luah` project.
+* Added the production Neon variables to the actual Git-connected `jomluahv2` project and redeployed successfully.
+* Production alias is now `https://jomluahv2.vercel.app`.
+* Added and verified the actual production origin in the Neon Auth `production` trusted-domain list.
+* Smoke-tested the homepage (`200`), protected dashboard redirect (`307` to `/login`), unauthenticated memories API (`401`), and auth session endpoint (`200 null`).
+
+#### Remaining production limitation
+
+* DeepSeek and Gemini API keys are not in Vercel yet, so authenticated live chat and embedding backfill still require provider-key configuration and testing.
+
 ### Saturday, 17 October 2026 — 21:49 MYT
 
 #### GitHub connected to Vercel
