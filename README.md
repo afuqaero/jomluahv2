@@ -52,6 +52,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Saturday, 17 October 2026 — 22:05 MYT
+
+#### Vercel Analytics enabled
+
+* Installed `@vercel/analytics`.
+* Mounted the Next.js `<Analytics />` component in the root app layout so page analytics load across the app.
+* Verified the production build passes.
+
 ### Saturday, 17 October 2026 — 22:01 MYT
 
 #### First production deployment ready
