@@ -1,26 +1,22 @@
 "use client";
 
 import {
-  ChatCircleDots,
-  ShieldCheck,
   Plus,
   Microphone,
   PaperPlaneRight,
-  Bell,
-  Gear,
-  User,
-  Circle,
   TextAlignLeft,
   X,
   ArrowBendUpLeft,
-  Trash
+  Trash,
+  ThumbsUp,
+  ThumbsDown
 } from "@phosphor-icons/react";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
-import { supabase } from "../lib/supabaseClient";
+import { neon as supabase } from "../lib/neonClient";
 import { useInactivityLogout } from "../lib/useInactivityLogout";
 
 type Message = {
@@ -31,6 +27,14 @@ type Message = {
   options?: string[];
   replyToText?: string;
   replyToSender?: "bot" | "user";
+  feedback?: 1 | -1;
+};
+
+type RecentChatSession = {
+  id: string;
+  title: string;
+  created_at: string;
+  chat_messages: Array<{ text: string; created_at: string }> | null;
 };
 
 // Keep a small recent window in the prompt. Older turns are compressed into
@@ -75,7 +79,7 @@ export default function ChatPage() {
       if (error) throw error;
 
       if (sessions && sessions.length > 0) {
-        const formatted = sessions.map((s: any) => {
+        const formatted = (sessions as RecentChatSession[]).map((s) => {
           const msgs = s.chat_messages || [];
           const sortedMsgs = [...msgs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           const lastMsg = sortedMsgs[0];
@@ -120,27 +124,6 @@ export default function ChatPage() {
       console.error("Failed to delete chat session:", err);
     }
   };
-
-  // Auth guard — redirect to login if no session
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.replace("/login");
-        return;
-      }
-      const meta = session.user.user_metadata;
-      const name =
-        meta?.full_name ||
-        meta?.name ||
-        session.user.email?.split("@")[0] ||
-        "there";
-      setDisplayName(name);
-      loadRecentChats(session.user.id);
-      handleInitialEntry(session.user.id);
-    };
-    checkAuth();
-  }, [router]);
 
   const handleLoadChat = async (chatId: string) => {
     setIsHistoryOpen(false);
@@ -232,42 +215,20 @@ export default function ChatPage() {
           contextSummary,
           summaryMessageCount,
           messagesToSummarize,
+          sessionId,
         }),
       });
 
       if (!res.ok) {
-        throw new Error("Failed to fetch AI response");
+        const errorBody = await res.text();
+        throw new Error(errorBody || "Failed to fetch AI response");
       }
 
-      const data = await res.json();
-      const replyText = data.reply || "I am here to support you. Could you tell me more?";
-
-      if (
-        data.didSummarize &&
-        typeof data.contextSummary === "string" &&
-        Number.isFinite(Number(data.summaryMessageCount))
-      ) {
-        const nextSummaryMessageCount = Number(data.summaryMessageCount);
-        setContextSummary(data.contextSummary);
-        setSummaryMessageCount(nextSummaryMessageCount);
-
-        const { error: summaryDbError } = await supabase
-          .from("chat_sessions")
-          .update({
-            context_summary: data.contextSummary,
-            summary_message_count: nextSummaryMessageCount,
-          })
-          .eq("id", sessionId);
-
-        if (summaryDbError) {
-          console.warn("Could not persist chat context summary:", summaryDbError.message);
-        }
+      if (!res.body) {
+        throw new Error("AI response stream unavailable");
       }
 
-      setIsTyping(false);
-
-      // Insert placeholder message for typewriter animation
-      const botMsgId = String(Date.now());
+      const botMsgId = crypto.randomUUID();
       setMessages((prev) => [
         ...prev,
         {
@@ -278,15 +239,73 @@ export default function ChatPage() {
         }
       ]);
 
-      // Save bot response to DB
-      const { error: botDbErr } = await supabase
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let replyText = "";
+      let summaryUpdate: { contextSummary: string; summaryMessageCount: number } | null = null;
+
+      const processLine = (line: string) => {
+        if (!line.trim()) return;
+        const event = JSON.parse(line);
+        if (event.type === "meta" && event.didSummarize && typeof event.contextSummary === "string") {
+          summaryUpdate = {
+            contextSummary: event.contextSummary,
+            summaryMessageCount: Number(event.summaryMessageCount),
+          };
+        }
+        if (event.type === "delta" && typeof event.text === "string") {
+          replyText += event.text;
+          setIsTyping(false);
+          setMessages((prev) => prev.map((message) =>
+            message.id === botMsgId ? { ...message, text: replyText } : message
+          ));
+        }
+        if (event.type === "error") throw new Error(event.error || "AI stream failed");
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        lines.forEach(processLine);
+        if (done) break;
+      }
+      if (buffer.trim()) processLine(buffer);
+
+      if (!replyText) {
+        replyText = "I am here with you. Could you tell me a little more?";
+        setMessages((prev) => prev.map((message) =>
+          message.id === botMsgId ? { ...message, text: replyText } : message
+        ));
+      }
+
+      if (summaryUpdate) {
+        const nextSummary = summaryUpdate as { contextSummary: string; summaryMessageCount: number };
+        setContextSummary(nextSummary.contextSummary);
+        setSummaryMessageCount(nextSummary.summaryMessageCount);
+        const { error: summaryDbError } = await supabase
+          .from("chat_sessions")
+          .update({
+            context_summary: nextSummary.contextSummary,
+            summary_message_count: nextSummary.summaryMessageCount,
+          })
+          .eq("id", sessionId);
+        if (summaryDbError) console.warn("Could not persist chat context summary:", summaryDbError.message);
+      }
+
+      const { data: savedBotMessage, error: botDbErr } = await supabase
         .from("chat_messages")
-        .insert({
-          session_id: sessionId,
-          sender: "bot",
-          text: replyText
-        });
+        .insert({ session_id: sessionId, sender: "bot", text: replyText })
+        .select("id")
+        .single();
       if (botDbErr) console.error("Error saving bot message:", botDbErr);
+      if (savedBotMessage?.id) {
+        setMessages((prev) => prev.map((message) =>
+          message.id === botMsgId ? { ...message, id: savedBotMessage.id } : message
+        ));
+      }
 
       // Reload sidebar list to show updated preview
       const { data: { session } } = await supabase.auth.getSession();
@@ -294,34 +313,13 @@ export default function ChatPage() {
         loadRecentChats(session.user.id);
       }
 
-      let textIndex = 0;
-      const interval = setInterval(() => {
-        textIndex += 2; // Type 2 characters at a time for natural speed
-        if (textIndex >= replyText.length) {
-          clearInterval(interval);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === botMsgId
-                ? { ...msg, text: replyText }
-                : msg
-            )
-          );
-        } else {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === botMsgId
-                ? { ...msg, text: replyText.substring(0, textIndex) }
-                : msg
-            )
-          );
-        }
-      }, 20);
+      setIsTyping(false);
     } catch (err) {
       console.error(err);
       setIsTyping(false);
       
       const replyText = "I'm having a bit of trouble connecting right now, but I am still here. Take a gentle breath.";
-      const botMsgId = String(Date.now());
+      const botMsgId = crypto.randomUUID();
       
       setMessages((prev) => [
         ...prev,
@@ -344,7 +342,23 @@ export default function ChatPage() {
     }
   };
 
-  const handleInitialEntry = async (uid: string) => {
+  const submitFeedback = async (messageId: string, rating: 1 | -1) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const { error } = await supabase.from("chat_feedback").upsert(
+      { user_id: session.user.id, message_id: messageId, rating, updated_at: new Date().toISOString() },
+      { onConflict: "user_id,message_id" }
+    );
+    if (error) {
+      console.error("Could not save chat feedback:", error);
+      return;
+    }
+    setMessages((prev) => prev.map((message) =>
+      message.id === messageId ? { ...message, feedback: rating } : message
+    ));
+  };
+
+  async function handleInitialEntry(uid: string) {
     const params = new URLSearchParams(window.location.search);
     const entryId = params.get("entryId");
     const moodParam = params.get("mood");
@@ -401,7 +415,7 @@ export default function ChatPage() {
         : `I logged my mood as "${mood}" today.`;
 
       const userMsg: Message = {
-        id: String(Date.now()),
+        id: crypto.randomUUID(),
         sender: "user",
         text: userText,
         timestamp: getFormattedTime()
@@ -428,11 +442,29 @@ export default function ChatPage() {
     } catch (err) {
       console.error("Error handling initial entry:", err);
     }
-  };
+  }
+
+  // Auth guard — redirect to login if no session.
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+      const name = session.user.name || session.user.email?.split("@")[0] || "there";
+      setDisplayName(name);
+      loadRecentChats(session.user.id);
+      handleInitialEntry(session.user.id);
+    };
+    checkAuth();
+    // Auth bootstrap intentionally follows router lifecycle only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend ?? inputValue).trim();
-    if (!text) return;
+    if (!text || isTyping) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -467,7 +499,7 @@ export default function ChatPage() {
 
       // 2. Add user message
       const userMsg: Message = {
-        id: String(Date.now()),
+        id: crypto.randomUUID(),
         sender: "user",
         text,
         timestamp: getFormattedTime(),
@@ -497,7 +529,9 @@ export default function ChatPage() {
       loadRecentChats(uid);
       
       // 3. Query companion response
-      simulateBotResponse(text, updatedMessages, sessionId);
+      if (sessionId) {
+        simulateBotResponse(text, updatedMessages, sessionId);
+      }
     } catch (err) {
       console.error("Error sending message:", err);
     }
@@ -634,6 +668,28 @@ export default function ChatPage() {
                     <span className={`text-[9px] font-bold uppercase tracking-wider block px-2 ${theme.textMuted} ${msg.sender === "user" ? "text-right" : "text-left"}`}>
                       {msg.timestamp}
                     </span>
+                    {msg.sender === "bot" && msg.text && (
+                      <div className="flex items-center gap-1 px-1" aria-label="Rate this response">
+                        <button
+                          type="button"
+                          onClick={() => submitFeedback(msg.id, 1)}
+                          className={`p-1.5 rounded-full transition ${msg.feedback === 1 ? "text-emerald-500 bg-emerald-500/10" : "text-neutral-400 hover:text-emerald-500 hover:bg-emerald-500/10"}`}
+                          title="Helpful response"
+                          aria-label="Helpful response"
+                        >
+                          <ThumbsUp size={14} weight={msg.feedback === 1 ? "fill" : "regular"} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => submitFeedback(msg.id, -1)}
+                          className={`p-1.5 rounded-full transition ${msg.feedback === -1 ? "text-rose-500 bg-rose-500/10" : "text-neutral-400 hover:text-rose-500 hover:bg-rose-500/10"}`}
+                          title="Unhelpful response"
+                          aria-label="Unhelpful response"
+                        >
+                          <ThumbsDown size={14} weight={msg.feedback === -1 ? "fill" : "regular"} />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Hover Reply Button (Bot messages only) */}
@@ -946,7 +1002,7 @@ function renderFormattedText(text: string) {
         const content = numberMatch ? numberMatch[1] : block.lines[0];
         return (
           <ol key={blockIdx} className="list-decimal pl-5 my-1 text-sm sm:text-base leading-relaxed">
-            <li>{parseInlineMarkdown(numberMatch[1] || content)}</li>
+            <li>{parseInlineMarkdown((numberMatch && numberMatch[1]) || content)}</li>
           </ol>
         );
       }

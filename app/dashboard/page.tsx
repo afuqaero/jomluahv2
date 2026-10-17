@@ -39,7 +39,7 @@ import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "./ResponsiveAssets";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
 import { useAppTheme } from "../components/useAppTheme";
-import { supabase } from "../lib/supabaseClient";
+import { neon as supabase } from "../lib/neonClient";
 
 const THEME_STORAGE_KEY = "jomluah-theme";
 const SIDEBAR_COLLAPSED_KEY = "jomluah-sidebar-collapsed";
@@ -230,11 +230,9 @@ export default function StudentDashboard() {
         return;
       }
       setUser(session.user);
-      // Derive display name: prefer full_name metadata, fallback to email prefix
-      const meta = session.user.user_metadata;
+      // Neon Auth stores the display name directly on the user record.
       const name =
-        meta?.full_name ||
-        meta?.name ||
+        session.user.name ||
         session.user.email?.split("@")[0] ||
         "there";
       setDisplayName(name);

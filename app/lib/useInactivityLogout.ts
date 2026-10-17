@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "./supabaseClient";
+import { neon as supabase } from "./neonClient";
 
 // After this much time with no user activity, sign the user out automatically.
 // Protects private journal/chat data on devices left unattended.

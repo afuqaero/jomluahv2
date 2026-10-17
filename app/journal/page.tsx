@@ -21,7 +21,7 @@ import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import NoteEditorModal, { type NotePayload } from "./NoteEditorModal";
 import NewFolderModal, { coverOptions, iconOptions, type NewFolderPayload } from "./NewFolderModal";
-import { supabase } from "../lib/supabaseClient";
+import { neon as supabase } from "../lib/neonClient";
 
 type IdeaNote = {
   id: number | string;

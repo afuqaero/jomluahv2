@@ -24,7 +24,7 @@ import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import MoodEntryModal, { type MoodEntryPayload, type ModalInitialEntry } from "../dashboard/MoodEntryModal";
 import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "../dashboard/ResponsiveAssets";
-import { supabase } from "../lib/supabaseClient";
+import { neon as supabase } from "../lib/neonClient";
 
 type JournalEntry = {
   id: number | string;

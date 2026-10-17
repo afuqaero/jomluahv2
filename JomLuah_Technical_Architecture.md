@@ -22,12 +22,12 @@
 ### 2.1 Core Framework & Libraries
 | Component | Technology | Version | Description & Rationale |
 | :--- | :--- | :--- | :--- |
-| **Framework** | **Next.js** | `16.2.6` | React Full-Stack Framework with App Router & SSR support |
+| **Framework** | **Next.js** | `16.4.2` | React Full-Stack Framework with App Router & SSR support |
 | **UI Library** | **React** | `19.2.4` | Modern component-based frontend framework |
-| **Language** | **TypeScript** | `^5` | Strict static typing across API routes, UI, and Supabase schemas |
+| **Language** | **TypeScript** | `^5` | Strict static typing across API routes, UI, and Neon schemas |
 | **Styling** | **Tailwind CSS** | `^4` | Utility-first CSS engine with PostCSS processing (`@tailwindcss/postcss`) |
 | **Icons** | **Lucide / Phosphor** | `^1.17` / `^2.1` | Icon libraries for UI elements, mood tags, and action buttons |
-| **Auth & Data** | **Supabase SSR** | `^0.12` / `^2.108` | Server-Side Supabase Client with JWT cookie session handling |
+| **Auth & Data** | **Neon Auth / Neon JS** | `^0.6` / `^0.8` | Managed Better Auth, signed Next.js sessions, and Neon Data API queries |
 
 ---
 
@@ -41,23 +41,23 @@
                                                    │
                                 ┌──────────────────┴──────────────────┐
                                 │        Edge Middleware Layer        │
-                                │   proxy.ts (Zero Network Calls)     │
+                                │ proxy.ts (Neon session validation) │
                                 └──────────────────┬──────────────────┘
                                                    │
                 ┌──────────────────────────────────┴──────────────────────────────────┐
                 │                                                                     │
 ┌───────────────▼────────────────────────┐                         ┌───────────────────▼──────────────────┐
 │         App Router API Services        │                         │     Database & Storage Layer         │
-│     /api/chat Route & Controllers      │                         │         Supabase PostgreSQL          │
+│     /api/chat Route & Controllers      │                         │           Neon Postgres              │
 │ • System Prompt Engineering            │                         │ • Row Level Security (RLS)           │
 │ • Malaysian Localization Rules         │                         │ • Data Tables (Journal, Folders, Chat)│
-│ • Safety Hotline Interceptors          │                         │ • pgvector Vector Embeddings         │
+│ • Safety Hotline Interceptors          │                         │ • JSONB Embeddings + Cosine Ranking  │
 └───────────────┬────────────────────────┘                         └───────────────────▲──────────────────┘
                 │                                                                      │
 ┌───────────────▼──────────────────────────────────────────────────────────────────────┴──────────────────┐
-│                              AI Inference Engine & Vector RAG Pipeline                                  │
-│  • Local Mode: Ollama REST API (http://localhost:11434 with llama3.2)                                   │
-│  • Cloud Fallback: OpenRouter API (meta-llama/llama-3.2-3b-instruct / llama-3.1-70b)                    │
+│                              AI Inference Engine & Memory/RAG Pipeline                                  │
+│  • DeepSeek API: https://api.deepseek.com/chat/completions                                              │
+│  • Default model: deepseek-v4-pro with streaming and strict tool calling                               │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -68,31 +68,26 @@
 The application utilizes a custom performance-optimized Next.js Edge Middleware ([`proxy.ts`](file:///Users/feeq/Documents/Projects/JomLuahv2/proxy.ts)).
 
 ### Key Features
-* **Zero Network Round-Trips**: Replaces traditional database/network auth checks (which add 400ms–850ms per request) with high-speed, local HTTP cookie evaluation (`<1ms`).
-* **Session Detection**: Checks for Supabase SSR JWT cookies (`sb-*-auth-token`).
+* **Signed Session Validation**: Neon Auth middleware validates protected routes and refreshes the signed session cache when required.
+* **Same-Origin Auth Proxy**: `/api/auth/[...path]` keeps browser and server sessions on the application origin.
 * **Onboarding Guard**: Checks a lightweight client cookie (`jl_ob=1`) set upon onboarding completion to direct users between `/onboarding` and `/dashboard`.
 
 ```typescript
 // proxy.ts (Core Excerpt)
-const hasSession = cookies.getAll().some(
-  (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
-);
-const onboardingCompleted = cookies.get("jl_ob")?.value === "1";
-
-if (!hasSession && isProtectedRoute) {
-  return NextResponse.redirect(new URL("/login", request.url));
-}
+const authResponse = await auth.middleware({ loginUrl: "/login" })(request);
+if (authResponse.headers.has("location")) return authResponse;
 ```
 
 ---
 
 ## 5. AI Engine, Localization & Safety Protocols
 
-### 5.1 Dual-Provider Inference Strategy ([`app/api/chat/route.ts`](file:///Users/feeq/Documents/Projects/JomLuahv2/app/api/chat/route.ts))
-The chat service dynamically chooses between local privacy-focused LLM execution and high-performance cloud inference:
-
-1. **Local Mode (Ollama)**: Target endpoint `http://localhost:11434/api/chat` using model `llama3.2`. Designed for privacy compliance within university networks.
-2. **Cloud Mode (OpenRouter)**: Target endpoint `https://openrouter.ai/api/v1/chat/completions` using models like `meta-llama/llama-3.2-3b-instruct` or `llama-3.1-70b-instruct`.
+### 5.1 DeepSeek V4 Inference Strategy ([`app/api/chat/route.ts`](file:///Users/feeq/Documents/Projects/JomLuahv2/app/api/chat/route.ts))
+The chat service uses DeepSeek's OpenAI-compatible Chat Completions endpoint. The
+default model is `deepseek-flash`; `DEEPSEEK_BASE_URL` and `DEEPSEEK_MODEL` can
+override the endpoint and model. Replies use server-to-client token streaming.
+Tool selection and rolling summaries use non-thinking mode for predictable,
+low-latency structured behavior.
 
 ### 5.2 System Prompt & Language Normalization
 To ensure empathetic, natural conversations for UTHM students, the system prompt strictly enforces colloquial Malaysian Malay (*Bahasa Melayu Pasar*) and *Manglish*, while forbidding formal textbook Malay and Indonesian vocabulary:
@@ -109,25 +104,56 @@ When high distress, depression, or self-harm keywords are detected, the system i
 
 ### 5.4 Rolling Conversation Context (Implemented)
 To control token usage during long conversations, the chat client keeps the complete
-message history in Supabase for display but sends only a bounded recent window to
+message history in Neon Postgres for display but sends only a bounded recent window to
 the model. When the unsummarised portion grows beyond the configured threshold,
 `app/api/chat/route.ts` asks the selected LLM for a compact summary and persists it
 in `chat_sessions.context_summary` together with `summary_message_count`. Future
 requests send that summary plus the latest turns instead of the full history.
 
+### 5.5 Saved Memory, Tools, and Journal Retrieval (Implemented)
+Explicit requests such as “remember that...” or “simpan...” can invoke controlled
+memory tools. Saved memories live in `user_memories`, separate from chat history,
+and remain available across sessions. RLS binds every memory to its authenticated
+owner. The API validates explicit intent before any write or delete.
+
+Relevant memories and journal entries are ranked with embeddings when a compatible
+embedding endpoint is configured. A lexical scorer remains available as a fallback.
+Journal evidence is supplied with `[Journal: title | date]` citations.
+
+### 5.6 Safety, Feedback, and Observability (Implemented)
+A deterministic English/BM classifier runs before DeepSeek. Urgent self-harm
+matches bypass generative output and return reviewed Malaysian crisis resources.
+Users can rate assistant messages; feedback and privacy-safe LLM metrics are stored
+in RLS-protected tables. No raw prompt text is written to `llm_events`.
+
+### 5.7 Backend APIs and Mobile/PWA Readiness (Implemented)
+Authenticated `/api/memories` endpoints provide server-side list, create, update,
+reactivate, and permanent-delete operations for future settings UI. `/api/ai/preferences`
+controls cross-chat memory and journal retrieval. `/api/ai/backfill` generates missing
+embeddings in bounded, repeatable batches.
+
+Chat requests cap message count and message size, enforce a provider timeout, and
+propagate client disconnects to upstream DeepSeek and embedding requests. Private
+management endpoints use `Cache-Control: private, no-store`. These choices make the
+backend safe for mobile clients with limited bandwidth and unstable connections.
+Offline queues, background sync, retry buttons, and service-worker behavior remain
+frontend/PWA responsibilities for the UI phase.
+
 ---
 
 ## 6. Database Schema & Vector RAG Specification
 
-The database is built on PostgreSQL via Supabase. Rolling conversation summaries
+The database is built on Neon Postgres. Rolling conversation summaries
 are implemented in `chat_sessions`; pgvector-based retrieval remains a planned
 extension for semantic journal-memory search.
 
 ### 6.1 Core Relational Tables
-1. **`public.profiles`**: Stores user attributes, role enum (`user`, `counselor`), onboarding questionnaire state, and mental health background tags. Automatically synchronized from `auth.users` via trigger.
+1. **`public.profiles`**: Stores user attributes, role enum (`user`, `counselor`), onboarding questionnaire state, and mental health background tags. Its UUID references `neon_auth.user`; registration/onboarding performs the profile upsert.
 2. **`public.journal_entries`**: User journal entries with title, excerpt, mood tags, favorite status, and image URLs.
 3. **`public.folders` & `public.notes`**: Personal organization board (todo lists, journal categorization).
 4. **`public.chat_sessions` & `public.chat_messages`**: Historical AI chat records. Each session also stores a compact `context_summary` and the number of messages already summarised, so the full transcript does not need to be resent to the LLM.
+5. **`public.user_memories` & `public.ai_preferences`**: RLS-protected cross-chat memories and user-controlled AI personalization switches.
+6. **`public.chat_feedback` & `public.llm_events`**: Response ratings and privacy-conscious operational telemetry.
 
 ### 6.2 Security & Row Level Security (RLS)
 All database tables enforce strict RLS policies to guarantee data isolation:
@@ -149,7 +175,8 @@ FOR SELECT USING (auth.uid() = user_id);
 JomLuahv2/
 ├── app/
 │   ├── api/
-│   │   └── chat/route.ts        # AI Chat API handler (Ollama & OpenRouter)
+│   │   ├── auth/[...path]/      # Same-origin Neon Auth handler
+│   │   └── chat/route.ts        # DeepSeek streaming, tools, memory, RAG, safety
 │   ├── chat/                    # AI Conversational interface
 │   ├── dashboard/               # Student dashboard (Overview, streak counter, quotes)
 │   ├── journal/                 # Private diary & reflection tools
@@ -158,10 +185,10 @@ JomLuahv2/
 │   ├── login/ & register/       # Auth pages
 │   ├── layout.tsx               # Root layout & global providers
 │   └── page.tsx                 # Landing page
-├── proxy.ts                     # High-performance Next.js Middleware
-├── supabase_schema.sql          # Primary relational schema & RLS policies
-├── supabase_profiles.sql        # User profiles migration & auth triggers
-└── supabase_chat.sql            # Chat sessions & message tables
+├── app/lib/neonClient.ts        # Browser Auth + Data API compatibility client
+├── app/lib/serverNeon.ts        # Authenticated server Data API client
+├── proxy.ts                     # Neon Auth protected-route middleware
+└── neon_migrations/             # Versioned Neon schema and RLS migrations
 ```
 
 ---
@@ -169,10 +196,12 @@ JomLuahv2/
 ## 8. Summary of Technical Features
 
 * ✅ **Next.js 16 App Router & React 19** architecture.
-* ✅ **Sub-millisecond Edge Auth Guarding** via zero-IO cookie inspection.
-* ✅ **Hybrid LLM Backend** (Ollama Local Inference + OpenRouter Cloud API).
+* ✅ **Neon Auth route guarding** with signed session caching.
+* ✅ **DeepSeek V4 Pro Backend** with streaming and controlled tool calls.
 * ✅ **Colloquial Manglish & BM Pasar System Prompt Tuning**.
 * ✅ **Malaysian Crisis Hotline Interception Logic**.
 * ✅ **Persisted rolling conversation summaries for lower token usage**.
-* 🧭 **PostgreSQL + pgvector Retrieval-Augmented Generation (RAG)** planned for a later memory-search phase.
+* ✅ **Cross-chat saved memory** with explicit user control and RLS.
+* ✅ **Embedding-ready memory and journal RAG**, with lexical fallback and journal citations.
+* ✅ **Separate urgent-risk classifier**, response feedback, evaluations, and LLM telemetry.
 * ✅ **Full Row-Level Security (RLS)** data privacy.

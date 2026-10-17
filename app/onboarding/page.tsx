@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Sparkle } from "@phosphor-icons/react";
-import { supabase } from "../lib/supabaseClient";
+import { neon as supabase } from "../lib/neonClient";
 import { useInactivityLogout } from "../lib/useInactivityLogout";
 
 function CuteRobotFace({ className }: { className?: string }) {

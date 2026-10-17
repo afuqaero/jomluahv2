@@ -4,33 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeSlash } from "@phosphor-icons/react";
-import { supabase } from "../lib/supabaseClient";
-
-function CuteRobotFace({ className }: { className?: string }) {
-  return (
-    <div className={`relative w-28 h-28 rounded-full bg-white flex items-center justify-center shadow-lg ${className}`}>
-      <svg viewBox="0 0 100 100" className="w-20 h-20">
-        {/* Robot Head Base */}
-        <rect x="20" y="25" width="60" height="55" rx="26" fill="#f3f4f6" />
-        <rect x="23" y="28" width="54" height="49" rx="23" fill="#ffffff" />
-        {/* Gray top helmet strip */}
-        <path d="M 23 42 A 23 23 0 0 1 77 42 Z" fill="#e5e7eb" />
-        <line x1="50" y1="28" x2="50" y2="42" stroke="#d1d5db" strokeWidth="2" />
-        {/* Antenna */}
-        <circle cx="50" cy="18" r="4" fill="#fbbf24" />
-        <line x1="50" y1="18" x2="50" y2="25" stroke="#fbbf24" strokeWidth="2" />
-        {/* Eyes */}
-        <circle cx="38" cy="54" r="5" fill="#312e81" />
-        <circle cx="62" cy="54" r="5" fill="#312e81" />
-        {/* Blush */}
-        <circle cx="28" cy="62" r="4" fill="#fbcfe8" />
-        <circle cx="72" cy="62" r="4" fill="#fbcfe8" />
-        {/* Mouth */}
-        <path d="M 42 63 Q 50 71 58 63" stroke="#312e81" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-      </svg>
-    </div>
-  );
-}
+import { neon as supabase, syncPendingProfile } from "../lib/neonClient";
+import { MascotSitting } from "../components/illustrations/Mascot";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -38,7 +13,7 @@ export default function RegisterPage() {
   // Navigation states: "welcome" | "onboarding" | "login"
   const [view, setView] = useState<"welcome" | "onboarding" | "login">("welcome");
   
-  // Onboarding step: 1 | 2 | 3 | 4
+  // Onboarding step: 1 | 2 | 3 | 4 | 5
   const [step, setStep] = useState<number>(1);
 
   // Form states
@@ -46,7 +21,9 @@ export default function RegisterPage() {
   const [studentId, setStudentId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Status states
   const [loading, setLoading] = useState(false);
@@ -84,6 +61,12 @@ export default function RegisterPage() {
         return;
       }
       setStep(4);
+    } else if (step === 4) {
+      if (!password || password.length < 6) {
+        setErrorMsg("Password must be at least 6 characters");
+        return;
+      }
+      setStep(5);
     }
   };
 
@@ -107,6 +90,10 @@ export default function RegisterPage() {
       setErrorMsg("Password must be at least 6 characters");
       return;
     }
+    if (password !== confirmPassword) {
+      setErrorMsg("Passwords do not match");
+      return;
+    }
     setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
@@ -125,11 +112,35 @@ export default function RegisterPage() {
         },
       });
       if (error) {
-        setErrorMsg(error.message);
+        setErrorMsg(error.message ?? "Unable to create account");
       } else {
+        if (data?.user) {
+          const { error: profileError } = await supabase.from("profiles").upsert({
+            id: data.user.id,
+            email: data.user.email,
+            full_name: fullName.trim(),
+            student_id: studentId.trim(),
+          });
+          if (profileError) {
+            localStorage.setItem(
+              "jl_pending_profile",
+              JSON.stringify({ email, full_name: fullName.trim(), student_id: studentId.trim() })
+            );
+          }
+        }
+
         // Force sign out to prevent auto-login session from bypassing email verification & manual login
         await supabase.auth.signOut();
         setSuccessMsg("Account created successfully! Redirecting to sign in...");
+
+        // Reset states so inputs are left empty and not autofilled or carried over
+        setFullName("");
+        setStudentId("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setStep(1);
+
         setTimeout(() => {
           router.push("/login");
         }, 1500);
@@ -157,10 +168,11 @@ export default function RegisterPage() {
     setSuccessMsg("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setErrorMsg(error.message);
+        setErrorMsg(error.message ?? "Unable to sign in");
       } else {
+        if (data.session?.user) await syncPendingProfile(data.session.user);
         setSuccessMsg("Signed in! Redirecting...");
         setTimeout(() => router.push("/dashboard"), 1200);
       }
@@ -175,7 +187,7 @@ export default function RegisterPage() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (step < 4) {
+      if (step < 5) {
         handleNext();
       } else {
         handleRegisterSubmit(e);
@@ -200,7 +212,9 @@ export default function RegisterPage() {
           </header>
 
           <div className="text-center flex-1 flex flex-col justify-center mb-8">
-            <CuteRobotFace className="mx-auto mb-8" />
+            <div className="relative w-28 h-28 rounded-full bg-white flex items-center justify-center shadow-lg mx-auto mb-8">
+              <MascotSitting className="w-22 h-20" />
+            </div>
             <h1 className="text-4xl sm:text-5xl font-black leading-tight tracking-tight text-white mb-5">Hi there,<br />I&apos;m Proxima!</h1>
             <p className="text-lg text-white/85 leading-relaxed max-w-[320px] mx-auto">Your AI companion throughout your journey</p>
           </div>
@@ -227,13 +241,16 @@ export default function RegisterPage() {
           </header>
 
           <div key={step} className="text-center flex-1 flex flex-col justify-center mb-8 animate-slide-step">
-            <CuteRobotFace className="mx-auto mb-8 hover:scale-105 hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer" />
+            <div className="relative w-28 h-28 rounded-full bg-white flex items-center justify-center shadow-lg mx-auto mb-8 hover:scale-105 hover:-translate-y-1 active:scale-95 transition-all duration-300 cursor-pointer">
+              <MascotSitting className="w-22 h-20" />
+            </div>
             
             <h2 className="text-2xl sm:text-3xl font-extrabold leading-snug text-white mb-8 max-w-[380px] mx-auto text-center">
               {step === 1 && "So nice to meet you! What do your friends call you?"}
               {step === 2 && "Awesome! What is your UTHM Student ID?"}
               {step === 3 && "To secure your profile, what is your personal email?"}
               {step === 4 && "Finally, let's pick a strong password to protect your journal."}
+              {step === 5 && "Just to be sure, let's re-type your password."}
             </h2>
 
             {errorMsg && (
@@ -257,6 +274,7 @@ export default function RegisterPage() {
                   placeholder="Your nickname..."
                   className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-center outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner hover:border-white/30"
                   autoFocus
+                  autoComplete="off"
                 />
               )}
 
@@ -269,6 +287,7 @@ export default function RegisterPage() {
                   placeholder="Your student ID..."
                   className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-center outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner hover:border-white/30"
                   autoFocus
+                  autoComplete="off"
                 />
               )}
 
@@ -281,6 +300,7 @@ export default function RegisterPage() {
                   placeholder="Your personal email..."
                   className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-center outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner hover:border-white/30"
                   autoFocus
+                  autoComplete="off"
                 />
               )}
 
@@ -294,6 +314,7 @@ export default function RegisterPage() {
                     placeholder="Choose a password..."
                     className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-center outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner pr-12 hover:border-white/30"
                     autoFocus
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -304,12 +325,34 @@ export default function RegisterPage() {
                   </button>
                 </div>
               )}
+
+              {step === 5 && (
+                <div className="relative w-full">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Re-type password..."
+                    className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-center outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner pr-12 hover:border-white/30"
+                    autoFocus
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="w-full">
             <div className="w-full mb-8">
-              {step < 4 ? (
+              {step < 5 ? (
                 <button onClick={handleNext} className="w-full py-4 px-8 rounded-full bg-white text-indigo-600 font-extrabold text-base tracking-wider shadow-lg hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99] hover:shadow-xl hover:bg-opacity-95 transition-all cursor-pointer">
                   CONTINUE
                 </button>
@@ -321,7 +364,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex gap-2 justify-center mt-auto pt-4">
-              {[1, 2, 3, 4].map((s) => (
+              {[1, 2, 3, 4, 5].map((s) => (
                 <div
                   key={s}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${
@@ -345,7 +388,9 @@ export default function RegisterPage() {
           </header>
 
           <div className="flex-1 flex flex-col justify-center w-full mb-8">
-            <CuteRobotFace className="mx-auto mb-8" />
+            <div className="relative w-28 h-28 rounded-full bg-white flex items-center justify-center shadow-lg mx-auto mb-8">
+              <MascotSitting className="w-22 h-20" />
+            </div>
             
             <div className="text-center text-xl font-bold text-white mb-8 leading-relaxed max-w-[360px] mx-auto">
               Welcome back! Enter your email and password to sign in.
@@ -362,7 +407,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <form onSubmit={handleLoginSubmit} className="w-full">
+            <form onSubmit={handleLoginSubmit} className="w-full" autoComplete="off">
               <div className="flex flex-col gap-2 mb-4">
                 <label className="text-xs font-extrabold tracking-widest text-white/60 ml-2">EMAIL ADDRESS</label>
                 <input
@@ -372,6 +417,7 @@ export default function RegisterPage() {
                   placeholder="yourname@email.com"
                   required
                   className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-left outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner"
+                  autoComplete="off"
                 />
               </div>
 
@@ -384,6 +430,7 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   required
                   className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-left outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner pr-12"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"

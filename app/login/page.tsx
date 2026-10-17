@@ -4,7 +4,7 @@ import React, { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Eye, EyeSlash } from "@phosphor-icons/react";
-import { supabase } from "../lib/supabaseClient";
+import { neon as supabase, syncPendingProfile } from "../lib/neonClient";
 
 export default function LoginPage() {
   return (
@@ -85,12 +85,14 @@ function LoginPageContent() {
     try {
       const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setErrorMsg(error.message);
+        setErrorMsg(error.message ?? "Unable to sign in");
       } else {
         // Read onboarding status once here → write lightweight cookie →
         // middleware will use cookie only from now on (zero DB calls per request)
-        const userId = signInData.session?.user.id;
-        if (userId) {
+        const signedInSession = signInData.session;
+        const userId = signedInSession?.user.id;
+        if (signedInSession && userId) {
+          await syncPendingProfile(signedInSession.user);
           try {
             const { data: profile } = await supabase
               .from("profiles")
@@ -159,7 +161,7 @@ function LoginPageContent() {
             </div>
           )}
 
-          <form onSubmit={handleLoginSubmit} className="w-full">
+          <form onSubmit={handleLoginSubmit} className="w-full" autoComplete="off">
             <div className="flex flex-col gap-2 mb-4">
               <label className="text-xs font-extrabold tracking-widest text-white/60 ml-2">EMAIL ADDRESS</label>
               <input
@@ -169,6 +171,7 @@ function LoginPageContent() {
                 placeholder="yourname@email.com"
                 required
                 className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-left outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner"
+                autoComplete="off"
               />
             </div>
 
@@ -181,6 +184,7 @@ function LoginPageContent() {
                 placeholder="••••••••"
                 required
                 className="w-full bg-white/10 border border-white/20 py-4 px-6 rounded-full text-xl text-white font-sans text-left outline-none focus:border-white/45 focus:bg-white/15 transition-all placeholder-white/40 shadow-inner pr-12"
+                autoComplete="new-password"
               />
               <button
                 type="button"

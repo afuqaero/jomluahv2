@@ -35,6 +35,9 @@ export default function LandingPage() {
             onClick={(e) => {
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: "smooth" });
+              if (window.location.hash) {
+                window.history.pushState(null, "", window.location.pathname);
+              }
             }}
             className="pill-logo"
           >
@@ -243,7 +246,7 @@ export default function LandingPage() {
           position: relative;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
+          overflow: clip;
         }
 
         /* ─── Background blobs ─────────────────── */
