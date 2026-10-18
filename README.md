@@ -52,6 +52,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 18 October 2026 — 23:44 MYT
+
+#### Read JWT directly from Neon Auth proxy
+
+* Reproduced the live onboarding failure with the signed-in test account: the profile request still received an opaque session token.
+* Browser token retrieval now reads the same-origin `set-auth-jwt` response header and rejects non-JWT values before calling Neon Data API.
+* Local production build passes; commit pushed for Vercel deployment.
+
 ### Sunday, 18 October 2026 — 23:36 MYT
 
 #### Fix cached Neon session token on onboarding
