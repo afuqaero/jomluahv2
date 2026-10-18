@@ -12,5 +12,6 @@ test("chat autoscroll stays inside the message pane", () => {
 });
 
 test("chat shell cannot make the document taller than the viewport", () => {
-  assert.match(chatPage, /h-dvh[^"`]*overflow-hidden/);
+  assert.match(chatPage, /h-dvh[^"`]*overflow-clip/);
+  assert.match(chatPage, /flex-1 h-full[^"`]*overflow-clip/);
 });

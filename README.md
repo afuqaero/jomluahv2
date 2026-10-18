@@ -52,6 +52,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Monday, 19 October 2026 — 00:06 MYT
+
+#### Prevent chat background from shifting the viewport
+
+* Live Chrome geometry showed the decorative background extended below the viewport and made the outer chat wrapper programmatically scroll by 73 px after the composer received focus.
+* Changed both viewport wrappers from scrollable overflow hiding to `overflow-clip`, keeping the header and composer fixed while the dedicated message pane remains independently scrollable.
+* Strengthened the layout regression test to cover both wrappers. Backend tests pass (7/7) and the production build succeeds locally.
+
 ### Sunday, 18 October 2026 — 23:59 MYT
 
 #### Restore production AI chat and contain chat scrolling

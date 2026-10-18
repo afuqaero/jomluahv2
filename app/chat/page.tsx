@@ -543,7 +543,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className={`h-dvh overflow-hidden ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
+    <div className={`h-dvh overflow-clip ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
 
       <AppSidebar
         isDarkMode={isDarkMode}
@@ -556,7 +556,7 @@ export default function ChatPage() {
       />
 
       {/* Page Content */}
-      <div className="flex-1 h-full min-w-0 p-4 sm:p-6 md:p-8 flex flex-col relative overflow-hidden transition-colors duration-500 pb-24 lg:pb-8">
+      <div className="flex-1 h-full min-w-0 p-4 sm:p-6 md:p-8 flex flex-col relative overflow-clip transition-colors duration-500 pb-24 lg:pb-8">
         <BackgroundDecor isDarkMode={isDarkMode} />
 
         <MobileBottomNav />
