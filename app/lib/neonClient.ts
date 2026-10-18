@@ -13,6 +13,14 @@ const authClient = createAuthClient();
 
 function getDataApiUrl(baseUrl: string) {
   const url = new URL(baseUrl);
+
+  // Accept either the Neon endpoint (`...neon.tech/neondb`) or the full
+  // Data API endpoint (`...apirest.../neondb/rest/v1`). This keeps Vercel
+  // configuration compatible with the URL copied from Neon’s dashboard.
+  if (url.hostname.split(".").includes("apirest") || url.pathname.endsWith("/rest/v1")) {
+    return url.toString().replace(/\/$/, "");
+  }
+
   const labels = url.hostname.split(".");
   labels.splice(1, 0, "apirest");
   url.hostname = labels.join(".");

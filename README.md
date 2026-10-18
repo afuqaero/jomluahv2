@@ -61,6 +61,15 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Verified backend tests (5/5), TypeScript, and production build locally.
 * Production authenticated onboarding verification remains pending until Vercel deploys and a signed-in test session is available.
 
+### Sunday, 18 October 2026 — 23:00 MYT
+
+#### Harden Neon Data API URL configuration
+
+* Investigated the production login `HTTP 404` using the auth route and deployment boundary.
+* Confirmed the same-origin Neon Auth proxy is reachable (`get-session` returns `200`; sign-in returns the expected `401` for invalid credentials).
+* Updated the browser Neon client to accept either a Neon base URL or the full `apirest/.../rest/v1` URL copied from the Neon dashboard, preventing duplicate Data API path construction.
+* Local production build passes. Redeploy and retry sign-in to verify the authenticated production path.
+
 ### Sunday, 18 October 2026 — 21:14 MYT
 
 #### Performance baseline before hosting changes
