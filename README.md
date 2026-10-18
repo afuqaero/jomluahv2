@@ -52,6 +52,15 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 18 October 2026 — 22:54 MYT
+
+#### Fix onboarding Data API authentication
+
+* Traced production onboarding failure: session loaded, but profile query returned `AuthRequiredError` because the client used Better Auth `token()` output instead of Neon Auth's Data API JWT accessor.
+* Switched browser Data API token retrieval to `getJWTToken()` with a narrow SDK compatibility type.
+* Verified backend tests (5/5), TypeScript, and production build locally.
+* Production authenticated onboarding verification remains pending until Vercel deploys and a signed-in test session is available.
+
 ### Sunday, 18 October 2026 — 21:14 MYT
 
 #### Performance baseline before hosting changes

@@ -21,9 +21,13 @@ function getDataApiUrl(baseUrl: string) {
 }
 
 async function getAccessToken() {
-  const { data, error } = await authClient.token();
-  if (error) return null;
-  return data?.token ?? null;
+  // Neon Data API requires the JWT issued by Neon Auth. Better Auth's
+  // `token()` response is not the Data API JWT; use the Neon adapter's
+  // documented JWT accessor instead.
+  const jwtClient = authClient as unknown as {
+    getJWTToken?: () => Promise<string | null>;
+  };
+  return (await jwtClient.getJWTToken?.()) ?? null;
 }
 
 const dataClient = createClient({
