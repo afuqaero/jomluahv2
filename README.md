@@ -52,6 +52,12 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 18 October 2026 — 19:07 MYT
+
+#### Performance phase added
+
+* Added Phase 13 to track LLM latency, website rendering, Core Web Vitals, regional deployment comparisons, load testing, and VPS migration decisions.
+
 ### Saturday, 17 October 2026 — 22:26 MYT
 
 #### Backend verification workflow

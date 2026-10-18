@@ -112,6 +112,33 @@
 - [x] Add and verify `https://jomluahv2.vercel.app` in the Neon `production` branch trusted domains (2026-10-17 22:01 MYT).
 - [ ] Run authenticated production authentication, CRUD, RLS, memory, embedding, and chat smoke tests.
 
+## Phase 13 — Performance and latency optimization
+
+### LLM response speed
+
+- [ ] Measure time-to-first-token and total response time separately in production.
+- [ ] Keep streaming responses enabled and flush deltas immediately.
+- [ ] Reduce prompt size with bounded history, compact summaries, and relevant-only memory/journal retrieval.
+- [ ] Cache stable system prompts and avoid duplicate embedding/provider requests.
+- [ ] Add provider timeout, retry, and graceful fallback behavior for rate limits or outages.
+- [ ] Track DeepSeek queue latency, model latency, token counts, and failure rates in `llm_events`.
+
+### Website loading and rendering
+
+- [ ] Measure Core Web Vitals (LCP, INP, CLS) on mobile and desktop.
+- [ ] Lazy-load heavy animations and below-the-fold components.
+- [ ] Reduce client JavaScript and move non-interactive work to server components where possible.
+- [ ] Optimize fonts, images, icons, and animation assets.
+- [ ] Add compression and cache headers for immutable static assets.
+- [ ] Verify PWA startup, offline behavior, and installability on mobile.
+
+### Infrastructure and regional latency
+
+- [ ] Compare Vercel iad1 versus a Singapore VPS for page TTFB, Neon query latency, and chat time-to-first-token.
+- [ ] Keep the database and application region close to Southeast Asian users when self-hosting.
+- [ ] Load-test expected final-year-project traffic before choosing a VPS size.
+- [ ] Document the cost, operational work, backups, monitoring, and rollback plan for any VPS migration.
+
 ## Required environment variables
 
 ```text
