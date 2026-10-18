@@ -52,6 +52,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 18 October 2026 — 23:36 MYT
+
+#### Fix cached Neon session token on onboarding
+
+* Traced the production `Provided authentication token is not a valid JWT encoding` error to the Next.js Neon Auth session cache returning the opaque cookie token to the browser Data API client.
+* Updated token retrieval to bypass the session cache and read the JWT-bearing Auth response before each Data API request.
+* `npm run build` passes locally; authenticated production verification remains pending until this commit is deployed.
+
 ### Sunday, 18 October 2026 — 22:54 MYT
 
 #### Fix onboarding Data API authentication
