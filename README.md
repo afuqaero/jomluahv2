@@ -70,6 +70,14 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Updated the browser Neon client to accept either a Neon base URL or the full `apirest/.../rest/v1` URL copied from the Neon dashboard, preventing duplicate Data API path construction.
 * Local production build passes. Redeploy and retry sign-in to verify the authenticated production path.
 
+### Sunday, 18 October 2026 — 23:30 MYT
+
+#### Pin browser auth proxy URL
+
+* Reproduced the production login failure in a fresh Chrome session: the browser SDK failed during `getSession()` with `HTTP 404`, while the same deployed auth route returned `200` directly and invalid sign-in returned the expected `401`.
+* Pinned the browser Neon Auth client to the same-origin `/api/auth` proxy instead of relying on automatic Better Auth URL discovery.
+* Production build passes. Redeploy and retry login; this removes hidden deployment URL overrides as a failure source.
+
 ### Sunday, 18 October 2026 — 21:14 MYT
 
 #### Performance baseline before hosting changes

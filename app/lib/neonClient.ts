@@ -1,4 +1,5 @@
-import { createAuthClient } from "@neondatabase/auth/next";
+import { createInternalNeonAuth } from "@neondatabase/auth";
+import { BetterAuthReactAdapter } from "@neondatabase/auth/react/adapters";
 import { createClient } from "@neondatabase/neon-js";
 
 const neonBaseUrl = process.env.NEXT_PUBLIC_NEON_URL;
@@ -9,7 +10,17 @@ if (!neonBaseUrl) {
   );
 }
 
-const authClient = createAuthClient();
+// Pin browser auth to our same-origin proxy. The SDK's automatic URL
+// discovery can pick up an unrelated Better Auth URL from the deployment
+// environment, producing a misleading HTTP 404 during getSession().
+const authBaseUrl =
+  typeof window !== "undefined"
+    ? `${window.location.origin}/api/auth`
+    : "http://localhost/api/auth";
+const authRuntime = createInternalNeonAuth(authBaseUrl, {
+  adapter: BetterAuthReactAdapter(),
+});
+const authClient = authRuntime.adapter;
 
 function getDataApiUrl(baseUrl: string) {
   const url = new URL(baseUrl);
@@ -32,10 +43,7 @@ async function getAccessToken() {
   // Neon Data API requires the JWT issued by Neon Auth. Better Auth's
   // `token()` response is not the Data API JWT; use the Neon adapter's
   // documented JWT accessor instead.
-  const jwtClient = authClient as unknown as {
-    getJWTToken?: () => Promise<string | null>;
-  };
-  return (await jwtClient.getJWTToken?.()) ?? null;
+  return (await authRuntime.getJWTToken()) ?? null;
 }
 
 const dataClient = createClient({
