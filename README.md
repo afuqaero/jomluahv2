@@ -52,6 +52,13 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 18 October 2026 — 21:14 MYT
+
+#### Performance baseline before hosting changes
+
+* Added a Vercel baseline checklist for homepage, dashboard, chat rendering, API TTFB, and chat time-to-first-token.
+* Hosting changes will be considered only after application-level optimization and repeat measurements on mobile and desktop.
+
 ### Sunday, 18 October 2026 — 19:07 MYT
 
 #### Performance phase added

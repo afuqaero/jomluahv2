@@ -134,10 +134,15 @@
 
 ### Infrastructure and regional latency
 
+- [ ] Establish a Vercel baseline before changing hosting: homepage TTFB, dashboard load, chat page render, API time-to-first-byte, and chat time-to-first-token.
+- [ ] Repeat the baseline on mobile and desktop using a cold browser session and a warm session.
+- [ ] Record p50 and p95 timings, not only one fastest request.
+- [ ] Fix application-level bottlenecks first, then re-measure after each change.
 - [ ] Compare Vercel iad1 versus a Singapore VPS for page TTFB, Neon query latency, and chat time-to-first-token.
 - [ ] Keep the database and application region close to Southeast Asian users when self-hosting.
 - [ ] Load-test expected final-year-project traffic before choosing a VPS size.
 - [ ] Document the cost, operational work, backups, monitoring, and rollback plan for any VPS migration.
+- [ ] Change hosting plan/provider only when measurements show the current platform remains the bottleneck after optimization.
 
 ## Required environment variables
 
