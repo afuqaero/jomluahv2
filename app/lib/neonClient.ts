@@ -42,14 +42,23 @@ function getDataApiUrl(baseUrl: string) {
 async function getAccessToken() {
   // Neon Data API requires the JWT issued by Neon Auth. Better Auth's
   // `token()` response is not the Data API JWT; use the Neon adapter's
-  // documented JWT accessor instead. The Next.js Neon Auth proxy can serve
-  // a cached session whose `session.token` is the opaque cookie token, so
-  // bypass that cache before reading the JWT-bearing response header.
-  const { data, error } = await authClient.getSession({
-    query: { disableCookieCache: "true" },
+  // documented JWT accessor instead. Read the same-origin proxy response
+  // directly so neither the server session cache nor the browser adapter
+  // can mistake the opaque session cookie token for the Data API JWT.
+  const response = await fetch("/api/auth/get-session?disableCookieCache=true", {
+    credentials: "include",
+    cache: "no-store",
   });
-  if (error || !data?.session?.token) return null;
-  return data.session.token;
+  if (!response.ok) return null;
+
+  const responseJwt = response.headers.get("set-auth-jwt");
+  if (responseJwt && responseJwt.split(".").length === 3) return responseJwt;
+
+  const payload = (await response.json().catch(() => null)) as
+    | { session?: { token?: string } }
+    | null;
+  const sessionToken = payload?.session?.token;
+  return sessionToken && sessionToken.split(".").length === 3 ? sessionToken : null;
 }
 
 const dataClient = createClient({
