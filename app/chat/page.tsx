@@ -52,7 +52,7 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [recentChats, setRecentChats] = useState<{ id: string; title: string; date: string; preview: string }[]>([]);
@@ -178,7 +178,8 @@ export default function ChatPage() {
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const messagePane = messagesScrollRef.current;
+    messagePane?.scrollTo({ top: messagePane.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
 
   const getFormattedTime = () => {
@@ -542,7 +543,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className={`min-h-screen ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
+    <div className={`h-dvh overflow-hidden ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
 
       <AppSidebar
         isDarkMode={isDarkMode}
@@ -555,7 +556,7 @@ export default function ChatPage() {
       />
 
       {/* Page Content */}
-      <div className="flex-1 h-screen min-w-0 p-4 sm:p-6 md:p-8 flex flex-col relative overflow-hidden transition-colors duration-500 pb-24 lg:pb-8">
+      <div className="flex-1 h-full min-w-0 p-4 sm:p-6 md:p-8 flex flex-col relative overflow-hidden transition-colors duration-500 pb-24 lg:pb-8">
         <BackgroundDecor isDarkMode={isDarkMode} />
 
         <MobileBottomNav />
@@ -607,7 +608,7 @@ export default function ChatPage() {
               {/* Premium Gradient Top Fade to transparency */}
               <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-[#F0F2F6] dark:from-stone-950 to-transparent pointer-events-none z-20 transition-colors duration-500" />
               
-              <div className="flex-1 overflow-y-auto px-1 pt-4 pb-4 space-y-6 scrollbar-none">
+              <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-1 pt-4 pb-4 space-y-6 scrollbar-none">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -724,7 +725,6 @@ export default function ChatPage() {
                 </div>
               )}
 
-              <div ref={messagesEndRef} />
             </div>
             </div>
           )}

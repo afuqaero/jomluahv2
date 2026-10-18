@@ -52,6 +52,15 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 18 October 2026 — 23:59 MYT
+
+#### Restore production AI chat and contain chat scrolling
+
+* Reproduced the live fallback response and traced it through Vercel runtime logs to a missing production `DEEPSEEK_API_KEY`; added the existing key as a Vercel Production secret and redeployed.
+* Verified the configured `deepseek-flash` model and request payload directly, then verified a successful streamed response in the deployed Chrome chat.
+* Traced the displaced chat layout to `scrollIntoView()` moving the entire document after each message; chat autoscroll now targets only the message pane and the shell is locked to the dynamic viewport.
+* Added chat layout regression tests. Backend tests pass (7/7) and the production build succeeds locally.
+
 ### Sunday, 18 October 2026 — 23:44 MYT
 
 #### Read JWT directly from Neon Auth proxy
