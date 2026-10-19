@@ -52,6 +52,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Monday, 19 October 2026 — 10:52 MYT
+
+#### Remove the dark strip below the chat header
+
+* Traced the visible black strip to the active-chat `Premium Gradient Top Fade` overlay, not to Chrome or a border-rendering issue.
+* Removed the opaque dark gradient so the header divider transitions directly into the chat area.
+* Added a regression test; backend tests pass (8/8) and the production build succeeds locally.
+
 ### Monday, 19 October 2026 — 00:06 MYT
 
 #### Prevent chat background from shifting the viewport

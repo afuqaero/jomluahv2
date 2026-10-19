@@ -15,3 +15,8 @@ test("chat shell cannot make the document taller than the viewport", () => {
   assert.match(chatPage, /h-dvh[^"`]*overflow-clip/);
   assert.match(chatPage, /flex-1 h-full[^"`]*overflow-clip/);
 });
+
+test("chat history has no opaque decorative strip below the header", () => {
+  assert.doesNotMatch(chatPage, /Premium Gradient Top Fade/);
+  assert.doesNotMatch(chatPage, /dark:from-stone-950/);
+});

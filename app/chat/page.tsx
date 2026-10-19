@@ -605,9 +605,6 @@ export default function ChatPage() {
           ) : (
             /* --- ACTIVE CHAT MESSAGE HISTORY --- */
             <div className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
-              {/* Premium Gradient Top Fade to transparency */}
-              <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-[#F0F2F6] dark:from-stone-950 to-transparent pointer-events-none z-20 transition-colors duration-500" />
-              
               <div ref={messagesScrollRef} className="flex-1 overflow-y-auto px-1 pt-4 pb-4 space-y-6 scrollbar-none">
               {messages.map((msg) => (
                 <div
