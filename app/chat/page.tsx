@@ -37,10 +37,21 @@ type RecentChatSession = {
   chat_messages: Array<{ text: string; created_at: string }> | null;
 };
 
-// Keep a small recent window in the prompt. Older turns are compressed into
-// chat_sessions.context_summary once the unsummarised portion gets too large.
-const RECENT_CONTEXT_MESSAGE_COUNT = 8;
-const SUMMARY_COMPACTION_TRIGGER = 12;
+type ContextProfile = "quick" | "balanced" | "deep";
+
+// Recent messages are sent verbatim; older messages are compacted into the
+// session summary. The server applies the actual token budget to every request.
+const CONTEXT_PROFILES: Record<ContextProfile, { recentMessages: number; compactAt: number; label: string }> = {
+  quick: { recentMessages: 8, compactAt: 12, label: "Quick · 8K budget" },
+  balanced: { recentMessages: 24, compactAt: 36, label: "Balanced · 16K budget" },
+  deep: { recentMessages: 48, compactAt: 64, label: "Deep · 32K budget" },
+};
+const DEFAULT_CONTEXT_PROFILE: ContextProfile = "balanced";
+const MAX_MESSAGES_PER_SUMMARY = 50;
+
+function isContextProfile(value: unknown): value is ContextProfile {
+  return value === "quick" || value === "balanced" || value === "deep";
+}
 
 export default function ChatPage() {
   const router = useRouter();
@@ -59,6 +70,40 @@ export default function ChatPage() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [contextSummary, setContextSummary] = useState("");
   const [summaryMessageCount, setSummaryMessageCount] = useState(0);
+  const [contextProfile, setContextProfile] = useState<ContextProfile>(DEFAULT_CONTEXT_PROFILE);
+  const [isContextProfileSaving, setIsContextProfileSaving] = useState(false);
+
+  const loadContextProfile = async () => {
+    try {
+      const response = await fetch("/api/ai/preferences", { cache: "no-store" });
+      if (!response.ok) return;
+      const body = await response.json();
+      if (isContextProfile(body?.preferences?.context_profile)) {
+        setContextProfile(body.preferences.context_profile);
+      }
+    } catch (error) {
+      console.warn("Could not load conversation context preference:", error);
+    }
+  };
+
+  const saveContextProfile = async (profile: ContextProfile) => {
+    const previousProfile = contextProfile;
+    setContextProfile(profile);
+    setIsContextProfileSaving(true);
+    try {
+      const response = await fetch("/api/ai/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ context_profile: profile }),
+      });
+      if (!response.ok) throw new Error("Could not save conversation context preference");
+    } catch (error) {
+      console.error("Could not save conversation context preference:", error);
+      setContextProfile(previousProfile);
+    } finally {
+      setIsContextProfileSaving(false);
+    }
+  };
 
   const loadRecentChats = async (uid: string) => {
     try {
@@ -126,7 +171,11 @@ export default function ChatPage() {
   };
 
   const handleLoadChat = async (chatId: string) => {
-    setIsHistoryOpen(false);
+    // Keep the desktop history sidebar open while switching conversations;
+    // close only the mobile slide-over so the selected chat is immediately visible.
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      setIsHistoryOpen(false);
+    }
     setCurrentSessionId(chatId);
     setContextSummary("");
     setSummaryMessageCount(0);
@@ -196,16 +245,21 @@ export default function ChatPage() {
     setIsTyping(true);
 
     try {
-      const compactBoundary = Math.max(0, currentMessages.length - RECENT_CONTEXT_MESSAGE_COUNT);
+      const contextLimits = CONTEXT_PROFILES[contextProfile];
+      const compactBoundary = Math.max(0, currentMessages.length - contextLimits.recentMessages);
+      const unsummarisedStart = Math.min(summaryMessageCount, currentMessages.length);
       const canCompact =
-        currentMessages.length - summaryMessageCount > SUMMARY_COMPACTION_TRIGGER &&
-        compactBoundary > summaryMessageCount;
+        currentMessages.length - summaryMessageCount > contextLimits.compactAt &&
+        compactBoundary > unsummarisedStart;
+      // The API validates a maximum 50-message summary batch. When a user
+      // switches from Deep to Quick in an old chat, process it in batches so
+      // no messages disappear from context between requests.
       const messagesToSummarize = canCompact
-        ? currentMessages.slice(summaryMessageCount, compactBoundary)
+        ? currentMessages.slice(unsummarisedStart, compactBoundary).slice(0, MAX_MESSAGES_PER_SUMMARY)
         : [];
-      const contextStart = canCompact
-        ? compactBoundary
-        : Math.max(0, Math.min(summaryMessageCount, currentMessages.length - RECENT_CONTEXT_MESSAGE_COUNT));
+      const contextStart = messagesToSummarize.length > 0
+        ? unsummarisedStart + messagesToSummarize.length
+        : Math.max(0, Math.min(summaryMessageCount, currentMessages.length - contextLimits.recentMessages));
       const contextMessages = currentMessages.slice(contextStart);
 
       const res = await fetch("/api/chat", {
@@ -216,6 +270,7 @@ export default function ChatPage() {
           contextSummary,
           summaryMessageCount,
           messagesToSummarize,
+          contextProfile,
           sessionId,
         }),
       });
@@ -456,6 +511,7 @@ export default function ChatPage() {
       const name = session.user.name || session.user.email?.split("@")[0] || "there";
       setDisplayName(name);
       loadRecentChats(session.user.id);
+      loadContextProfile();
       handleInitialEntry(session.user.id);
     };
     checkAuth();
@@ -542,6 +598,104 @@ export default function ChatPage() {
     handleSendMessage(option);
   };
 
+  const startNewChat = () => {
+    setMessages([]);
+    setCurrentSessionId(null);
+    setContextSummary("");
+    setSummaryMessageCount(0);
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      setIsHistoryOpen(false);
+    }
+  };
+
+  const conversationHistoryContent = (
+    <>
+      <button
+        onClick={startNewChat}
+        className="w-full flex items-center justify-center gap-2 py-3 px-4 mb-4 rounded-2xl bg-[#6366F1]/90 hover:bg-[#4F46E5] text-white font-bold text-sm shadow-lg shadow-[#6366F1]/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <Plus size={16} weight="bold" />
+        New check-in
+      </button>
+
+      <details className={`mb-4 rounded-2xl border p-3 ${isDarkMode ? "border-white/10 bg-white/5" : "border-indigo-100 bg-indigo-50/60"}`}>
+        <summary className={`cursor-pointer list-none text-xs font-extrabold ${theme.textHeading}`}>
+          <span className="flex items-center justify-between gap-3">
+            Conversation memory
+            <span className={`text-[10px] font-semibold ${isDarkMode ? "text-stone-400" : "text-neutral-500"}`}>Settings</span>
+          </span>
+        </summary>
+        <div className="pt-3">
+          <select
+            aria-label="Conversation memory setting"
+            value={contextProfile}
+            onChange={(event) => {
+              if (isContextProfile(event.target.value)) saveContextProfile(event.target.value);
+            }}
+            disabled={isContextProfileSaving}
+            className={`w-full rounded-xl border px-3 py-2 text-xs font-bold outline-none transition focus:ring-2 focus:ring-indigo-400 disabled:opacity-60 ${isDarkMode ? "border-white/10 bg-stone-900 text-stone-100" : "border-indigo-100 bg-white text-neutral-700"}`}
+          >
+            {(Object.keys(CONTEXT_PROFILES) as ContextProfile[]).map((profile) => (
+              <option key={profile} value={profile}>{CONTEXT_PROFILES[profile].label}</option>
+            ))}
+          </select>
+          <p className={`mt-2 text-[10px] leading-relaxed ${isDarkMode ? "text-stone-400" : "text-neutral-500"}`}>
+            {isContextProfileSaving ? "Saving your choice…" : "Older turns stay in a compact private summary."}
+          </p>
+        </div>
+      </details>
+
+      <div className="flex items-baseline justify-between gap-3 mb-3 px-1">
+        <div>
+          <h2 className={`text-sm font-extrabold ${theme.textHeading}`}>Recent conversations</h2>
+          <p className={`mt-0.5 text-[10px] ${isDarkMode ? "text-stone-400" : "text-neutral-500"}`}>
+            {recentChats.length > 10 ? "Showing 10 at a time · scroll for older chats" : `${recentChats.length} ${recentChats.length === 1 ? "conversation" : "conversations"}`}
+          </p>
+        </div>
+        <span className={`inline-flex min-w-7 h-7 items-center justify-center rounded-full text-xs font-extrabold ${isDarkMode ? "bg-indigo-400/15 text-indigo-200" : "bg-indigo-100 text-indigo-600"}`} aria-label={`${recentChats.length} conversations`}>
+          {recentChats.length}
+        </span>
+      </div>
+
+      <div className="max-h-[min(640px,calc(100dvh-290px))] overflow-y-auto space-y-2 pr-1 overscroll-contain scrollbar-thin" aria-label="Conversation history">
+        {recentChats.length === 0 ? (
+          <p className={`rounded-2xl border border-dashed p-4 text-center text-xs leading-relaxed ${isDarkMode ? "border-white/10 text-stone-400" : "border-indigo-100 text-neutral-500"}`}>
+            Your check-ins will appear here.
+          </p>
+        ) : recentChats.map((chat, index) => (
+          <div key={chat.id} className="w-full relative group animate-slide-in-item" style={{ animationDelay: `${Math.min(index, 9) * 45}ms` }}>
+            <button
+              onClick={() => handleLoadChat(chat.id)}
+              aria-current={currentSessionId === chat.id ? "page" : undefined}
+              className={`w-full min-h-15 text-left p-3 pr-10 rounded-2xl border transition duration-300 flex flex-col gap-1 shadow-sm ${
+                currentSessionId === chat.id
+                  ? "border-indigo-400/50 bg-indigo-500/10"
+                  : "border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10 hover:translate-x-0.5"
+              }`}
+            >
+              <div className="flex items-center justify-between w-full gap-2">
+                <span className={`text-sm font-extrabold truncate ${theme.textHeading}`}>{chat.title}</span>
+                <span className="text-[10px] uppercase font-bold text-neutral-400 dark:text-neutral-500 shrink-0">{chat.date}</span>
+              </div>
+              <span className="text-xs text-neutral-500 dark:text-stone-400 line-clamp-1 truncate block max-w-full">{chat.preview}</span>
+            </button>
+            <button
+              onClick={async (event) => {
+                event.stopPropagation();
+                if (window.confirm(`Delete chat "${chat.title}"?`)) await handleDeleteChat(chat.id);
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200"
+              title="Delete chat session"
+              aria-label={`Delete ${chat.title}`}
+            >
+              <Trash size={14} weight="bold" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+
   return (
     <div className={`h-dvh overflow-clip ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
 
@@ -561,16 +715,19 @@ export default function ChatPage() {
 
         <MobileBottomNav />
 
+        <div className="relative z-10 flex flex-1 min-h-0 gap-5">
+        <section className="flex flex-1 min-w-0 min-h-0 flex-col">
         {/* Header matching dashboard theme consistency */}
         <header className="relative z-20 pb-4 border-b border-neutral-200/20 dark:border-white/5 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            {/* Sidebar toggle button (circular menu lines) -> Opens Recent Chats history drawer */}
+            {/* The same control opens a desktop sidebar or a mobile slide-over. */}
             <button
-              onClick={() => setIsHistoryOpen(true)}
+              onClick={() => setIsHistoryOpen((isOpen) => !isOpen)}
+              aria-expanded={isHistoryOpen}
               className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] ${
                 isDarkMode ? "bg-white/5 border-white/10 hover:bg-white/10 text-white" : "bg-white border-neutral-200/50 hover:bg-neutral-50 text-neutral-700 shadow-sm"
               }`}
-              title="Open recent chats"
+              title={isHistoryOpen ? "Collapse conversation history" : "Open conversation history"}
             >
               <TextAlignLeft size={20} weight="bold" />
             </button>
@@ -799,82 +956,48 @@ export default function ChatPage() {
 
         </main>
 
-        {/* Slide-out Recent Chats History Panel (Absolute to page content so it sits to the right of Sidebar) */}
-        {isHistoryOpen && (
-          <>
-            {/* Backdrop Overlay */}
-            <div 
-              onClick={() => setIsHistoryOpen(false)}
-              className="absolute inset-0 bg-black/10 dark:bg-black/35 backdrop-blur-xs transition-opacity duration-300 animate-backdrop-fade z-30"
-            />
+        </section>
 
-            {/* Drawer Body (Premium Glassmorphic Panel with Slide-in animation) */}
-            <div className="absolute top-0 bottom-0 left-0 z-40 w-80 max-w-[85vw] h-full flex flex-col backdrop-blur-2xl bg-white/30 dark:bg-stone-900/35 border-r border-white/20 dark:border-white/10 p-5 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] animate-slide-in-left">
-              
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between mb-6">
-                <span className={`text-lg font-extrabold tracking-tight ${theme.textHeading}`}>Recent Chats</span>
-                <button 
-                  onClick={() => setIsHistoryOpen(false)}
-                  className={`p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/5 transition text-neutral-800 dark:text-white`}
-                >
+        {/* Desktop: a real secondary sidebar that can collapse without covering the chat. */}
+        <aside
+          id="conversation-history-desktop"
+          aria-label="Conversation history"
+          className={`hidden lg:flex min-h-0 shrink-0 flex-col overflow-hidden rounded-[1.75rem] border backdrop-blur-2xl transition-[width,opacity,padding] duration-300 ease-out ${
+            isHistoryOpen
+              ? `w-88 p-5 opacity-100 ${isDarkMode ? "border-white/10 bg-stone-900/35" : "border-white/70 bg-white/65 shadow-[0_18px_55px_rgba(99,102,241,0.12)]"}`
+              : "w-0 border-transparent p-0 opacity-0"
+          }`}
+        >
+          {isHistoryOpen && (
+            <>
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <span className={`text-lg font-extrabold tracking-tight ${theme.textHeading}`}>Your conversations</span>
+                <button onClick={() => setIsHistoryOpen(false)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition" aria-label="Collapse conversation history">
                   <X size={18} weight="bold" />
                 </button>
               </div>
+              {conversationHistoryContent}
+            </>
+          )}
+        </aside>
 
-              {/* New Chat Action Button */}
-              <button
-                onClick={() => {
-                  setMessages([]);
-                  setCurrentSessionId(null);
-                  setIsHistoryOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 mb-6 rounded-2xl bg-[#6366F1]/90 hover:bg-[#4F46E5] text-white font-bold text-sm shadow-lg shadow-[#6366F1]/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Plus size={16} weight="bold" />
-                New check-in
-              </button>
-
-              {/* Chats List with Staggered Slide-in Animation */}
-              <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
-                {recentChats.map((chat, idx) => (
-                  <div
-                    key={chat.id}
-                    className="w-full relative group animate-slide-in-item"
-                    style={{ animationDelay: `${idx * 60}ms` }}
-                  >
-                    <button
-                      onClick={() => handleLoadChat(chat.id)}
-                      className="w-full text-left p-3.5 pr-10 rounded-2xl border border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10 transition duration-300 flex flex-col gap-1 hover:translate-x-1 shadow-sm"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className={`text-sm font-extrabold truncate max-w-[150px] ${theme.textHeading}`}>{chat.title}</span>
-                        <span className="text-[10px] uppercase font-bold text-neutral-400 dark:text-neutral-500 shrink-0">{chat.date}</span>
-                      </div>
-                      <span className="text-xs text-neutral-500 dark:text-stone-400 line-clamp-1 truncate block max-w-full">{chat.preview}</span>
-                    </button>
-                    
-                    {/* Delete chat button */}
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (window.confirm(`Delete chat "${chat.title}"?`)) {
-                          await handleDeleteChat(chat.id);
-                        }
-                      }}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 p-2 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      title="Delete chat session"
-                    >
-                      <Trash size={14} weight="bold" />
-                    </button>
-                  </div>
-                ))}
+        {/* Mobile: the same history becomes an accessible slide-over. */}
+        {isHistoryOpen && (
+          <div className="lg:hidden fixed inset-0 z-50">
+            <button onClick={() => setIsHistoryOpen(false)} className="absolute inset-0 w-full h-full bg-black/30 backdrop-blur-xs animate-backdrop-fade" aria-label="Close conversation history" />
+            <aside id="conversation-history-mobile" className={`absolute top-0 bottom-0 left-0 w-84 max-w-[88vw] overflow-y-auto p-5 shadow-2xl animate-slide-in-left ${isDarkMode ? "bg-stone-950 border-r border-white/10" : "bg-white border-r border-indigo-100"}`} aria-label="Conversation history">
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <span className={`text-lg font-extrabold tracking-tight ${theme.textHeading}`}>Your conversations</span>
+                <button onClick={() => setIsHistoryOpen(false)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition" aria-label="Close conversation history">
+                  <X size={18} weight="bold" />
+                </button>
               </div>
-
-            </div>
-          </>
+              {conversationHistoryContent}
+            </aside>
+          </div>
         )}
 
+        </div>
       </div>
     </div>
   );

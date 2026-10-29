@@ -102,6 +102,8 @@ CREATE TABLE IF NOT EXISTS public.ai_preferences (
     user_id UUID PRIMARY KEY REFERENCES neon_auth."user"(id) ON DELETE CASCADE,
     memory_enabled BOOLEAN NOT NULL DEFAULT true,
     journal_rag_enabled BOOLEAN NOT NULL DEFAULT true,
+    context_profile TEXT NOT NULL DEFAULT 'balanced'
+        CHECK (context_profile IN ('quick', 'balanced', 'deep')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

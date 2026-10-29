@@ -52,6 +52,17 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Monday, 19 October 2026 — 12:41 MYT
+
+#### Companion foundation, context controls, and Aurora design exploration
+
+* Completed the Neon production migration for the per-user conversation context profile and schema-verified it after application. Users can select Quick (8K), Balanced (16K default), or Deep (32K) working context budgets; the server enforces each budget with bounded recent history, rolling summaries, relevant private retrieval, safety instructions, and reply allowance.
+* Completed and locally verified the current production chat fixes: the DeepSeek runtime configuration, independent message-pane scrolling, stable dynamic viewport behavior, and removal of the unintended dark header strip.
+* Added the production chat-history experience: a collapsible secondary history area on desktop, a mobile slide-over, compact recent-session rows, and scrolling for older conversations.
+* Built interactive **temporary Aurora Companion** light and dark design previews for review. The previews include a dashboard return control, an animated companion state, reflection-history shelf, in-shelf scrolling, and a shelf collapse/reopen control.
+* Corrected the Aurora preview collapse behavior so the shelf slides away while the central companion area remains centred. The Aurora work is a design prototype only; it has not replaced the live `/chat` UI yet.
+* Confirmed secret values remain excluded from Git tracking. Credentials are never recorded in this change log.
+
 ### Monday, 19 October 2026 — 10:52 MYT
 
 #### Remove the dark strip below the chat header
@@ -276,6 +287,8 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 #### Backend phase continued
 
+* **2026-10-19 MYT:** Added user-selectable conversation context profiles: Quick (8K), Balanced (16K, default), and Deep (32K). The chat API now enforces the selected application-level working budget across recent conversation, retrieved private context, rolling summary, and answer allowance. Balanced reserves 4.5K recent chat, 2.5K relevant memory/journal context, 1K summary, 1.2K system/safety reserve, and 2K response allowance. `neon_migrations/002_add_context_profile.sql` was applied and schema-verified on the Neon production branch.
+* **2026-10-19 MYT:** Reworked chat history into a collapsible secondary sidebar. On desktop it sits beside the conversation; on mobile it becomes a slide-over. It presents up to 10 compact recent conversations at once and scrolls to older sessions without extending the chat page.
 * Added authenticated `/api/memories` CRUD endpoints for future memory-management UI.
 * Added RLS-backed `ai_preferences` with `memory_enabled` and `journal_rag_enabled` controls.
 * Connected AI preferences to chat retrieval and memory writes.

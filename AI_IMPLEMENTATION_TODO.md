@@ -114,11 +114,16 @@
 
 ## Phase 13 — Performance and latency optimization
 
+- [x] Replace the chat-history overlay with a collapsible secondary conversation sidebar: desktop keeps it beside chat, mobile uses a slide-over, and the list presents up to 10 compact rows before scrolling to older conversations (2026-10-19 MYT).
+- [x] Produce interactive Aurora Companion light and dark design prototypes with an animated companion, a collapsible reflection-history shelf, scrolling past conversations, and a persistent Dashboard return control (2026-10-19 MYT). Prototype-only: obtain final design approval before replacing the live `/chat` interface.
+- [x] Keep the Aurora main conversation stage centred when the reflection shelf collapses; only the shelf moves off-canvas and its reopen rail remains available (2026-10-19 MYT).
+
 ### LLM response speed
 
+- [x] Add a per-user conversation-context control: Quick (8K), Balanced (16K, default), or Deep (32K) application working budget; retain older turns as a rolling summary (2026-10-19 MYT). Balanced protects 4.5K recent chat, 2.5K relevant memory/journal context, 1K summary, 1.2K system/safety reserve, and 2K response allowance. Applied and verified `neon_migrations/002_add_context_profile.sql` on the Neon production branch (2026-10-19 MYT).
 - [ ] Measure time-to-first-token and total response time separately in production.
 - [ ] Keep streaming responses enabled and flush deltas immediately.
-- [ ] Reduce prompt size with bounded history, compact summaries, and relevant-only memory/journal retrieval.
+- [x] Reduce prompt size with bounded history, compact summaries, and relevant-only memory/journal retrieval; enforce the selected application budget server-side (2026-10-19 MYT).
 - [ ] Cache stable system prompts and avoid duplicate embedding/provider requests.
 - [ ] Add provider timeout, retry, and graceful fallback behavior for rate limits or outages.
 - [ ] Track DeepSeek queue latency, model latency, token counts, and failure rates in `llm_events`.

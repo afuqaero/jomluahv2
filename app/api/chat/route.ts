@@ -47,11 +47,41 @@ type DeepSeekResponse = {
   usage?: DeepSeekUsage;
 };
 
-const MAX_SUMMARY_WORDS = 220;
 const MAX_RELEVANT_MEMORIES = 6;
 const MAX_RELEVANT_JOURNALS = 4;
 const DEEPSEEK_BASE_URL = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-flash";
+
+type ContextProfile = "quick" | "balanced" | "deep";
+type ContextBudget = {
+  workingTokens: number;
+  systemTokens: number;
+  recentTokens: number;
+  currentMessageTokens: number;
+  retrievalTokens: number;
+  summaryTokens: number;
+  summaryWords: number;
+  responseTokens: number;
+};
+
+// These are application-level limits, deliberately lower than the provider's
+// model limit. They keep normal chats fast and leave room for safety and
+// system instructions. Token estimates use a conservative characters/4 rule.
+const CONTEXT_BUDGETS: Record<ContextProfile, ContextBudget> = {
+  quick: {
+    workingTokens: 8_000, systemTokens: 800, recentTokens: 3_000, currentMessageTokens: 600, retrievalTokens: 1_800,
+    summaryTokens: 600, summaryWords: 420, responseTokens: 1_200,
+  },
+  balanced: {
+    workingTokens: 16_000, systemTokens: 1_200, recentTokens: 4_500, currentMessageTokens: 800, retrievalTokens: 2_500,
+    summaryTokens: 1_000, summaryWords: 700, responseTokens: 2_000,
+  },
+  deep: {
+    workingTokens: 32_000, systemTokens: 2_000, recentTokens: 10_000, currentMessageTokens: 1_600, retrievalTokens: 5_000,
+    summaryTokens: 2_000, summaryWords: 1_400, responseTokens: 3_000,
+  },
+};
+const DEFAULT_CONTEXT_PROFILE: ContextProfile = "balanced";
 
 const systemPrompt = `You are JomLuah, a warm, friendly emotional companion for Malaysian university students at UTHM.
 
@@ -74,9 +104,11 @@ SAFETY:
 - Malaysian support: UTHM PCU +607-4537465, Befrienders KL 03-76272929, Talian Kasih 15999, emergency 999.
 - Never give instructions that facilitate self-harm.`;
 
-const summaryPrompt = `Create compact conversation memory for future JomLuah replies.
+function createSummaryPrompt(maxWords: number) {
+  return `Create compact conversation memory for future JomLuah replies.
 Keep only main concerns, facts, emotions, goals, preferences, unresolved topics, and safety signals.
-Do not add advice or diagnoses. Use concise English bullet points. Maximum ${MAX_SUMMARY_WORDS} words.`;
+Do not add advice or diagnoses. Use concise English bullet points. Maximum ${maxWords} words.`;
+}
 
 const tools = [
   {
@@ -165,8 +197,47 @@ function normaliseMessages(value: unknown): IncomingMessage[] {
     .map((message) => ({ ...message, text: message.text.trim().slice(0, 8000) }));
 }
 
+function normaliseContextProfile(value: unknown): ContextProfile | undefined {
+  return value === "quick" || value === "balanced" || value === "deep" ? value : undefined;
+}
+
 function limitWords(text: string, maxWords: number) {
   return text.trim().split(/\s+/).filter(Boolean).slice(0, maxWords).join(" ");
+}
+
+function estimateTokens(text: string) {
+  return Math.ceil(text.length / 4);
+}
+
+function clipToEstimatedTokens(text: string, maxTokens: number) {
+  if (maxTokens <= 0) return "";
+  const maxCharacters = maxTokens * 4;
+  return text.length <= maxCharacters ? text.trim() : `${text.slice(0, Math.max(0, maxCharacters - 1)).trim()}…`;
+}
+
+// Start at the newest message, so the immediate conversation is never
+// sacrificed when a session becomes long. Older turns survive in the summary.
+function limitMessagesByBudget(
+  messages: IncomingMessage[],
+  recentTokens: number,
+  currentMessageTokens: number
+): IncomingMessage[] {
+  const currentMessage = messages.at(-1);
+  const historicalMessages = currentMessage ? messages.slice(0, -1) : messages;
+  let remainingTokens = recentTokens;
+  const result: IncomingMessage[] = [];
+  for (let index = historicalMessages.length - 1; index >= 0 && remainingTokens > 0; index -= 1) {
+    const message = historicalMessages[index];
+    const clippedText = clipToEstimatedTokens(message.text, remainingTokens);
+    if (!clippedText) continue;
+    result.unshift({ ...message, text: clippedText });
+    remainingTokens -= estimateTokens(clippedText);
+  }
+  if (currentMessage) {
+    const currentText = clipToEstimatedTokens(currentMessage.text, currentMessageTokens);
+    if (currentText) result.push({ ...currentMessage, text: currentText });
+  }
+  return result;
 }
 
 function toModelMessages(messages: IncomingMessage[]): ModelMessage[] {
@@ -188,7 +259,7 @@ function deepSeekHeaders() {
 
 async function callDeepSeek(
   messages: ModelMessage[],
-  options: { purpose: "summary" | "tools"; includeTools?: boolean },
+  options: { purpose: "summary" | "tools"; includeTools?: boolean; maxTokens?: number },
   signal: AbortSignal
 ) {
   const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
@@ -199,7 +270,7 @@ async function callDeepSeek(
       model: DEEPSEEK_MODEL,
       messages,
       stream: false,
-      max_tokens: options.purpose === "summary" ? 450 : 700,
+      max_tokens: options.maxTokens ?? (options.purpose === "summary" ? 450 : 700),
       temperature: options.purpose === "summary" ? 0.1 : 0.4,
       thinking: { type: "disabled" },
       reasoning_effort: "none",
@@ -216,7 +287,8 @@ async function callDeepSeek(
 async function streamDeepSeek(
   messages: ModelMessage[],
   onDelta: (text: string) => void,
-  signal: AbortSignal
+  signal: AbortSignal,
+  maxTokens: number
 ): Promise<DeepSeekUsage> {
   const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
     method: "POST",
@@ -227,7 +299,7 @@ async function streamDeepSeek(
       messages,
       stream: true,
       stream_options: { include_usage: true },
-      max_tokens: 1200,
+      max_tokens: maxTokens,
       temperature: 0.7,
       thinking: { type: "disabled" },
       reasoning_effort: "none",
@@ -262,17 +334,19 @@ async function streamDeepSeek(
   return usage;
 }
 
-function formatRetrievedContext(memories: MemoryRecord[], journals: JournalRecord[]) {
+function formatRetrievedContext(memories: MemoryRecord[], journals: JournalRecord[], maxTokens: number) {
   const parts: string[] = [];
   if (memories.length > 0) {
-    parts.push(`Relevant saved memories:\n${memories.map((memory) => `- ${memory.content}`).join("\n")}`);
+    const memoryText = `Relevant saved memories:\n${memories.map((memory) => `- ${memory.content}`).join("\n")}`;
+    parts.push(clipToEstimatedTokens(memoryText, Math.floor(maxTokens / 2)));
   }
   if (journals.length > 0) {
-    parts.push(`Relevant journal excerpts:\n${journals.map((journal) =>
+    const journalText = `Relevant journal excerpts:\n${journals.map((journal) =>
       `- [Journal: ${journal.title} | ${journal.timestamp.slice(0, 10)}] mood: ${journal.mood} | ${journal.excerpt || "No note"}`
-    ).join("\n")}`);
+    ).join("\n")}`;
+    parts.push(clipToEstimatedTokens(journalText, Math.ceil(maxTokens / 2)));
   }
-  return parts.join("\n\n");
+  return clipToEstimatedTokens(parts.filter(Boolean).join("\n\n"), maxTokens);
 }
 
 export async function POST(req: Request) {
@@ -285,7 +359,10 @@ export async function POST(req: Request) {
     if (messages.length === 0) {
       return NextResponse.json({ error: "At least one valid message is required" }, { status: 400 });
     }
-    const priorSummary = typeof body.contextSummary === "string" ? limitWords(body.contextSummary, MAX_SUMMARY_WORDS) : "";
+    const requestedContextProfile = normaliseContextProfile(body.contextProfile) ?? DEFAULT_CONTEXT_PROFILE;
+    let contextProfile = requestedContextProfile;
+    let contextBudget = CONTEXT_BUDGETS[contextProfile];
+    const rawPriorSummary = typeof body.contextSummary === "string" ? body.contextSummary : "";
     const parsedSummaryCount = Number(body.summaryMessageCount);
     const priorSummaryCount = Number.isFinite(parsedSummaryCount) && parsedSummaryCount >= 0 ? Math.floor(parsedSummaryCount) : 0;
     const sessionId = typeof body.sessionId === "string" ? body.sessionId : null;
@@ -303,9 +380,14 @@ export async function POST(req: Request) {
 
     if (user && latestUserText) {
       const { data: preferences } = await supabase.from("ai_preferences")
-        .select("memory_enabled, journal_rag_enabled").eq("user_id", user.id).maybeSingle();
+        .select("memory_enabled, journal_rag_enabled, context_profile").eq("user_id", user.id).maybeSingle();
       memoryEnabled = preferences?.memory_enabled ?? true;
       journalRagEnabled = preferences?.journal_rag_enabled ?? true;
+      const savedContextProfile = normaliseContextProfile(preferences?.context_profile);
+      if (savedContextProfile) {
+        contextProfile = savedContextProfile;
+        contextBudget = CONTEXT_BUDGETS[contextProfile];
+      }
       queryEmbedding = await createEmbedding(latestUserText, providerSignal).catch(() => null);
       const loadMemories = memoryEnabled || hasToolIntent(latestUserText);
       const loadJournals = journalRagEnabled;
@@ -347,18 +429,23 @@ export async function POST(req: Request) {
       journals = rankRecords(latestUserText, candidates, queryEmbedding, MAX_RELEVANT_JOURNALS);
     }
 
+    const priorSummary = limitWords(rawPriorSummary, contextBudget.summaryWords);
     let contextSummary = priorSummary;
     let summaryMessageCount = priorSummaryCount;
     let summaryFailed = false;
     if (messagesToSummarize.length > 0) {
       const summaryInput: ModelMessage[] = [
-        { role: "system", content: summaryPrompt },
+        { role: "system", content: createSummaryPrompt(contextBudget.summaryWords) },
         ...(priorSummary ? [{ role: "user" as const, content: `Existing memory:\n${priorSummary}` }] : []),
         { role: "user", content: `Conversation turns to add:\n${formatConversation(messagesToSummarize)}` },
       ];
       try {
-        const summaryResponse = await callDeepSeek(summaryInput, { purpose: "summary" }, providerSignal);
-        const generatedSummary = limitWords(summaryResponse.choices?.[0]?.message?.content || "", MAX_SUMMARY_WORDS);
+        const summaryResponse = await callDeepSeek(
+          summaryInput,
+          { purpose: "summary", maxTokens: contextBudget.summaryTokens },
+          providerSignal
+        );
+        const generatedSummary = limitWords(summaryResponse.choices?.[0]?.message?.content || "", contextBudget.summaryWords);
         if (generatedSummary) {
           contextSummary = generatedSummary;
           summaryMessageCount = priorSummaryCount + messagesToSummarize.length;
@@ -369,16 +456,22 @@ export async function POST(req: Request) {
       }
     }
 
-    const retrievedContext = formatRetrievedContext(memories, journals);
+    const retrievedContext = formatRetrievedContext(memories, journals, contextBudget.retrievalTokens);
     const contextParts = [
       contextSummary ? `Earlier conversation summary:\n${contextSummary}` : "",
       retrievedContext,
       safety.level === "concern" ? "Safety classifier detected possible distress. Respond supportively and ask whether the user is currently safe." : "",
     ].filter(Boolean);
     const answerMessages = summaryFailed ? [...messagesToSummarize, ...messages] : messages;
+    const boundedAnswerMessages = limitMessagesByBudget(
+      answerMessages,
+      contextBudget.recentTokens,
+      contextBudget.currentMessageTokens
+    );
+    const boundedSystemPrompt = clipToEstimatedTokens(systemPrompt, contextBudget.systemTokens);
     const modelMessages: ModelMessage[] = [
-      { role: "system", content: `${systemPrompt}${contextParts.length ? `\n\nPRIVATE CONTEXT:\n${contextParts.join("\n\n")}` : ""}` },
-      ...toModelMessages(answerMessages),
+      { role: "system", content: `${boundedSystemPrompt}${contextParts.length ? `\n\nPRIVATE CONTEXT:\n${contextParts.join("\n\n")}` : ""}` },
+      ...toModelMessages(boundedAnswerMessages),
     ];
 
     if (user && hasToolIntent(latestUserText) && safety.level !== "urgent") {
@@ -486,6 +579,7 @@ export async function POST(req: Request) {
           type: "meta", contextSummary, summaryMessageCount,
           didSummarize: summaryMessageCount !== priorSummaryCount,
           safetyLevel: safety.level, model: DEEPSEEK_MODEL,
+          contextProfile, contextBudget: contextBudget.workingTokens,
         });
         let usage: DeepSeekUsage = {};
         let succeeded = true;
@@ -495,7 +589,8 @@ export async function POST(req: Request) {
           else usage = await streamDeepSeek(
             modelMessages,
             (text) => send(controller, { type: "delta", text }),
-            providerSignal
+            providerSignal,
+            contextBudget.responseTokens
           );
           send(controller, { type: "done" });
         } catch (error) {
