@@ -52,6 +52,21 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Friday, 30 October 2026 — 01:26 MYT
+
+#### Landing page redesign and design tooling
+
+* Made the selected interactive Design 1 landing page the main `/` page and removed the temporary Aurora and alternative landing-page previews. The anti-slop comparison preview remains available for reference.
+* Reworked the hero with a looping Companion AI conversation, a two-dimensional cartoon room illustration, and a layout that keeps the student's face and hand visible beside the chat card.
+* Rebuilt the feature section around Companion AI, Private Journal, and Mood Spectrum using custom illustrated assets and vector icons instead of emoji-style graphics.
+* Added the anti-slop project skills and recorded the landing-page visual direction in `DESIGN.md`.
+
+#### Next steps
+
+* Inspect and refine the dashboard UI/UX.
+* Inspect and refine the Companion AI chat UI/UX.
+* Replace DeepSeek with Fiqstore using a new API key. Configure the key privately in local and deployment environment settings, then verify chat streaming, tool calls, and safety behavior before switching production traffic. Never commit the key to Git.
+
 ### Monday, 19 October 2026 — 12:41 MYT
 
 #### Companion foundation, context controls, and Aurora design exploration
