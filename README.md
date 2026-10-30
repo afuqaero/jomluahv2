@@ -23,6 +23,13 @@ JomLuah acts as a digital complement to human counselling, giving students a saf
 *   **Retrieval**: Provider-neutral embeddings stored in PostgreSQL JSONB with cosine ranking and lexical fallback. A pgvector migration remains a future scale optimization.
 *   **LLM Integration**: DeepSeek V4 Pro with token streaming, strict tool calling, saved memory, journal retrieval, and a separate safety layer.
 
+## Data Security and Privacy
+
+* Neon-managed encryption at rest protects database storage; the application uses HTTPS for Neon Data API traffic. These are provider-managed protections, not client-side or end-to-end encryption.
+* Row-level security (RLS) policies isolate user records through the application. RLS is not a defense against privileged database/project operators, who may have administrative access to plaintext records.
+* Chat content, journal entries, memories, preference records, and embeddings are readable by the application when needed. The chat service sends relevant conversation and retrieved context to the configured LLM/embedding provider to generate replies and embeddings.
+* Do not describe JomLuah as zero-knowledge or claim that database or hosting administrators are technically unable to access plaintext. Review provider access, project roles, production credentials, retention, and audit controls in the Neon and hosting consoles.
+
 ---
 
 ## 📚 Official Technical Documentation
@@ -53,6 +60,11 @@ This comprehensive documentation covers:
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
 ### Friday, 30 October 2026 — 01:26 MYT
+
+#### Encryption and privacy model
+
+* Documented the existing standard encryption model: Neon-managed encryption at rest and HTTPS transport, combined with application-level RLS. This does not provide end-to-end encryption or hide plaintext from privileged service/database operators.
+* Recorded that chat context is sent to the configured model provider and embeddings may be sent to the configured embedding provider; review provider access, retention, and production console controls separately.
 
 #### Landing page redesign and design tooling
 
