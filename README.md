@@ -25,10 +25,11 @@ JomLuah acts as a digital complement to human counselling, giving students a saf
 
 ## Data Security and Privacy
 
-* Neon-managed encryption at rest protects database storage; the application uses HTTPS for Neon Data API traffic. These are provider-managed protections, not client-side or end-to-end encryption.
-* Row-level security (RLS) policies isolate user records through the application. RLS is not a defense against privileged database/project operators, who may have administrative access to plaintext records.
-* Chat content, journal entries, memories, preference records, and embeddings are readable by the application when needed. The chat service sends relevant conversation and retrieved context to the configured LLM/embedding provider to generate replies and embeddings.
-* Do not describe JomLuah as zero-knowledge or claim that database or hosting administrators are technically unable to access plaintext. Review provider access, project roles, production credentials, retention, and audit controls in the Neon and hosting consoles.
+* Chat message bodies, reply text/options, conversation titles, and rolling summaries are encrypted in the browser with AES-256-GCM before database writes. A random per-user data key is wrapped with a password-derived PBKDF2-SHA-256 key (600,000 iterations); only its salt and wrapped value are stored in Neon.
+* Existing chat history is encrypted client-side the first time the user unlocks it. After a full page reload, the user must enter the account password to unlock chat. Losing or resetting that password makes existing encrypted chat unrecoverable; no recovery key exists.
+* Database operators can still see ownership, message sender, timestamps, and ciphertext size. This feature does not encrypt journal entries, saved memories/embeddings, feedback, or preference records; privileged database operators may still read those values.
+* Chat plaintext is decrypted in the browser and sent to the application and configured LLM provider when generating replies. This protects persisted chat from database-only access, not from a compromised browser/application or the model provider. Do not describe JomLuah as fully end-to-end encrypted or zero-knowledge.
+* Applied `neon_migrations/003_client_side_chat_encryption.sql` to the JomLuah Neon production branch and verified owner-only RLS. The updated application code still needs to be deployed; existing chat rows remain plaintext until that code is live and the user unlocks chat.
 
 ---
 
@@ -61,6 +62,15 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 ### Friday, 30 October 2026 — 01:26 MYT
 
+#### Client-side encryption for chat history
+
+* Added browser-side AES-256-GCM encryption for saved chat messages, reply payloads, conversation titles, and rolling summaries; the random data key is password-wrapped and never stored unwrapped in Neon.
+* Added a per-user encryption-key table with owner-only RLS and a resumable, paginated migration of existing plaintext chat history during unlock.
+* Added a chat unlock screen for returning sessions without the in-memory key and initialize/unlock the vault after successful sign-in.
+* Applied `neon_migrations/003_client_side_chat_encryption.sql` to JomLuah's Neon production branch. Verified the table exists, RLS is enabled, its `authenticated` policy is scoped by `auth.uid() = user_id`, and the key table has zero rows so far.
+* The encryption code is still a local change, not deployed. Existing chat content remains plaintext until the updated app is deployed and each user signs in to run the client-side history migration.
+* Scope remains chat history only. Journal text, saved memories/embeddings, feedback, and preferences are not yet client-side encrypted. Chat plaintext is still sent to the app and configured LLM provider to generate replies.
+
 #### Encryption and privacy model
 
 * Documented the existing standard encryption model: Neon-managed encryption at rest and HTTPS transport, combined with application-level RLS. This does not provide end-to-end encryption or hide plaintext from privileged service/database operators.
@@ -75,6 +85,7 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 #### Next steps
 
+* Deploy the client-side chat-encryption code, then test key creation, unlock, and existing-history encryption with a user account.
 * Inspect and refine the dashboard UI/UX.
 * Inspect and refine the Companion AI chat UI/UX.
 * Replace DeepSeek with Fiqstore using a new API key. Configure the key privately in local and deployment environment settings, then verify chat streaming, tool calls, and safety behavior before switching production traffic. Never commit the key to Git.

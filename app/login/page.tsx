@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ShieldCheck, Eye, EyeSlash } from "@phosphor-icons/react";
 import { neon as supabase, syncPendingProfile } from "../lib/neonClient";
+import { unlockAndMigrateChat } from "../lib/chatEncryption";
 
 export default function LoginPage() {
   return (
@@ -92,6 +93,7 @@ function LoginPageContent() {
         const signedInSession = signInData.session;
         const userId = signedInSession?.user.id;
         if (signedInSession && userId) {
+          await unlockAndMigrateChat(userId, password);
           await syncPendingProfile(signedInSession.user);
           try {
             const { data: profile } = await supabase

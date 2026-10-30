@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeSlash } from "@phosphor-icons/react";
 import { neon as supabase, syncPendingProfile } from "../lib/neonClient";
+import { unlockAndMigrateChat } from "../lib/chatEncryption";
 import { MascotSitting } from "../components/illustrations/Mascot";
 
 export default function RegisterPage() {
@@ -172,7 +173,10 @@ export default function RegisterPage() {
       if (error) {
         setErrorMsg(error.message ?? "Unable to sign in");
       } else {
-        if (data.session?.user) await syncPendingProfile(data.session.user);
+        if (data.session?.user) {
+          await unlockAndMigrateChat(data.session.user.id, password);
+          await syncPendingProfile(data.session.user);
+        }
         setSuccessMsg("Signed in! Redirecting...");
         setTimeout(() => router.push("/dashboard"), 1200);
       }

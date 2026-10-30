@@ -11,12 +11,20 @@ import {
   ThumbsUp,
   ThumbsDown
 } from "@phosphor-icons/react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
 import { neon as supabase } from "../lib/neonClient";
+import {
+  decryptChatPayload,
+  decryptSessionText,
+  encryptChatPayload,
+  encryptSessionText,
+  hasChatEncryptionKey,
+  unlockAndMigrateChat,
+} from "../lib/chatEncryption";
 import { useInactivityLogout } from "../lib/useInactivityLogout";
 
 type Message = {
@@ -72,6 +80,12 @@ export default function ChatPage() {
   const [summaryMessageCount, setSummaryMessageCount] = useState(0);
   const [contextProfile, setContextProfile] = useState<ContextProfile>(DEFAULT_CONTEXT_PROFILE);
   const [isContextProfileSaving, setIsContextProfileSaving] = useState(false);
+  const [chatUserId, setChatUserId] = useState<string | null>(null);
+  const [isChatUnlocked, setIsChatUnlocked] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [unlockPassword, setUnlockPassword] = useState("");
+  const [unlockError, setUnlockError] = useState("");
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   const loadContextProfile = async () => {
     try {
@@ -124,7 +138,7 @@ export default function ChatPage() {
       if (error) throw error;
 
       if (sessions && sessions.length > 0) {
-        const formatted = (sessions as RecentChatSession[]).map((s) => {
+        const formatted = await Promise.all((sessions as RecentChatSession[]).map(async (s) => {
           const msgs = s.chat_messages || [];
           const sortedMsgs = [...msgs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           const lastMsg = sortedMsgs[0];
@@ -134,11 +148,11 @@ export default function ChatPage() {
 
           return {
             id: s.id,
-            title: s.title,
+            title: await decryptSessionText(uid, s.title),
             date: dateStr,
-            preview: lastMsg?.text || "No messages yet..."
+            preview: lastMsg ? (await decryptChatPayload<{ text: string }>(uid, lastMsg.text)).text : "No messages yet..."
           };
-        });
+        }));
         setRecentChats(formatted);
       } else {
         setRecentChats([]);
@@ -192,7 +206,9 @@ export default function ChatPage() {
       if (sessionContextError) {
         console.warn("Chat context summary is unavailable:", sessionContextError.message);
       } else {
-        setContextSummary(sessionContext?.context_summary || "");
+        setContextSummary(sessionContext?.context_summary
+          ? await decryptSessionText(chatUserId!, sessionContext.context_summary)
+          : "");
         setSummaryMessageCount(Number(sessionContext?.summary_message_count || 0));
       }
 
@@ -205,19 +221,25 @@ export default function ChatPage() {
       if (error) throw error;
 
       if (dbMsgs) {
-        const formatted: Message[] = dbMsgs.map((m) => {
+        const formatted: Message[] = await Promise.all(dbMsgs.map(async (m) => {
           const dateObj = new Date(m.created_at);
           const timeStr = dateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+          const payload = await decryptChatPayload<{
+            text: string;
+            options?: string[];
+            replyToText?: string;
+            replyToSender?: "bot" | "user";
+          }>(chatUserId!, m.text);
           return {
             id: m.id,
             sender: m.sender as "bot" | "user",
-            text: m.text,
+            text: payload.text,
             timestamp: timeStr,
-            options: m.options || undefined,
-            replyToText: m.reply_to_text || undefined,
-            replyToSender: (m.reply_to_sender as "bot" | "user") || undefined
+            options: payload.options,
+            replyToText: payload.replyToText,
+            replyToSender: payload.replyToSender
           };
-        });
+        }));
         setMessages(formatted);
       }
     } catch (err) {
@@ -344,7 +366,7 @@ export default function ChatPage() {
         const { error: summaryDbError } = await supabase
           .from("chat_sessions")
           .update({
-            context_summary: nextSummary.contextSummary,
+            context_summary: await encryptSessionText(chatUserId!, nextSummary.contextSummary),
             summary_message_count: nextSummary.summaryMessageCount,
           })
           .eq("id", sessionId);
@@ -353,7 +375,11 @@ export default function ChatPage() {
 
       const { data: savedBotMessage, error: botDbErr } = await supabase
         .from("chat_messages")
-        .insert({ session_id: sessionId, sender: "bot", text: replyText })
+        .insert({
+          session_id: sessionId,
+          sender: "bot",
+          text: await encryptChatPayload(chatUserId!, { text: replyText }),
+        })
         .select("id")
         .single();
       if (botDbErr) console.error("Error saving bot message:", botDbErr);
@@ -393,7 +419,7 @@ export default function ChatPage() {
         .insert({
           session_id: sessionId,
           sender: "bot",
-          text: replyText
+          text: await encryptChatPayload(chatUserId!, { text: replyText })
         });
     }
   };
@@ -450,7 +476,7 @@ export default function ChatPage() {
         .from("chat_sessions")
         .insert({
           user_id: uid,
-          title: title
+          title: await encryptSessionText(uid, title),
         })
         .select()
         .single();
@@ -485,7 +511,7 @@ export default function ChatPage() {
         .insert({
           session_id: sessionId,
           sender: "user",
-          text: userText
+          text: await encryptChatPayload(uid, { text: userText }),
         });
 
       if (msgErr) console.error("Error saving user message:", msgErr);
@@ -508,8 +534,12 @@ export default function ChatPage() {
         router.replace("/login");
         return;
       }
+      setIsAuthReady(true);
+      setChatUserId(session.user.id);
       const name = session.user.name || session.user.email?.split("@")[0] || "there";
       setDisplayName(name);
+      if (!hasChatEncryptionKey(session.user.id)) return;
+      setIsChatUnlocked(true);
       loadRecentChats(session.user.id);
       loadContextProfile();
       handleInitialEntry(session.user.id);
@@ -518,6 +548,25 @@ export default function ChatPage() {
     // Auth bootstrap intentionally follows router lifecycle only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
+
+  const handleUnlockChat = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!chatUserId || !unlockPassword) return;
+    setIsUnlocking(true);
+    setUnlockError("");
+    try {
+      await unlockAndMigrateChat(chatUserId, unlockPassword);
+      setUnlockPassword("");
+      setIsChatUnlocked(true);
+      await loadRecentChats(chatUserId);
+      await loadContextProfile();
+      await handleInitialEntry(chatUserId);
+    } catch (error) {
+      setUnlockError(error instanceof Error ? error.message : "Could not unlock your saved chats.");
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend ?? inputValue).trim();
@@ -539,7 +588,7 @@ export default function ChatPage() {
           .from("chat_sessions")
           .insert({
             user_id: uid,
-            title: title
+            title: await encryptSessionText(uid, title),
           })
           .select()
           .single();
@@ -575,9 +624,11 @@ export default function ChatPage() {
         .insert({
           session_id: sessionId,
           sender: "user",
-          text,
-          reply_to_text: userMsg.replyToText || null,
-          reply_to_sender: userMsg.replyToSender || null
+          text: await encryptChatPayload(uid, {
+            text,
+            replyToText: userMsg.replyToText,
+            replyToSender: userMsg.replyToSender,
+          }),
         });
 
       if (msgErr) console.error("Error saving user message:", msgErr);
@@ -695,6 +746,41 @@ export default function ChatPage() {
       </div>
     </>
   );
+
+  if (!isAuthReady || !isChatUnlocked) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#f5f6ff] px-5 py-10 text-slate-900">
+        <section className="w-full max-w-md rounded-3xl border border-indigo-100 bg-white p-8 shadow-xl shadow-indigo-950/5">
+          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-xl font-bold text-white" aria-hidden="true">J</div>
+          {!isAuthReady ? (
+            <p role="status" className="text-sm text-slate-600">Checking your secure session…</p>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold tracking-tight">Unlock your private chats</h1>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Your chat history is encrypted on this device. Enter your account password to unlock it. Your password is used only in this browser to unlock the encryption key.</p>
+              <form onSubmit={handleUnlockChat} className="mt-6 space-y-4">
+                <label htmlFor="chat-unlock-password" className="block text-sm font-semibold">Account password</label>
+                <input
+                  id="chat-unlock-password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={unlockPassword}
+                  onChange={(event) => setUnlockPassword(event.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200"
+                />
+                {unlockError && <p role="alert" className="text-sm text-red-700">{unlockError}</p>}
+                <button type="submit" disabled={isUnlocking} className="w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 disabled:cursor-wait disabled:opacity-60">
+                  {isUnlocking ? "Unlocking and securing chat history…" : "Unlock chats"}
+                </button>
+              </form>
+              <p className="mt-5 text-xs leading-5 text-slate-500">If you reset your account password, older encrypted chats cannot be recovered without the original password.</p>
+            </>
+          )}
+        </section>
+      </main>
+    );
+  }
 
   return (
     <div className={`h-dvh overflow-clip ${theme.bg} font-sans antialiased flex transition-colors duration-500`}>
