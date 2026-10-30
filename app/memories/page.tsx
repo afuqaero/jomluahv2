@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, useState, useEffect } from "react";
+import { cloneElement, useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   ClockCounterClockwise,
@@ -25,6 +25,12 @@ import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppS
 import MoodEntryModal, { type MoodEntryPayload, type ModalInitialEntry } from "../dashboard/MoodEntryModal";
 import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "../dashboard/ResponsiveAssets";
 import { neon as supabase } from "../lib/neonClient";
+import {
+  decryptJournalImages,
+  encryptJournalImages,
+  restoreChatEncryptionKey,
+  unlockAndMigrateChat,
+} from "../lib/chatEncryption";
 
 type JournalEntry = {
   id: number | string;
@@ -111,6 +117,12 @@ export default function MemoriesPage() {
   const [activeMood, setActiveMood] = useState("Good");
   const [modalReadOnly, setModalReadOnly] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEncryptionReady, setIsEncryptionReady] = useState(false);
+  const [encryptionPassword, setEncryptionPassword] = useState("");
+  const [rememberEncryptionDevice, setRememberEncryptionDevice] = useState(true);
+  const [encryptionError, setEncryptionError] = useState("");
+  const [isUnlockingEncryption, setIsUnlockingEncryption] = useState(false);
 
   const moods = [
     { name: "Happy", icon: <HappyEmoji className="w-7 h-7" />, color: "bg-gradient-to-br from-amber-300 to-orange-400" },
@@ -119,7 +131,25 @@ export default function MemoriesPage() {
     { name: "Sad", icon: <SadEmoji className="w-7 h-7" />, color: "bg-gradient-to-br from-blue-300 to-indigo-400" },
   ];
 
-  // Load entries from Supabase on mount — authenticated users only
+  const loadEntries = async (uid: string) => {
+    const { data, error } = await supabase
+      .from("journal_entries")
+      .select("*")
+      .order("timestamp", { ascending: false });
+    if (error) throw error;
+    const mapped = await Promise.all((data ?? []).map(async (entry: any) => ({
+      id: entry.id,
+      timestamp: new Date(entry.timestamp).getTime(),
+      title: entry.title,
+      mood: entry.mood,
+      excerpt: entry.excerpt,
+      tags: entry.tags || [],
+      favorite: entry.favorite,
+      images: await decryptJournalImages(uid, entry.images || []),
+    })));
+    setEntries(mapped);
+  };
+
   useEffect(() => {
     const fetchEntries = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -128,27 +158,31 @@ export default function MemoriesPage() {
         return;
       }
       setUser(session.user);
-      // Fetch real entries from DB — empty if none yet
-      const { data, error } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .order("timestamp", { ascending: false });
-      if (!error && data) {
-        const mapped = data.map((d: any) => ({
-          id: d.id,
-          timestamp: new Date(d.timestamp).getTime(),
-          title: d.title,
-          mood: d.mood,
-          excerpt: d.excerpt,
-          tags: d.tags || [],
-          favorite: d.favorite,
-          images: d.images || [],
-        }));
-        setEntries(mapped);
+      if (await restoreChatEncryptionKey(session.user.id)) {
+        await loadEntries(session.user.id);
+        setIsEncryptionReady(true);
       }
+      setIsLoading(false);
     };
     fetchEntries();
   }, []);
+
+  const handleUnlockEncryption = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user || !encryptionPassword) return;
+    setIsUnlockingEncryption(true);
+    setEncryptionError("");
+    try {
+      await unlockAndMigrateChat(user.id, encryptionPassword, rememberEncryptionDevice);
+      setEncryptionPassword("");
+      await loadEntries(user.id);
+      setIsEncryptionReady(true);
+    } catch (error) {
+      setEncryptionError(error instanceof Error ? error.message : "Could not unlock your private diary photos.");
+    } finally {
+      setIsUnlockingEncryption(false);
+    }
+  };
 
 
 
@@ -190,6 +224,7 @@ export default function MemoriesPage() {
 
   const handleMoodSubmit = async (payload: MoodEntryPayload, action: "save" | "continue") => {
     const title = payload.title.trim() || `Feeling ${payload.mood}`;
+    const encryptedImages = user ? await encryptJournalImages(user.id, payload.images) : payload.images;
     
     if (editingEntryId !== null) {
       if (user) {
@@ -201,7 +236,7 @@ export default function MemoriesPage() {
             mood: payload.mood,
             excerpt: payload.description.trim() || "No additional notes for this entry.",
             tags: payload.tags,
-            images: payload.images,
+            images: encryptedImages,
           })
           .eq("id", editingEntryId);
         if (error) {
@@ -243,6 +278,29 @@ export default function MemoriesPage() {
         timestamp: editingEntry.timestamp,
       }
     : null;
+
+  if (user && !isEncryptionReady && !isLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#f5f6ff] px-5 py-10 text-slate-900">
+        <section className="w-full max-w-md rounded-3xl border border-indigo-100 bg-white p-8 shadow-xl shadow-indigo-950/5">
+          <h1 className="text-2xl font-bold tracking-tight">Unlock your private diary</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Enter your account password to unlock your saved photos. Your password is used only in this browser.</p>
+          <form onSubmit={handleUnlockEncryption} className="mt-6 space-y-4">
+            <label htmlFor="memories-unlock-password" className="block text-sm font-semibold">Account password</label>
+            <input id="memories-unlock-password" type="password" autoComplete="current-password" required value={encryptionPassword} onChange={(event) => setEncryptionPassword(event.target.value)} className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200" />
+            <label className="flex items-start gap-3 text-sm text-slate-700">
+              <input type="checkbox" checked={rememberEncryptionDevice} onChange={(event) => setRememberEncryptionDevice(event.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-600" />
+              <span>Remember this device <span className="block text-xs text-slate-500">Leave off on a shared device.</span></span>
+            </label>
+            {encryptionError && <p role="alert" className="text-sm text-red-700">{encryptionError}</p>}
+            <button type="submit" disabled={isUnlockingEncryption} className="w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-60">
+              {isUnlockingEncryption ? "Unlocking your photos…" : "Unlock diary"}
+            </button>
+          </form>
+        </section>
+      </main>
+    );
+  }
 
   // Group entries by month-year
   const getGroupedEntries = () => {
