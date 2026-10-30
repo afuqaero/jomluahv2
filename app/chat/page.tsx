@@ -22,7 +22,7 @@ import {
   decryptSessionText,
   encryptChatPayload,
   encryptSessionText,
-  hasChatEncryptionKey,
+  restoreChatEncryptionKey,
   unlockAndMigrateChat,
 } from "../lib/chatEncryption";
 import { useInactivityLogout } from "../lib/useInactivityLogout";
@@ -84,6 +84,7 @@ export default function ChatPage() {
   const [isChatUnlocked, setIsChatUnlocked] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [unlockPassword, setUnlockPassword] = useState("");
+  const [rememberThisDevice, setRememberThisDevice] = useState(true);
   const [unlockError, setUnlockError] = useState("");
   const [isUnlocking, setIsUnlocking] = useState(false);
 
@@ -538,7 +539,7 @@ export default function ChatPage() {
       setChatUserId(session.user.id);
       const name = session.user.name || session.user.email?.split("@")[0] || "there";
       setDisplayName(name);
-      if (!hasChatEncryptionKey(session.user.id)) return;
+      if (!await restoreChatEncryptionKey(session.user.id)) return;
       setIsChatUnlocked(true);
       loadRecentChats(session.user.id);
       loadContextProfile();
@@ -555,7 +556,7 @@ export default function ChatPage() {
     setIsUnlocking(true);
     setUnlockError("");
     try {
-      await unlockAndMigrateChat(chatUserId, unlockPassword);
+      await unlockAndMigrateChat(chatUserId, unlockPassword, rememberThisDevice);
       setUnlockPassword("");
       setIsChatUnlocked(true);
       await loadRecentChats(chatUserId);
@@ -769,12 +770,21 @@ export default function ChatPage() {
                   onChange={(event) => setUnlockPassword(event.target.value)}
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200"
                 />
+                <label className="flex items-start gap-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={rememberThisDevice}
+                    onChange={(event) => setRememberThisDevice(event.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-indigo-600"
+                  />
+                  <span>Remember this device <span className="block text-xs text-slate-500">Recommended for your private device. Leave off on a shared device.</span></span>
+                </label>
                 {unlockError && <p role="alert" className="text-sm text-red-700">{unlockError}</p>}
                 <button type="submit" disabled={isUnlocking} className="w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 disabled:cursor-wait disabled:opacity-60">
                   {isUnlocking ? "Unlocking and securing chat history…" : "Unlock chats"}
                 </button>
               </form>
-              <p className="mt-5 text-xs leading-5 text-slate-500">If you reset your account password, older encrypted chats cannot be recovered without the original password.</p>
+              <p className="mt-5 text-xs leading-5 text-slate-500">On a new device, enter your password once to unlock your chats. A password reset cannot unlock older chats.</p>
             </>
           )}
         </section>

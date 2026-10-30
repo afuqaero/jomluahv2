@@ -51,6 +51,7 @@ function LoginPageContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberChatOnDevice, setRememberChatOnDevice] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -93,7 +94,7 @@ function LoginPageContent() {
         const signedInSession = signInData.session;
         const userId = signedInSession?.user.id;
         if (signedInSession && userId) {
-          await unlockAndMigrateChat(userId, password);
+          await unlockAndMigrateChat(userId, password, rememberChatOnDevice);
           await syncPendingProfile(signedInSession.user);
           try {
             const { data: profile } = await supabase
@@ -196,6 +197,16 @@ function LoginPageContent() {
                 {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
               </button>
             </div>
+
+            <label className="mb-2 flex items-start gap-3 px-2 text-sm text-white/90">
+              <input
+                type="checkbox"
+                checked={rememberChatOnDevice}
+                onChange={(event) => setRememberChatOnDevice(event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-white"
+              />
+              <span>Remember this device for private chats <span className="block text-xs text-white/65">Turn off on shared devices.</span></span>
+            </label>
 
             <button type="submit" disabled={loading} className="w-full py-4 px-8 rounded-full bg-white text-indigo-600 font-extrabold text-base tracking-wider shadow-lg hover:-translate-y-0.5 hover:shadow-xl hover:bg-opacity-95 transition-all cursor-pointer mt-4">
               {loading ? "SIGNING IN..." : "SIGN IN SECURELY"}

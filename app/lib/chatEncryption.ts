@@ -2,6 +2,8 @@ import { neon } from "./neonClient";
 
 const ENVELOPE_PREFIX = "jlenc:v1:";
 const PBKDF2_ITERATIONS = 600_000;
+const DEVICE_KEY_DATABASE = "jomluah-chat-keys";
+const DEVICE_KEY_STORE = "keys";
 const keyCache = new Map<string, CryptoKey>();
 
 type VaultRow = {
@@ -16,6 +18,69 @@ type EncryptedPayload = {
   replyToText?: string;
   replyToSender?: "bot" | "user";
 };
+
+function openDeviceKeyDatabase() {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("This browser cannot remember the chat key on this device."));
+      return;
+    }
+    const request = indexedDB.open(DEVICE_KEY_DATABASE, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(DEVICE_KEY_STORE)) {
+        request.result.createObjectStore(DEVICE_KEY_STORE);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error ?? new Error("Could not open device key storage."));
+    request.onblocked = () => reject(new Error("Device key storage is busy in another tab."));
+  });
+}
+
+async function saveDeviceKey(userId: string, key: CryptoKey) {
+  const database = await openDeviceKeyDatabase();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(DEVICE_KEY_STORE, "readwrite");
+      transaction.objectStore(DEVICE_KEY_STORE).put(key, userId);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("Could not remember this device."));
+      transaction.onabort = () => reject(transaction.error ?? new Error("Could not remember this device."));
+    });
+  } finally {
+    database.close();
+  }
+}
+
+async function readDeviceKey(userId: string) {
+  const database = await openDeviceKeyDatabase();
+  try {
+    return await new Promise<CryptoKey | undefined>((resolve, reject) => {
+      const transaction = database.transaction(DEVICE_KEY_STORE, "readonly");
+      const request = transaction.objectStore(DEVICE_KEY_STORE).get(userId);
+      request.onsuccess = () => resolve(request.result as CryptoKey | undefined);
+      request.onerror = () => reject(request.error ?? new Error("Could not read this device's chat key."));
+    });
+  } finally {
+    database.close();
+  }
+}
+
+async function deleteDeviceKey(userId: string) {
+  if (typeof indexedDB === "undefined") return;
+  const database = await openDeviceKeyDatabase();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(DEVICE_KEY_STORE, "readwrite");
+      transaction.objectStore(DEVICE_KEY_STORE).delete(userId);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error ?? new Error("Could not remove this device's chat key."));
+      transaction.onabort = () => reject(transaction.error ?? new Error("Could not remove this device's chat key."));
+    });
+  } finally {
+    database.close();
+  }
+}
 
 function toBase64(bytes: Uint8Array) {
   let binary = "";
@@ -190,20 +255,34 @@ async function createOrLoadKey(userId: string, password: string) {
   throw error;
 }
 
-export async function unlockAndMigrateChat(userId: string, password: string) {
+export async function unlockAndMigrateChat(userId: string, password: string, rememberDevice = true) {
   if (!password) throw new Error("Enter your account password to unlock encrypted chats.");
   const key = await createOrLoadKey(userId, password);
   keyCache.set(userId, key);
   try {
     await migrateLegacyHistory(userId, key);
+    try {
+      if (rememberDevice) await saveDeviceKey(userId, key);
+      else await deleteDeviceKey(userId);
+    } catch {
+      keyCache.set(userId, key);
+    }
   } catch (error) {
     keyCache.delete(userId);
     throw error;
   }
 }
 
-export function hasChatEncryptionKey(userId: string) {
-  return keyCache.has(userId);
+export async function restoreChatEncryptionKey(userId: string) {
+  if (keyCache.has(userId)) return true;
+  try {
+    const key = await readDeviceKey(userId);
+    if (!key || key.extractable || key.algorithm.name !== "AES-GCM") return false;
+    keyCache.set(userId, key);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function clearChatEncryptionKey(userId: string) {

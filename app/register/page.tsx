@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [rememberChatOnDevice, setRememberChatOnDevice] = useState(true);
 
   // Status states
   const [loading, setLoading] = useState(false);
@@ -174,7 +175,7 @@ export default function RegisterPage() {
         setErrorMsg(error.message ?? "Unable to sign in");
       } else {
         if (data.session?.user) {
-          await unlockAndMigrateChat(data.session.user.id, password);
+          await unlockAndMigrateChat(data.session.user.id, password, rememberChatOnDevice);
           await syncPendingProfile(data.session.user);
         }
         setSuccessMsg("Signed in! Redirecting...");
@@ -444,6 +445,16 @@ export default function RegisterPage() {
                   {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+
+              <label className="mb-2 flex items-start gap-3 px-2 text-sm text-white/90">
+                <input
+                  type="checkbox"
+                  checked={rememberChatOnDevice}
+                  onChange={(event) => setRememberChatOnDevice(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-white"
+                />
+                <span>Remember this device for private chats <span className="block text-xs text-white/65">Turn off on shared devices.</span></span>
+              </label>
 
               <button type="submit" disabled={loading} className="w-full py-4 px-8 rounded-full bg-white text-indigo-600 font-extrabold text-base tracking-wider shadow-lg hover:-translate-y-0.5 hover:shadow-xl hover:bg-opacity-95 transition-all cursor-pointer mt-4">
                 {loading ? "SIGNING IN..." : "SIGN IN SECURELY"}
