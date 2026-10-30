@@ -369,8 +369,8 @@ export async function POST(req: Request) {
     const latestUserText = [...messages].reverse().find((message) => message.sender === "user")?.text || "";
     const safety = assessSafety(latestUserText);
 
-    const supabase = await createRouteNeonClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const neon = await createRouteNeonClient();
+    const { data: { user } } = await neon.auth.getUser();
     let memories: MemoryRecord[] = [];
     let availableMemories: MemoryRecord[] = [];
     let journals: JournalRecord[] = [];
@@ -379,7 +379,7 @@ export async function POST(req: Request) {
     let journalRagEnabled = true;
 
     if (user && latestUserText) {
-      const { data: preferences } = await supabase.from("ai_preferences")
+      const { data: preferences } = await neon.from("ai_preferences")
         .select("memory_enabled, journal_rag_enabled, context_profile").eq("user_id", user.id).maybeSingle();
       memoryEnabled = preferences?.memory_enabled ?? true;
       journalRagEnabled = preferences?.journal_rag_enabled ?? true;
@@ -393,11 +393,11 @@ export async function POST(req: Request) {
       const loadJournals = journalRagEnabled;
       const [{ data: memoryRows }, { data: journalRows }] = await Promise.all([
         loadMemories
-          ? supabase.from("user_memories").select("id, content, category, importance, embedding, updated_at")
+          ? neon.from("user_memories").select("id, content, category, importance, embedding, updated_at")
               .eq("user_id", user.id).eq("is_active", true).order("updated_at", { ascending: false }).limit(100)
           : Promise.resolve({ data: [] }),
         loadJournals
-          ? supabase.from("journal_entries").select("id, title, mood, excerpt, tags, timestamp, embedding")
+          ? neon.from("journal_entries").select("id, title, mood, excerpt, tags, timestamp, embedding")
               .eq("user_id", user.id).order("timestamp", { ascending: false }).limit(100)
           : Promise.resolve({ data: [] }),
       ]);
@@ -422,7 +422,7 @@ export async function POST(req: Request) {
             const embedding = generated[index];
             if (!embedding) return;
             journal.embedding = embedding;
-            await supabase.from("journal_entries").update({ embedding }).eq("id", journal.id).eq("user_id", user.id);
+            await neon.from("journal_entries").update({ embedding }).eq("id", journal.id).eq("user_id", user.id);
           }));
         }
       }
@@ -497,11 +497,11 @@ export async function POST(req: Request) {
             else if (!content || containsSecretData(content)) toolResults.push("save_memory: rejected because content is empty or secret credential data");
             else {
               const embedding = await createEmbedding(content, providerSignal).catch(() => null);
-              const { data: existing } = await supabase.from("user_memories").select("id")
+              const { data: existing } = await neon.from("user_memories").select("id")
                 .eq("user_id", user.id).eq("content", content).eq("is_active", true).maybeSingle();
               const operation = existing
-                ? supabase.from("user_memories").update({ category, importance, embedding, updated_at: new Date().toISOString() }).eq("id", existing.id)
-                : supabase.from("user_memories").insert({ user_id: user.id, content, category, importance, embedding });
+                ? neon.from("user_memories").update({ category, importance, embedding, updated_at: new Date().toISOString() }).eq("id", existing.id)
+                : neon.from("user_memories").insert({ user_id: user.id, content, category, importance, embedding });
               const { error } = await operation;
               toolResults.push(error ? `save_memory: failed (${error.message})` : `save_memory: saved "${content}"`);
             }
@@ -514,7 +514,7 @@ export async function POST(req: Request) {
               const target = rankRecords(query, availableMemories, queryEmbedding, 1)[0];
               if (!target) toolResults.push("forget_memory: no matching saved memory found");
               else {
-                const { error } = await supabase.from("user_memories")
+                const { error } = await neon.from("user_memories")
                   .update({ is_active: false, updated_at: new Date().toISOString() })
                   .eq("id", target.id).eq("user_id", user.id);
                 toolResults.push(error ? `forget_memory: failed (${error.message})` : `forget_memory: removed "${target.content}"`);
@@ -523,7 +523,7 @@ export async function POST(req: Request) {
           }
 
           if (toolCall.function.name === "list_memories") {
-            const { data } = await supabase.from("user_memories").select("content, category")
+            const { data } = await neon.from("user_memories").select("content, category")
               .eq("user_id", user.id).eq("is_active", true).order("updated_at", { ascending: false }).limit(20);
             toolResults.push(`list_memories: ${JSON.stringify(data || [])}`);
           }
@@ -538,7 +538,7 @@ export async function POST(req: Request) {
             } else {
               const days = Math.round(Math.max(7, Math.min(365, Number(args.days) || 30)));
               const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-              const { data: moodRows, error: moodError } = await supabase.from("journal_entries")
+              const { data: moodRows, error: moodError } = await neon.from("journal_entries")
                 .select("mood, timestamp, title").eq("user_id", user.id)
                 .gte("timestamp", since).order("timestamp", { ascending: false }).limit(500);
               if (moodError) toolResults.push(`get_mood_history: failed (${moodError.message})`);
@@ -608,7 +608,7 @@ export async function POST(req: Request) {
           }
         } finally {
           if (user) {
-            await supabase.from("llm_events").insert({
+            await neon.from("llm_events").insert({
               user_id: user.id, session_id: sessionId, provider: "deepseek", model: DEEPSEEK_MODEL,
               purpose: "chat", latency_ms: Date.now() - startedAt,
               prompt_tokens: usage.prompt_tokens ?? null, completion_tokens: usage.completion_tokens ?? null,

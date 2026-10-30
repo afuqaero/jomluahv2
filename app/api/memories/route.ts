@@ -11,16 +11,16 @@ import { createRouteNeonClient } from "../../lib/serverNeon";
 const noStoreHeaders = { "Cache-Control": "private, no-store" };
 
 async function authenticatedClient() {
-  const supabase = await createRouteNeonClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return { supabase, user };
+  const neon = await createRouteNeonClient();
+  const { data: { user } } = await neon.auth.getUser();
+  return { neon, user };
 }
 
 export async function GET() {
-  const { supabase, user } = await authenticatedClient();
+  const { neon, user } = await authenticatedClient();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: noStoreHeaders });
 
-  const { data, error } = await supabase
+  const { data, error } = await neon
     .from("user_memories")
     .select("id, content, category, importance, is_active, created_at, updated_at")
     .eq("user_id", user.id)
@@ -32,7 +32,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { supabase, user } = await authenticatedClient();
+  const { neon, user } = await authenticatedClient();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: noStoreHeaders });
 
   const body = await req.json().catch(() => ({}));
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   const category = normaliseMemoryCategory(body.category);
   const importance = normaliseImportance(body.importance);
   const embedding = await createEmbedding(content, req.signal).catch(() => null);
-  const { data: existing } = await supabase
+  const { data: existing } = await neon
     .from("user_memories")
     .select("id")
     .eq("user_id", user.id)
@@ -53,14 +53,14 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   const query = existing
-    ? supabase.from("user_memories").update({
+    ? neon.from("user_memories").update({
         category,
         importance,
         embedding,
         is_active: true,
         updated_at: new Date().toISOString(),
       }).eq("id", existing.id).eq("user_id", user.id).select("id, content, category, importance, is_active, created_at, updated_at").single()
-    : supabase.from("user_memories").insert({
+    : neon.from("user_memories").insert({
         user_id: user.id,
         content,
         category,
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const { supabase, user } = await authenticatedClient();
+  const { neon, user } = await authenticatedClient();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: noStoreHeaders });
 
   const body = await req.json().catch(() => ({}));
@@ -93,7 +93,7 @@ export async function PATCH(req: Request) {
   if (body.importance !== undefined) updates.importance = normaliseImportance(body.importance);
   if (typeof body.is_active === "boolean") updates.is_active = body.is_active;
 
-  const { data, error } = await supabase.from("user_memories").update(updates)
+  const { data, error } = await neon.from("user_memories").update(updates)
     .eq("id", id).eq("user_id", user.id)
     .select("id, content, category, importance, is_active, created_at, updated_at").maybeSingle();
 
@@ -103,13 +103,13 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const { supabase, user } = await authenticatedClient();
+  const { neon, user } = await authenticatedClient();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: noStoreHeaders });
 
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Memory id is required" }, { status: 400, headers: noStoreHeaders });
 
-  const { error, count } = await supabase.from("user_memories")
+  const { error, count } = await neon.from("user_memories")
     .delete({ count: "exact" }).eq("id", id).eq("user_id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: noStoreHeaders });
   if (!count) return NextResponse.json({ error: "Memory not found" }, { status: 404, headers: noStoreHeaders });

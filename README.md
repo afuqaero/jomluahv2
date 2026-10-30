@@ -11,8 +11,8 @@ JomLuah acts as a digital complement to human counselling, giving students a saf
 *   **Student Dashboard**: A grounding overview of the user's emotional state, journal streak, and recent logs.
 *   **AI Conversational Reflection**: Real-time chat interface with an LLM that remembers past conversations and surfaces insights using a RAG (Retrieval-Augmented Generation) pipeline.
 *   **Private Journaling**: A seamless journal module that allows users to reflect on their thoughts, which can also be transitioned into an AI reflection session.
-*   **Risk Detection & Alerts**: Keyword and pattern-based detection that quietly flags distress signals (e.g., depression, self-harm keywords) and alerts counsellors on their dashboard.
-*   **Counsellor & Admin Dashboards**: Dedicated views for counsellors to monitor assigned students, read AI-generated session reports, and track mood trends.
+*   **Counselor Dashboard**: A consent-gated view of morning/evening mood scores for students assigned to that counselor. It does not expose chat, journal, notes, or AI-generated conversation analysis.
+*   **Admin Dashboard**: Assign one counselor per student and manage student/counselor roles, with role checks and an audit trail. Admin accounts are bootstrapped through a trusted database operation.
 
 ---
 
@@ -60,6 +60,24 @@ This comprehensive documentation covers:
 ## Development Change Log
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
+
+### Friday, 30 October 2026 — 19:20 MYT
+
+#### Counselor and admin foundations
+
+* Added the counselor dashboard at `/counselor` with assigned-student selection, date filters, morning/evening mood-score chart, and score table.
+* Added the admin dashboard at `/admin` for counselor role changes and one-active-counselor-per-student assignments; role and assignment changes are audit logged.
+* Added `neon_migrations/004_counselor_mood_sharing.sql` with isolated mood-check-in, consent, assignment, and audit tables plus database-enforced access rules. Student consent defaults off. Counselors receive only mood score, period, and date for their assigned students after consent; admins receive no mood data.
+* Added authenticated APIs for check-in submission and consent management so a future student-side UI can use the schema. The student dashboard and check-in UI were not changed; consequently, no new check-in records are created by this release and counselor charts remain empty until the student UI is implemented.
+* Existing journal moods are not copied or exposed. No chat, journal text, tags, photos, or inferred conversation topics are shared with counselors.
+* Staff sign-in routes admins and counselors to their respective pages and does not send them through student onboarding or chat-key unlock.
+* Applied migration `004` to the Neon `JomLuah` production branch after validating the same migration on a development branch. Production verification confirmed all four tables have RLS enabled, all eight dashboard functions and five mood-sharing policies exist, the `admin` role is available, and there are currently no mood check-in records.
+* Bootstrap the first admin only through trusted Neon SQL after applying the migration: `UPDATE public.profiles SET role = 'admin'::public.user_role WHERE email = '<verified-admin-email>';`. Do not expose this operation through the web app or commit a real email address.
+
+#### Next steps
+
+* Build the student mood check-in and explicit sharing-consent UI without sharing journal entries.
+* Exercise counselor assignment boundaries, consent revocation, and admin/counselor access with test accounts; provision the first admin through trusted Neon SQL.
 
 ### Friday, 30 October 2026 — 01:26 MYT
 

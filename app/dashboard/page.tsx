@@ -39,7 +39,7 @@ import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "./ResponsiveAssets";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
 import { useAppTheme } from "../components/useAppTheme";
-import { neon as supabase } from "../lib/neonClient";
+import { neon as neon } from "../lib/neonClient";
 import {
   decryptJournalImages,
   encryptJournalImages,
@@ -183,7 +183,7 @@ export default function StudentDashboard() {
   const [isUnlockingEncryption, setIsUnlockingEncryption] = useState(false);
 
   const loadDiaryEntries = async (uid: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await neon
       .from("journal_entries")
       .select("*")
       .order("timestamp", { ascending: false });
@@ -252,10 +252,10 @@ export default function StudentDashboard() {
     handleMoodSelect(activeMood);
   };
 
-  // Load entries from Supabase on mount — authenticated users only
+  // Load entries from Neon on mount — authenticated users only
   useEffect(() => {
     const fetchUserAndEntries = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await neon.auth.getSession();
       if (!session) {
         router.replace("/login");
         return;
@@ -278,7 +278,7 @@ export default function StudentDashboard() {
       await loadDiaryEntries(session.user.id);
 
       // Fetch dynamic quotes from database
-      const { data: dbQuotes, error: qErr } = await supabase
+      const { data: dbQuotes, error: qErr } = await neon
         .from("daily_quotes")
         .select("text, author");
       if (!qErr && dbQuotes && dbQuotes.length > 0) {
@@ -524,7 +524,7 @@ export default function StudentDashboard() {
     if (user) {
       const encryptedImages = await encryptJournalImages(user.id, entry.images);
       if (editingEntryId !== null) {
-        const { error } = await supabase
+        const { error } = await neon
           .from("journal_entries")
           .update({
             timestamp: new Date(entry.timestamp).toISOString(),
@@ -557,7 +557,7 @@ export default function StudentDashboard() {
           }
         }
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await neon
           .from("journal_entries")
           .insert({
             user_id: user.id,
@@ -636,7 +636,7 @@ export default function StudentDashboard() {
     if (editingEntryId === null) return;
     
     if (user) {
-      const { error } = await supabase
+      const { error } = await neon
         .from("journal_entries")
         .delete()
         .eq("id", editingEntryId);
@@ -748,7 +748,7 @@ export default function StudentDashboard() {
               <button
                 onClick={async () => {
                   document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
-                  await supabase.auth.signOut();
+                  await neon.auth.signOut();
                   router.push("/");
                 }}
                 className="p-2.5 rounded-2xl bg-white/10 hover:bg-rose-500/25 hover:border-rose-500/35 hover:text-rose-200 text-white transition-all shrink-0 flex items-center justify-center border border-white/10"

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Sparkle } from "@phosphor-icons/react";
-import { neon as supabase } from "../lib/neonClient";
+import { neon as neon } from "../lib/neonClient";
 import { useInactivityLogout } from "../lib/useInactivityLogout";
 
 function CuteRobotFace({ className }: { className?: string }) {
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await neon.auth.getSession();
         if (!session) {
           router.push("/login?redirectTo=/onboarding");
         } else {
@@ -83,7 +83,7 @@ export default function OnboardingPage() {
             document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
             
             // Set onboarding completed to false in DB
-            await supabase
+            await neon
               .from("profiles")
               .upsert({
                 id: session.user.id,
@@ -99,7 +99,7 @@ export default function OnboardingPage() {
           }
 
           // Check if user already finished onboarding
-          const { data: profile, error } = await supabase
+          const { data: profile, error } = await neon
             .from("profiles")
             .select("onboarding_completed")
             .eq("id", session.user.id)
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
     setErrorMsg("");
 
     try {
-      const { error } = await supabase
+      const { error } = await neon
         .from("profiles")
         .upsert({
           id: userId,

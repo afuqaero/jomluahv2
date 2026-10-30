@@ -10,6 +10,13 @@
 
 **JomLuah** (*Malay:* "Let's Express") is a Progressive Web Application (PWA) designed as an AI-powered emotional management companion for university students and a triage dashboard for university counselors.
 
+### Current dashboard scope (30 October 2026)
+* `/counselor` displays only student-entered morning/evening mood scores for students assigned to the signed-in counselor, and only after the student explicitly consents. It does not expose chat, journal entries, narrative notes, or AI-inferred topics.
+* `/admin` manages student/counselor roles and one active counselor assignment per student. Admin accounts are provisioned through a trusted database operation; admin pages and APIs do not expose student mood check-ins.
+* Bootstrap the first admin only through trusted Neon SQL after migration: `UPDATE public.profiles SET role = 'admin'::public.user_role WHERE email = '<verified-admin-email>';`. Never expose admin promotion through the app.
+* `mood_checkins`, `mood_sharing_consents`, `counselor_assignments`, and `admin_audit_log` are defined in `neon_migrations/004_counselor_mood_sharing.sql`. Migration `004` has been applied to the `JomLuah` Neon production branch after dev-branch validation; production verification confirmed RLS on all four tables, eight dashboard functions, five mood-sharing policies, and the `admin` role value. The check-in table currently has no records.
+* The student dashboard is unchanged. Student check-in/consent APIs exist, but there is no student UI for submitting scores or enabling sharing yet. Existing journal moods are not backfilled or shared.
+
 ### Key Objectives
 * **Student-Facing**: Provides 24/7 conversational reflection, private journaling, mood check-ins, memory recall (RAG), and localized crisis hotline guidance.
 * **Counselor-Facing**: Surfaces aggregated mood trends, automated session summaries, and risk triage alerts for students expressing severe distress (depression, self-harm, suicidal ideation keywords).
@@ -178,7 +185,9 @@ JomLuahv2/
 │   │   ├── auth/[...path]/      # Same-origin Neon Auth handler
 │   │   └── chat/route.ts        # DeepSeek streaming, tools, memory, RAG, safety
 │   ├── chat/                    # AI Conversational interface
-│   ├── dashboard/               # Student dashboard (Overview, streak counter, quotes)
+│   ├── dashboard/               # Student dashboard (unchanged by staff dashboard work)
+│   ├── counselor/               # Assigned-student, consent-gated mood dashboard
+│   ├── admin/                   # Counselor role and assignment management
 │   ├── journal/                 # Private diary & reflection tools
 │   ├── memories/                # Kenangan image attachments & throwback memories
 │   ├── onboarding/              # User profile & mental history onboarding
@@ -190,6 +199,11 @@ JomLuahv2/
 ├── proxy.ts                     # Neon Auth protected-route middleware
 └── neon_migrations/             # Versioned Neon schema and RLS migrations
 ```
+
+Staff API routes:
+* `app/api/admin/route.ts` — role and counselor-assignment management; privileged operations are checked by database functions.
+* `app/api/counselor/route.ts` and `app/api/counselor/checkins/route.ts` — assigned roster and consent-filtered mood scores.
+* `app/api/wellbeing/checkins/route.ts` and `app/api/wellbeing/consent/route.ts` — current-user mood data and explicit consent endpoints for future student UI integration.
 
 ---
 

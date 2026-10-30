@@ -21,7 +21,7 @@ import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import NoteEditorModal, { type NotePayload } from "./NoteEditorModal";
 import NewFolderModal, { coverOptions, iconOptions, type NewFolderPayload } from "./NewFolderModal";
-import { neon as supabase } from "../lib/neonClient";
+import { neon as neon } from "../lib/neonClient";
 
 type IdeaNote = {
   id: number | string;
@@ -69,17 +69,17 @@ export default function IdeaBoardPage() {
   const activeFolder = folders.find((folder) => folder.id === activeFolderId) ?? null;
   const editingNote = activeFolder?.notes.find((note) => note.id === editingNoteId) ?? null;
 
-  // Load folders from Supabase on mount — authenticated users only
+  // Load folders from Neon on mount — authenticated users only
   useEffect(() => {
     const fetchFolders = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await neon.auth.getSession();
       if (!session) {
         router.replace("/login");
         return;
       }
       setUser(session.user);
       // Fetch real folders from DB — empty if none yet
-      const { data, error } = await supabase
+      const { data, error } = await neon
         .from("folders")
         .select("*, notes(*)")
         .order("created_at", { ascending: true });
@@ -164,7 +164,7 @@ export default function IdeaBoardPage() {
     });
 
     if (user) {
-      const { error } = await supabase
+      const { error } = await neon
         .from("notes")
         .update({ completed: completedVal })
         .eq("id", noteId);
@@ -181,7 +181,7 @@ export default function IdeaBoardPage() {
     if (!activeFolder || !quickTodoText.trim()) return;
 
     if (user) {
-      const { data, error } = await supabase
+      const { data, error } = await neon
         .from("notes")
         .insert({
           folder_id: activeFolder.id,
@@ -240,7 +240,7 @@ export default function IdeaBoardPage() {
 
     if (user) {
       if (editingNoteId !== null) {
-        const { error } = await supabase
+        const { error } = await neon
           .from("notes")
           .update({
             title: payload.title.trim(),
@@ -265,7 +265,7 @@ export default function IdeaBoardPage() {
           );
         }
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await neon
           .from("notes")
           .insert({
             folder_id: activeFolder.id,
@@ -332,7 +332,7 @@ export default function IdeaBoardPage() {
     if (!activeFolder || editingNoteId === null) return;
 
     if (user) {
-      const { error } = await supabase
+      const { error } = await neon
         .from("notes")
         .delete()
         .eq("id", editingNoteId);
@@ -352,7 +352,7 @@ export default function IdeaBoardPage() {
 
   const handleCreateFolder = async (payload: NewFolderPayload) => {
     if (user) {
-      const { data, error } = await supabase
+      const { data, error } = await neon
         .from("folders")
         .insert({
           user_id: user.id,
@@ -402,7 +402,7 @@ export default function IdeaBoardPage() {
     if (!window.confirm(`Delete "${folder.name}" and all its notes?`)) return;
 
     if (user) {
-      const { error } = await supabase
+      const { error } = await neon
         .from("folders")
         .delete()
         .eq("id", id);

@@ -1,7 +1,7 @@
 -- JomLuah initial Neon schema
 -- Apply with the direct (unpooled) Neon connection on a development branch.
 -- Neon Auth identities live in neon_auth."user"; auth.uid() is supplied by
--- Neon for Supabase-compatible RLS policies used through the Data API.
+-- Neon for row-level security policies used through the Data API.
 
 BEGIN;
 

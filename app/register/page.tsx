@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeSlash } from "@phosphor-icons/react";
-import { neon as supabase, syncPendingProfile } from "../lib/neonClient";
+import { neon as neon, syncPendingProfile } from "../lib/neonClient";
 import { unlockAndMigrateChat } from "../lib/chatEncryption";
 import { MascotSitting } from "../components/illustrations/Mascot";
 
@@ -105,7 +105,7 @@ export default function RegisterPage() {
         ? `${window.location.origin}/login?verified=true`
         : undefined;
 
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await neon.auth.signUp({
         email,
         password,
         options: {
@@ -117,7 +117,7 @@ export default function RegisterPage() {
         setErrorMsg(error.message ?? "Unable to create account");
       } else {
         if (data?.user) {
-          const { error: profileError } = await supabase.from("profiles").upsert({
+          const { error: profileError } = await neon.from("profiles").upsert({
             id: data.user.id,
             email: data.user.email,
             full_name: fullName.trim(),
@@ -132,7 +132,7 @@ export default function RegisterPage() {
         }
 
         // Force sign out to prevent auto-login session from bypassing email verification & manual login
-        await supabase.auth.signOut();
+        await neon.auth.signOut();
         setSuccessMsg("Account created successfully! Redirecting to sign in...");
 
         // Reset states so inputs are left empty and not autofilled or carried over
@@ -170,7 +170,7 @@ export default function RegisterPage() {
     setSuccessMsg("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await neon.auth.signInWithPassword({ email, password });
       if (error) {
         setErrorMsg(error.message ?? "Unable to sign in");
       } else {

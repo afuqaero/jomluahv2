@@ -9,7 +9,21 @@ The system is not a replacement for human counselling. Instead, it acts as a dig
 
 The application has two sides:
 - **Student-facing:** conversational AI reflection, private journaling, mood tracking, personal insights, memory of past entries
-- **Counsellor-facing:** monitoring dashboard, automated session reports, risk alerts, aggregated mood trends
+- **Counselor-facing (current implementation):** consent-gated morning/evening mood scores for assigned students only
+- **Admin-facing (current implementation):** counselor role and student-assignment management
+
+### Current dashboard implementation and privacy boundary (30 October 2026)
+
+The counselor and admin dashboards are being introduced separately from the existing student dashboard. The student dashboard has not been changed as part of this work.
+
+- Counselors can view only date, check-in period, and numeric mood score for students assigned to them, and only for check-ins submitted after that student's explicit mood-sharing consent.
+- Admins can assign a student to one counselor and grant/revoke counselor roles. Admin access does not include mood check-ins, journals, or conversations. Role and assignment changes are recorded in an audit table.
+- Student mood sharing is opt-in and defaults off. Existing journal mood fields are private and are not copied into the shared check-in table.
+- Chat content, journal text/photos, free-text check-in notes, and AI-inferred topics are not exposed in these dashboards. There is no free-text field in the shared check-in schema.
+- The current counselor and admin screens are implemented at `/counselor` and `/admin`. Migration `neon_migrations/004_counselor_mood_sharing.sql` has been validated on a development branch and applied to the `JomLuah` Neon production branch. Verification confirmed four RLS-enabled tables, eight dashboard functions, five mood-sharing policies, and the `admin` role value. The mood check-in table is currently empty.
+- APIs for submitting mood scores and managing consent are ready for later student UI integration. The student dashboard currently has no new check-in or consent controls, so counselor charts remain empty until that UI is built.
+
+Earlier sections describing AI session reports, keyword alerts, or sharing existing journal moods are proposed product concepts, not features implemented by these dashboards. Any later safety-alert feature requires a separately reviewed consent, privacy, and escalation design; counselor access to private chat remains out of scope.
 
 ---
 

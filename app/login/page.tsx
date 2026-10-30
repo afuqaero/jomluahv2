@@ -3,8 +3,8 @@
 import React, { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Eye, EyeSlash } from "@phosphor-icons/react";
-import { neon as supabase, syncPendingProfile } from "../lib/neonClient";
+import { ArrowLeft, Eye, EyeSlash } from "@phosphor-icons/react";
+import { neon as neon, syncPendingProfile } from "../lib/neonClient";
 import { unlockAndMigrateChat } from "../lib/chatEncryption";
 
 export default function LoginPage() {
@@ -60,10 +60,17 @@ function LoginPageContent() {
   // Redirect if already authenticated on mount
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await neon.auth.getSession();
       if (data.session) {
         setSuccessMsg("Already signed in! Redirecting...");
-        setTimeout(() => router.push(redirectTo), 1200);
+        const { data: profile } = await neon.from("profiles")
+          .select("role, onboarding_completed")
+          .eq("id", data.session.user.id)
+          .maybeSingle();
+        const destination = profile?.role === "admin" ? "/admin"
+          : profile?.role === "counselor" ? "/counselor"
+          : redirectTo;
+        setTimeout(() => router.push(destination), 1200);
       }
     };
     checkSession();
@@ -85,7 +92,7 @@ function LoginPageContent() {
     setSuccessMsg("");
 
     try {
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signInData, error } = await neon.auth.signInWithPassword({ email, password });
       if (error) {
         setErrorMsg(error.message ?? "Unable to sign in");
       } else {
@@ -94,19 +101,29 @@ function LoginPageContent() {
         const signedInSession = signInData.session;
         const userId = signedInSession?.user.id;
         if (signedInSession && userId) {
-          await unlockAndMigrateChat(userId, password, rememberChatOnDevice);
           await syncPendingProfile(signedInSession.user);
           try {
-            const { data: profile } = await supabase
+            const { data: profile } = await neon
               .from("profiles")
-              .select("onboarding_completed")
+              .select("role, onboarding_completed")
               .eq("id", userId)
               .single();
-            if (profile?.onboarding_completed) {
+            if (profile?.role === "admin" || profile?.role === "counselor") {
+              document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
+            } else if (profile?.onboarding_completed) {
               document.cookie = "jl_ob=1; path=/; max-age=31536000; SameSite=Lax";
             } else {
               document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
             }
+            if (profile?.role !== "admin" && profile?.role !== "counselor") {
+              await unlockAndMigrateChat(userId, password, rememberChatOnDevice);
+            }
+            const destination = profile?.role === "admin" ? "/admin"
+              : profile?.role === "counselor" ? "/counselor"
+              : redirectTo;
+            setSuccessMsg("Signed in! Redirecting...");
+            setTimeout(() => router.push(destination), 800);
+            return;
           } catch (profileErr) {
             console.error("Error reading profile onboarding status:", profileErr);
             document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
@@ -218,6 +235,9 @@ function LoginPageContent() {
           <Link href="/register" className="bg-transparent border-none text-white/80 text-sm font-bold tracking-wider uppercase hover:text-white transition-all cursor-pointer py-2 decoration-transparent">
             Don&apos;t have an account? Sign up
           </Link>
+          <p className="mt-5 text-sm text-white/70">
+            Counselor? <Link href="/counselor/login" className="font-semibold text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">Open staff sign in</Link>
+          </p>
         </div>
       </div>
     </div>

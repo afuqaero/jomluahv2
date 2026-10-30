@@ -24,7 +24,7 @@ import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import MoodEntryModal, { type MoodEntryPayload, type ModalInitialEntry } from "../dashboard/MoodEntryModal";
 import { HappyEmoji, GoodEmoji, OkayEmoji, SadEmoji } from "../dashboard/ResponsiveAssets";
-import { neon as supabase } from "../lib/neonClient";
+import { neon as neon } from "../lib/neonClient";
 import {
   decryptJournalImages,
   encryptJournalImages,
@@ -132,7 +132,7 @@ export default function MemoriesPage() {
   ];
 
   const loadEntries = async (uid: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await neon
       .from("journal_entries")
       .select("*")
       .order("timestamp", { ascending: false });
@@ -152,7 +152,7 @@ export default function MemoriesPage() {
 
   useEffect(() => {
     const fetchEntries = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await neon.auth.getSession();
       if (!session) {
         router.replace("/login");
         return;
@@ -208,7 +208,7 @@ export default function MemoriesPage() {
   const handleDeleteEntry = async (entryId: number | string) => {
     if (window.confirm("Are you sure you want to delete this memory?")) {
       if (user) {
-        const { error } = await supabase
+        const { error } = await neon
           .from("journal_entries")
           .delete()
           .eq("id", entryId);
@@ -228,7 +228,7 @@ export default function MemoriesPage() {
     
     if (editingEntryId !== null) {
       if (user) {
-        const { error } = await supabase
+        const { error } = await neon
           .from("journal_entries")
           .update({
             timestamp: new Date(payload.timestamp).toISOString(),

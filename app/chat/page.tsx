@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useAppTheme } from "../components/useAppTheme";
 import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppSidebar";
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
-import { neon as supabase } from "../lib/neonClient";
+import { neon as neon } from "../lib/neonClient";
 import {
   decryptChatPayload,
   decryptSessionText,
@@ -122,7 +122,7 @@ export default function ChatPage() {
 
   const loadRecentChats = async (uid: string) => {
     try {
-      const { data: sessions, error } = await supabase
+      const { data: sessions, error } = await neon
         .from("chat_sessions")
         .select(`
           id,
@@ -165,7 +165,7 @@ export default function ChatPage() {
 
   const handleDeleteChat = async (chatId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await neon
         .from("chat_sessions")
         .delete()
         .eq("id", chatId);
@@ -196,7 +196,7 @@ export default function ChatPage() {
     setSummaryMessageCount(0);
     
     try {
-      const { data: sessionContext, error: sessionContextError } = await supabase
+      const { data: sessionContext, error: sessionContextError } = await neon
         .from("chat_sessions")
         .select("context_summary, summary_message_count")
         .eq("id", chatId)
@@ -213,7 +213,7 @@ export default function ChatPage() {
         setSummaryMessageCount(Number(sessionContext?.summary_message_count || 0));
       }
 
-      const { data: dbMsgs, error } = await supabase
+      const { data: dbMsgs, error } = await neon
         .from("chat_messages")
         .select("*")
         .eq("session_id", chatId)
@@ -364,7 +364,7 @@ export default function ChatPage() {
         const nextSummary = summaryUpdate as { contextSummary: string; summaryMessageCount: number };
         setContextSummary(nextSummary.contextSummary);
         setSummaryMessageCount(nextSummary.summaryMessageCount);
-        const { error: summaryDbError } = await supabase
+        const { error: summaryDbError } = await neon
           .from("chat_sessions")
           .update({
             context_summary: await encryptSessionText(chatUserId!, nextSummary.contextSummary),
@@ -374,7 +374,7 @@ export default function ChatPage() {
         if (summaryDbError) console.warn("Could not persist chat context summary:", summaryDbError.message);
       }
 
-      const { data: savedBotMessage, error: botDbErr } = await supabase
+      const { data: savedBotMessage, error: botDbErr } = await neon
         .from("chat_messages")
         .insert({
           session_id: sessionId,
@@ -391,7 +391,7 @@ export default function ChatPage() {
       }
 
       // Reload sidebar list to show updated preview
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await neon.auth.getSession();
       if (session) {
         loadRecentChats(session.user.id);
       }
@@ -415,7 +415,7 @@ export default function ChatPage() {
       ]);
 
       // Save fallback to DB
-      await supabase
+      await neon
         .from("chat_messages")
         .insert({
           session_id: sessionId,
@@ -426,9 +426,9 @@ export default function ChatPage() {
   };
 
   const submitFeedback = async (messageId: string, rating: 1 | -1) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await neon.auth.getSession();
     if (!session) return;
-    const { error } = await supabase.from("chat_feedback").upsert(
+    const { error } = await neon.from("chat_feedback").upsert(
       { user_id: session.user.id, message_id: messageId, rating, updated_at: new Date().toISOString() },
       { onConflict: "user_id,message_id" }
     );
@@ -457,7 +457,7 @@ export default function ChatPage() {
       let description = descParam || "";
 
       if (entryId) {
-        const { data: entry, error: entryErr } = await supabase
+        const { data: entry, error: entryErr } = await neon
           .from("journal_entries")
           .select("*")
           .eq("id", entryId)
@@ -473,7 +473,7 @@ export default function ChatPage() {
 
       // Create a new chat session
       const title = `Reflection: Feeling ${mood}`;
-      const { data: newSession, error: sErr } = await supabase
+      const { data: newSession, error: sErr } = await neon
         .from("chat_sessions")
         .insert({
           user_id: uid,
@@ -507,7 +507,7 @@ export default function ChatPage() {
       setMessages([userMsg]);
 
       // Save user message to database
-      const { error: msgErr } = await supabase
+      const { error: msgErr } = await neon
         .from("chat_messages")
         .insert({
           session_id: sessionId,
@@ -530,7 +530,7 @@ export default function ChatPage() {
   // Auth guard — redirect to login if no session.
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await neon.auth.getSession();
       if (!session) {
         router.replace("/login");
         return;
@@ -574,7 +574,7 @@ export default function ChatPage() {
     if (!text || isTyping) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await neon.auth.getSession();
       if (!session) return;
       const uid = session.user.id;
 
@@ -585,7 +585,7 @@ export default function ChatPage() {
         const words = text.split(" ");
         const title = words.slice(0, 4).join(" ") + (words.length > 4 ? "..." : "");
 
-        const { data: newSession, error: sErr } = await supabase
+        const { data: newSession, error: sErr } = await neon
           .from("chat_sessions")
           .insert({
             user_id: uid,
@@ -620,7 +620,7 @@ export default function ChatPage() {
       setReplyingTo(null);
 
       // Save user message to database
-      const { error: msgErr } = await supabase
+      const { error: msgErr } = await neon
         .from("chat_messages")
         .insert({
           session_id: sessionId,

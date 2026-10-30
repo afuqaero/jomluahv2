@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "./app/lib/auth/server";
 
-const PROTECTED_ROUTES = ["/dashboard", "/journal", "/chat", "/memories", "/onboarding"];
+const PROTECTED_ROUTES = ["/dashboard", "/journal", "/chat", "/memories", "/onboarding", "/counselor", "/admin"];
 const protectWithNeonAuth = auth.middleware({ loginUrl: "/login" });
+const protectCounselorWithNeonAuth = auth.middleware({ loginUrl: "/counselor/login" });
 
 /**
  * Neon Auth validates protected routes and refreshes its signed session cookie.
@@ -11,13 +12,14 @@ const protectWithNeonAuth = auth.middleware({ loginUrl: "/login" });
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
+  const isCounselorAuthRoute = pathname === "/counselor/login" || pathname === "/counselor/register";
+  const isProtectedRoute = !isCounselorAuthRoute && PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
 
   if (!isProtectedRoute) {
     return NextResponse.next({ request });
   }
 
-  const authResponse = await protectWithNeonAuth(request);
+  const authResponse = await (pathname.startsWith("/counselor") ? protectCounselorWithNeonAuth : protectWithNeonAuth)(request);
   if (authResponse.headers.has("location")) {
     return authResponse;
   }
@@ -29,7 +31,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (!onboardingCompleted && pathname !== "/onboarding") {
+  const isStaffRoute = pathname.startsWith("/counselor") || pathname.startsWith("/admin");
+  if (!onboardingCompleted && pathname !== "/onboarding" && !isStaffRoute) {
     return NextResponse.redirect(new URL("/onboarding", request.url));
   }
 

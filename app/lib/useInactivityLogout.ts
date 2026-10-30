@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { neon as supabase } from "./neonClient";
+import { neon as neon } from "./neonClient";
 
 // After this much time with no user activity, sign the user out automatically.
 // Protects private journal/chat data on devices left unattended.
@@ -18,7 +18,7 @@ export function useInactivityLogout(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
   useEffect(() => {
     const logout = async () => {
       document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
-      await supabase.auth.signOut();
+      await neon.auth.signOut();
       router.replace("/login?reason=timeout");
     };
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { neon as supabase } from "../lib/neonClient";
+import { neon as neon } from "../lib/neonClient";
 import { useInactivityLogout } from "../lib/useInactivityLogout";
 import {
   ChatCircleDots,
@@ -114,7 +114,7 @@ export default function AppSidebar({
         href="/"
         onClick={async () => {
           document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
-          await supabase.auth.signOut();
+          await neon.auth.signOut();
         }}
         title={collapsed ? "Logout" : undefined}
         aria-label={collapsed ? "Logout" : undefined}
@@ -259,9 +259,9 @@ export function MobileBottomNav({ onNewEntry }: { onNewEntry?: (moodName?: strin
     const loadFolders = async () => {
       if (!showPopup) return;
       setMenuStep("main");
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await neon.auth.getSession();
       if (session?.user) {
-        const { data, error } = await supabase
+        const { data, error } = await neon
           .from("folders")
           .select("id, name, type")
           .order("created_at", { ascending: true });

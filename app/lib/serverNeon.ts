@@ -27,5 +27,6 @@ export async function createRouteNeonClient() {
       },
     },
     from: dataClient.from.bind(dataClient),
+    rpc: dataClient.rpc.bind(dataClient),
   };
 }
