@@ -13,7 +13,7 @@ This document saves the advanced research-grade and engineering-focused ideas de
 
 ### B. Campus-Wide Semantic Topic Clustering
 *   **Concept:** Provide aggregated, completely anonymized insights to the counselor dashboard to understand campus sentiment.
-*   **Technical Implementation:** Use vector embeddings (via Supabase `pgvector`) to group and cluster journals and chats semantically without compromising individual user identity.
+*   **Technical Implementation:** Use vector embeddings in Neon Postgres (pgvector if enabled) to group and cluster journals and chats semantically without compromising individual user identity.
 *   **Thesis Value:** Solves a major public health tracking challenge for the university counseling center. Counselors can view anonymized trend percentages (e.g., "Academic Stress: 45%", "Relationship Anxiety: 25%") to organize proactive institutional campaigns.
 
 ### C. Fail-Safe Distress Escalation & "Safe Zone" UI
@@ -21,7 +21,7 @@ This document saves the advanced research-grade and engineering-focused ideas de
 *   **Technical Implementation:** The system monitors user chats and entries for high-distress triggers. If detected:
     1.  The UI shifts to a soft, calming aesthetic with deep-breathing visual aids and grounding exercises (e.g., 5-4-3-2-1 technique).
     2.  Displays a one-touch button to call UTHM's emergency counselor hotline.
-    3.  Sends a secure, real-time alert through Supabase Realtime to the counselor portal.
+    3.  Sends a secure alert through the application backend to the counselor portal.
 *   **Thesis Value:** Highlights rigorous ethical system design, addressing the safety, security, and human-computer interaction (HCI) challenges of mental health applications.
 
 ### D. Memory Throwback RAG Engine
@@ -35,7 +35,7 @@ This document saves the advanced research-grade and engineering-focused ideas de
 
 *   **Frontend:** Next.js (App Router) + Tailwind CSS + shadcn/ui. Provides lightweight, responsive, and aesthetically premium mobile-first interfaces.
 *   **PWA Wrapper:** `@ducanh2912/next-pwa` for high compatibility, offline drafting capabilities, and smooth installation on both iOS and Android.
-*   **Backend & DB:** Supabase (Auth, Postgres, Realtime triggers, PgVector for semantic search).
+*   **Backend & DB:** Neon Auth and Postgres; use application APIs for alerts and consider pgvector for semantic search.
 *   **Hosting:** Vercel (extremely fast, zero-config deployment for Next.js).
 *   **AI Model:** Gemini 1.5 Flash (massive context length for parsing months of past chats, rapid response latency, and powerful structured JSON schema outputs).
 
@@ -44,4 +44,4 @@ This document saves the advanced research-grade and engineering-focused ideas de
 ## 3. Recommended Skills Registered
 1.  **`prd-writer`**: Formulates detailed Product Requirements Documents (Chapter 3 / Methodology blueprint).
 2.  **`academic-thesis-writer`**: Assists in writing thesis chapters (Chapters 1 to 5) with high academic prose and LaTeX/Markdown formatting.
-3.  **`security-expert`** (Proposed): Guides data encryption, anonymization pipelines, and Supabase RLS (Row-Level Security) rules to secure patient data.
+3.  **`security-expert`** (Proposed): Guides data encryption, anonymization pipelines, and Neon Postgres RLS rules to secure patient data.

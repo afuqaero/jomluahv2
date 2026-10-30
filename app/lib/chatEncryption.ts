@@ -221,6 +221,45 @@ async function migrateLegacyHistory(userId: string, key: CryptoKey) {
   }
 }
 
+async function migrateLegacyJournalPhotos(userId: string, key: CryptoKey) {
+  const batchSize = 250;
+  for (let offset = 0; ; offset += batchSize) {
+    const { data: entries, error } = await neon.from("journal_entries")
+      .select("id, images")
+      .eq("user_id", userId)
+      .order("timestamp", { ascending: true })
+      .range(offset, offset + batchSize - 1);
+    if (error) throw error;
+
+    for (const entry of entries ?? []) {
+      const images = (entry.images ?? []) as string[];
+      if (!images.length) continue;
+      let changed = false;
+      const encryptedImages = await Promise.all(images.map(async (image) => {
+        if (isEncrypted(image)) {
+          await decryptValue<{ value: string }>(key, image);
+          return image;
+        }
+        changed = true;
+        return encryptValue(key, { value: image });
+      }));
+      if (changed) {
+        const { error: updateError } = await neon.from("journal_entries")
+          .update({ images: encryptedImages })
+          .eq("id", entry.id)
+          .eq("user_id", userId);
+        if (updateError) throw updateError;
+      }
+    }
+    if (!entries || entries.length < batchSize) break;
+  }
+}
+
+async function migrateUnlockedUserData(userId: string, key: CryptoKey) {
+  await migrateLegacyHistory(userId, key);
+  await migrateLegacyJournalPhotos(userId, key);
+}
+
 async function createOrLoadKey(userId: string, password: string) {
   const existing = await readVaultRow(userId);
   if (existing) return unwrapVaultKey(password, existing);
@@ -242,8 +281,21 @@ async function createOrLoadKey(userId: string, password: string) {
     .like("text", `${ENVELOPE_PREFIX}%`)
     .limit(1);
   if (encryptedMessage.error) throw encryptedMessage.error;
-  if (encryptedSession.data?.length || encryptedSummary.data?.length || encryptedMessage.data?.length) {
-    throw new Error("The encryption key for existing chat history is missing. A new key was not created to protect your data.");
+  let hasEncryptedPhoto = false;
+  for (let offset = 0; ; offset += 250) {
+    const journalEntries = await neon.from("journal_entries")
+      .select("images")
+      .eq("user_id", userId)
+      .order("timestamp", { ascending: true })
+      .range(offset, offset + 249);
+    if (journalEntries.error) throw journalEntries.error;
+    hasEncryptedPhoto = (journalEntries.data ?? []).some((entry: { images?: string[] | null }) =>
+      (entry.images ?? []).some((image) => isEncrypted(image))
+    );
+    if (hasEncryptedPhoto || !journalEntries.data || journalEntries.data.length < 250) break;
+  }
+  if (encryptedSession.data?.length || encryptedSummary.data?.length || encryptedMessage.data?.length || hasEncryptedPhoto) {
+    throw new Error("The encryption key for existing protected data is missing. A new key was not created because it cannot unlock that data.");
   }
 
   const created = await createVaultKey(password);
@@ -260,7 +312,7 @@ export async function unlockAndMigrateChat(userId: string, password: string, rem
   const key = await createOrLoadKey(userId, password);
   keyCache.set(userId, key);
   try {
-    await migrateLegacyHistory(userId, key);
+    await migrateUnlockedUserData(userId, key);
     try {
       if (rememberDevice) await saveDeviceKey(userId, key);
       else await deleteDeviceKey(userId);
@@ -279,8 +331,10 @@ export async function restoreChatEncryptionKey(userId: string) {
     const key = await readDeviceKey(userId);
     if (!key || key.extractable || key.algorithm.name !== "AES-GCM") return false;
     keyCache.set(userId, key);
+    await migrateUnlockedUserData(userId, key);
     return true;
   } catch {
+    keyCache.delete(userId);
     return false;
   }
 }
@@ -312,4 +366,12 @@ export async function decryptSessionText(userId: string, value: string) {
   if (!key) throw new Error("Unlock chat encryption before reading conversations.");
   const payload = await decryptValue<{ value: string }>(key, value);
   return payload.value;
+}
+
+export async function encryptJournalImages(userId: string, images: string[]) {
+  return Promise.all(images.map((image) => encryptSessionText(userId, image)));
+}
+
+export async function decryptJournalImages(userId: string, images: string[]) {
+  return Promise.all(images.map((image) => decryptSessionText(userId, image)));
 }

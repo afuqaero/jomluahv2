@@ -149,7 +149,7 @@ extension for semantic journal-memory search.
 
 ### 6.1 Core Relational Tables
 1. **`public.profiles`**: Stores user attributes, role enum (`user`, `counselor`), onboarding questionnaire state, and mental health background tags. Its UUID references `neon_auth.user`; registration/onboarding performs the profile upsert.
-2. **`public.journal_entries`**: User journal entries with title, excerpt, mood tags, favorite status, and image URLs.
+2. **`public.journal_entries`**: User journal entries with title, excerpt, mood tags, favorite status, and an `images TEXT[]` column containing client-side AES-GCM ciphertext for photo data. The browser decrypts photos after unlocking the user's data key; journal text and metadata remain readable in the database.
 3. **`public.folders` & `public.notes`**: Personal organization board (todo lists, journal categorization).
 4. **`public.chat_sessions` & `public.chat_messages`**: Historical AI chat records. Each session also stores a compact `context_summary` and the number of messages already summarised, so the full transcript does not need to be resent to the LLM.
 5. **`public.user_memories` & `public.ai_preferences`**: RLS-protected cross-chat memories and user-controlled AI personalization switches.

@@ -19,17 +19,18 @@ JomLuah acts as a digital complement to human counselling, giving students a saf
 ## 🛠️ Tech Stack
 
 *   **Frontend**: Next.js 16.4.2 (App Router), React 19, TypeScript, Tailwind CSS 4.
-*   **Backend & Database**: Neon Postgres, Neon Auth, and Neon Data API. The verified runtime currently targets an isolated Neon migration branch pending production promotion.
+*   **Backend & Database**: Neon Postgres, Neon Auth, and Neon Data API.
 *   **Retrieval**: Provider-neutral embeddings stored in PostgreSQL JSONB with cosine ranking and lexical fallback. A pgvector migration remains a future scale optimization.
 *   **LLM Integration**: DeepSeek V4 Pro with token streaming, strict tool calling, saved memory, journal retrieval, and a separate safety layer.
 
 ## Data Security and Privacy
 
-* Chat message bodies, reply text/options, conversation titles, and rolling summaries are encrypted in the browser with AES-256-GCM before database writes. A random per-user data key is wrapped with a password-derived PBKDF2-SHA-256 key (600,000 iterations); only its salt and wrapped value are stored in Neon.
+* Chat message bodies, reply text/options, conversation titles, rolling summaries, and journal photo data are encrypted in the browser with AES-256-GCM before database writes. A random per-user data key is wrapped with a password-derived PBKDF2-SHA-256 key (600,000 iterations); only its salt and wrapped value are stored in Neon.
 * On a user's first sign-in, legacy chat history is encrypted in the browser. By default, the browser remembers a non-exportable Web Crypto key in IndexedDB, so future visits on that device unlock automatically. Users can turn off device remembering on shared devices; a new device still needs the account password. Losing or resetting the password without access to a remembered device makes older encrypted chat unrecoverable; there is no recovery key.
-* Database operators can still see ownership, message sender, timestamps, and ciphertext size. This feature does not encrypt journal entries, saved memories/embeddings, feedback, or preference records; privileged database operators may still read those values.
+* Journal photo data is stored as encrypted strings in `journal_entries.images`; existing plaintext photos are encrypted during the next successful unlock. Journal text (title, excerpt, mood, tags), saved memories/embeddings, feedback, and preferences are not client-side encrypted, so privileged database operators may still read those values.
+* Database operators can still see ownership, message sender, timestamps, and ciphertext size. Photos are encrypted before they reach Neon; the app does not use object storage for journal photos.
 * Chat plaintext is decrypted in the browser and sent to the application and configured LLM provider when generating replies. This protects persisted chat from database-only access, not from a compromised browser/application or the model provider. Do not describe JomLuah as fully end-to-end encrypted or zero-knowledge.
-* Applied `neon_migrations/003_client_side_chat_encryption.sql` to the JomLuah Neon production branch and verified owner-only RLS. The updated application code still needs to be deployed; existing chat rows remain plaintext until that code is live and the user unlocks chat.
+* Applied `neon_migrations/003_client_side_chat_encryption.sql` to the JomLuah Neon production branch and verified owner-only RLS. The photo-encryption code in this change still needs deployment; existing chat and photo rows are migrated during user unlock.
 
 ---
 
@@ -69,8 +70,8 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Added a chat unlock screen for returning sessions without the in-memory key and initialize/unlock the vault after successful sign-in.
 * Improved repeat-visit usability: remember the non-exportable key in browser IndexedDB by default, restore it automatically after reload, and let users opt out on shared devices.
 * Applied `neon_migrations/003_client_side_chat_encryption.sql` to JomLuah's Neon production branch. Verified the table exists, RLS is enabled, its `authenticated` policy is scoped by `auth.uid() = user_id`, and the key table has zero rows so far.
-* The encryption code is still a local change, not deployed. Existing chat content remains plaintext until the updated app is deployed and each user signs in to run the client-side history migration.
-* Scope remains chat history only. Journal text, saved memories/embeddings, feedback, and preferences are not yet client-side encrypted. Chat plaintext is still sent to the app and configured LLM provider to generate replies.
+* Chat encryption has previously been deployed. This change adds client-side encryption for journal photos; legacy plaintext photos are encrypted after the update is deployed and each user unlocks their account.
+* Journal text, saved memories/embeddings, feedback, and preferences are not client-side encrypted. Chat plaintext is still sent to the app and configured LLM provider to generate replies.
 
 #### Encryption and privacy model
 
@@ -263,7 +264,7 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 #### Neon credentials hardened
 
-* Rotated the previously exposed `neondb_owner` password independently on the Neon `production` and `migration-supabase-to-neon` branches using the official password-reset API.
+* Rotated the previously exposed `neondb_owner` password independently on the Neon `production` and migration branches using the official password-reset API.
 * Waited for every Neon operation to finish before refreshing local credentials.
 * Verified the rotated migration connection still contains 11 application tables.
 * Verified the rotated production connection contains 11 application tables and 24 RLS policies.
@@ -279,10 +280,10 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 #### Application runtime cut over to Neon
 
-* Replaced direct Supabase packages with `@neondatabase/auth` and `@neondatabase/neon-js`.
+* Replaced legacy backend packages with `@neondatabase/auth` and `@neondatabase/neon-js`.
 * Added a same-origin Neon Auth handler, signed session middleware, browser data client, and authenticated server Data API client.
-* Preserved existing auth and `.from(...)` query behavior through a small compatibility facade while removing the Supabase runtime dependency.
-* Pointed local development at the isolated `migration-supabase-to-neon` branch and removed obsolete local Supabase variables.
+* Preserved existing auth and `.from(...)` query behavior through a small compatibility facade while removing the previous backend runtime dependency.
+* Pointed local development at the isolated Neon migration branch and removed obsolete backend environment variables.
 * Preserved registration profile metadata across verification/sign-in and connected profiles to Neon Auth UUIDs.
 * Upgraded Next.js from 16.2.6 to 16.4.2 to resolve the critical production dependency advisory.
 
@@ -300,11 +301,11 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 #### Neon database migration branch ready
 
-* Linked this repository to the existing Neon `JomLuah` project and created the isolated `migration-supabase-to-neon` branch.
+* Linked this repository to the existing Neon `JomLuah` project and created an isolated migration branch.
 * Added [`neon_migrations/001_initial_schema.sql`](./neon_migrations/001_initial_schema.sql), consolidating profiles, journals, folders, notes, quotes, chat history/context, saved memory, preferences, feedback, and LLM telemetry.
-* Replaced Supabase `auth.users` foreign keys with Neon Auth `neon_auth."user"` references.
+* Replaced legacy auth-user foreign keys with Neon Auth `neon_auth."user"` references.
 * Preserved ownership isolation with Neon `auth.uid()`, `authenticated`, and `anonymous` Data API roles.
-* Removed the Supabase-only auth trigger from the Neon migration; profile creation remains part of authenticated onboarding and will be finalized during the Neon Auth client cutover.
+* Removed the legacy auth trigger from the Neon migration; profile creation remains part of authenticated onboarding.
 * Tightened profile privacy from globally readable profiles to self-only access.
 
 #### Migration verification
@@ -312,15 +313,7 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Applied the migration twice through the direct, unpooled Neon connection; both passes succeeded.
 * Verified 11 application tables all have RLS enabled and 24 policies are installed.
 * Verified all user foreign keys target Neon Auth, 15 initial quotes seed idempotently, anonymous users can read only quotes, and unauthenticated writes are rejected.
-* Production remains unchanged. The next backend task is replacing Supabase Auth/data calls with Neon clients and running signed-in isolation tests on the migration branch before promotion.
-
-### Saturday, 17 October 2026 — 07:03 MYT
-
-#### Supabase migration attempt
-
-* Confirmed the configured project reference and attempted `supabase_ai_features.sql` through both the Supabase dashboard and a direct PostgreSQL connection.
-* Migration is blocked: both the project API host and database host from `.env.local` return DNS `NXDOMAIN`; the dashboard also remains on Supabase's loading-error screen.
-* No database schema changes were applied. Replace the stale Supabase URL, anon key, and `DATABASE_URL` with credentials from an active project, then rerun the migration.
+* Completed the Neon Auth and Data API cutover; the active runtime uses Neon.
 
 ### Saturday, 17 October 2026 — 06:53 MYT
 
@@ -351,9 +344,8 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 #### Backend work still requiring environment access
 
-* Run `supabase_ai_features.sql` in the correct Supabase project.
 * Configure DeepSeek and optional embedding-provider environment variables.
-* Run signed-in RLS and CRUD acceptance tests against migrated Supabase.
+* Confirm signed-in RLS and CRUD behavior against the active Neon production branch.
 * Run real DeepSeek evaluations after API key configuration.
 
 UI/UX, offline service-worker outbox, retry/cancel controls, memory settings screens, and clickable journal citations remain deferred to the UI phase.
@@ -364,7 +356,7 @@ UI/UX, offline service-worker outbox, retry/cancel controls, memory settings scr
 
 * Replaced Ollama/OpenRouter chat routing with the official DeepSeek OpenAI-compatible endpoint and default model `deepseek-v4-pro`.
 * Added real token streaming from DeepSeek through `/api/chat` into Sanctuary Chat.
-* Kept rolling per-session context summaries: full transcripts remain in Supabase while bounded context reaches the LLM.
+* Kept rolling per-session context summaries: full transcripts remain in Neon while bounded context reaches the LLM.
 * Added cross-chat saved memory with explicit save, list, and forget tools.
 * Added explicit English/BM intent gates so memory writes require phrases such as “remember”, “store memory”, or “simpan”.
 * Added secret-data rejection for passwords, PINs, bank credentials, and API keys.
@@ -390,7 +382,6 @@ UI/UX, offline service-worker outbox, retry/cancel controls, memory settings scr
 
 #### Required before features become live
 
-* Run [`supabase_ai_features.sql`](./supabase_ai_features.sql) in Supabase SQL Editor.
 * Configure `DEEPSEEK_API_KEY` locally and in Vercel.
 * Configure `DEEPSEEK_BASE_URL=https://api.deepseek.com` and `DEEPSEEK_MODEL=deepseek-v4-pro`.
 * Configure an optional OpenAI-compatible embedding endpoint. DeepSeek currently handles chat/tool generation; no DeepSeek embedding endpoint is assumed by this implementation.

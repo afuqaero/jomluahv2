@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, useState, useEffect, useMemo } from "react";
+import { cloneElement, useState, useEffect, useMemo, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -40,6 +40,12 @@ import AppSidebar, { MobileBottomNav, BackgroundDecor } from "../components/AppS
 import InteractiveLiquidOrb from "../components/InteractiveLiquidOrb";
 import { useAppTheme } from "../components/useAppTheme";
 import { neon as supabase } from "../lib/neonClient";
+import {
+  decryptJournalImages,
+  encryptJournalImages,
+  restoreChatEncryptionKey,
+  unlockAndMigrateChat,
+} from "../lib/chatEncryption";
 
 const THEME_STORAGE_KEY = "jomluah-theme";
 const SIDEBAR_COLLAPSED_KEY = "jomluah-sidebar-collapsed";
@@ -167,8 +173,33 @@ export default function StudentDashboard() {
   const [editingEntryId, setEditingEntryId] = useState<number | string | null>(null);
   const [modalReadOnly, setModalReadOnly] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("there");
   const [isLoading, setIsLoading] = useState(true);
+  const [isEncryptionReady, setIsEncryptionReady] = useState(false);
+  const [encryptionPassword, setEncryptionPassword] = useState("");
+  const [rememberEncryptionDevice, setRememberEncryptionDevice] = useState(true);
+  const [encryptionError, setEncryptionError] = useState("");
+  const [isUnlockingEncryption, setIsUnlockingEncryption] = useState(false);
+
+  const loadDiaryEntries = async (uid: string) => {
+    const { data, error } = await supabase
+      .from("journal_entries")
+      .select("*")
+      .order("timestamp", { ascending: false });
+    if (error) throw error;
+    const mapped = await Promise.all((data ?? []).map(async (entry: any) => ({
+      id: entry.id,
+      timestamp: new Date(entry.timestamp).getTime(),
+      title: entry.title,
+      mood: entry.mood,
+      excerpt: entry.excerpt,
+      tags: entry.tags || [],
+      favorite: entry.favorite,
+      images: await decryptJournalImages(uid, entry.images || []),
+    })));
+    setRecentEntries(mapped);
+  };
 
   // Selected date states (for mock weekly calendar view)
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -230,6 +261,13 @@ export default function StudentDashboard() {
         return;
       }
       setUser(session.user);
+      setUserId(session.user.id);
+      const canUnlock = await restoreChatEncryptionKey(session.user.id);
+      if (!canUnlock) {
+        setIsLoading(false);
+        return;
+      }
+      setIsEncryptionReady(true);
       // Neon Auth stores the display name directly on the user record.
       const name =
         session.user.name ||
@@ -237,23 +275,7 @@ export default function StudentDashboard() {
         "there";
       setDisplayName(name);
       // Fetch real entries from DB — empty array if none yet
-      const { data, error } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .order("timestamp", { ascending: false });
-      if (!error && data) {
-        const mapped = data.map((d: any) => ({
-          id: d.id,
-          timestamp: new Date(d.timestamp).getTime(),
-          title: d.title,
-          mood: d.mood,
-          excerpt: d.excerpt,
-          tags: d.tags || [],
-          favorite: d.favorite,
-          images: d.images || [],
-        }));
-        setRecentEntries(mapped);
-      }
+      await loadDiaryEntries(session.user.id);
 
       // Fetch dynamic quotes from database
       const { data: dbQuotes, error: qErr } = await supabase
@@ -266,6 +288,23 @@ export default function StudentDashboard() {
     };
     fetchUserAndEntries();
   }, []);
+
+  const handleUnlockEncryption = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!userId || !encryptionPassword) return;
+    setIsUnlockingEncryption(true);
+    setEncryptionError("");
+    try {
+      await unlockAndMigrateChat(userId, encryptionPassword, rememberEncryptionDevice);
+      setEncryptionPassword("");
+      await loadDiaryEntries(userId);
+      setIsEncryptionReady(true);
+    } catch (error) {
+      setEncryptionError(error instanceof Error ? error.message : "Could not unlock your private diary photos.");
+    } finally {
+      setIsUnlockingEncryption(false);
+    }
+  };
 
 
   // User-Agent & Width Device type detection
@@ -418,6 +457,44 @@ export default function StudentDashboard() {
         }
       : null;
 
+  if (user && !isEncryptionReady && !isLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#f5f6ff] px-5 py-10 text-slate-900">
+        <section className="w-full max-w-md rounded-3xl border border-indigo-100 bg-white p-8 shadow-xl shadow-indigo-950/5">
+          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-xl font-bold text-white" aria-hidden="true">J</div>
+          <h1 className="text-2xl font-bold tracking-tight">Unlock your private diary</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Enter your account password once on this device to unlock and encrypt your saved photos. Your password is used only in this browser.</p>
+          <form onSubmit={handleUnlockEncryption} className="mt-6 space-y-4">
+            <label htmlFor="diary-unlock-password" className="block text-sm font-semibold">Account password</label>
+            <input
+              id="diary-unlock-password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={encryptionPassword}
+              onChange={(event) => setEncryptionPassword(event.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200"
+            />
+            <label className="flex items-start gap-3 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={rememberEncryptionDevice}
+                onChange={(event) => setRememberEncryptionDevice(event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-indigo-600"
+              />
+              <span>Remember this device <span className="block text-xs text-slate-500">Leave off on a shared device.</span></span>
+            </label>
+            {encryptionError && <p role="alert" className="text-sm text-red-700">{encryptionError}</p>}
+            <button type="submit" disabled={isUnlockingEncryption} className="w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 disabled:cursor-wait disabled:opacity-60">
+              {isUnlockingEncryption ? "Securing your diary photos…" : "Unlock diary"}
+            </button>
+          </form>
+          <p className="mt-5 text-xs leading-5 text-slate-500">A password reset cannot unlock old encrypted photos without access to a device that remembers the key.</p>
+        </section>
+      </main>
+    );
+  }
+
   const handleMoodSelect = (name: string) => {
     setActiveMood(name);
     setEditingEntryId(null);
@@ -445,6 +522,7 @@ export default function StudentDashboard() {
     const title = entry.title.trim() || `Feeling ${entry.mood}`;
 
     if (user) {
+      const encryptedImages = await encryptJournalImages(user.id, entry.images);
       if (editingEntryId !== null) {
         const { error } = await supabase
           .from("journal_entries")
@@ -454,7 +532,7 @@ export default function StudentDashboard() {
             mood: entry.mood,
             excerpt: entry.description.trim() || "No additional notes for this entry.",
             tags: entry.tags,
-            images: entry.images,
+            images: encryptedImages,
           })
           .eq("id", editingEntryId);
 
@@ -488,7 +566,7 @@ export default function StudentDashboard() {
             mood: entry.mood,
             excerpt: entry.description.trim() || "No additional notes for this entry.",
             tags: entry.tags,
-            images: entry.images,
+            images: encryptedImages,
             favorite: false,
           })
           .select()
@@ -504,7 +582,7 @@ export default function StudentDashboard() {
             tags: data.tags || [],
             favorite: data.favorite,
             isNew: true,
-            images: data.images || [],
+            images: entry.images,
           };
           setRecentEntries((prev) => [newEntry, ...prev]);
           if (action === "continue") {

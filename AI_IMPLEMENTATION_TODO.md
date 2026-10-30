@@ -17,7 +17,7 @@
 - [x] Inject only relevant memories into prompts.
 - [x] Add authenticated memory CRUD API (`GET`, `POST`, `PATCH`, `DELETE`).
 - [x] Add authenticated memory/journal preference API with RLS-backed storage.
-- [x] Include memory, preferences, feedback, and LLM-event tables in the consolidated Neon migration and apply it to the `migration-supabase-to-neon` branch (2026-10-17 21:00 MYT).
+- [x] Include memory, preferences, feedback, and LLM-event tables in the consolidated Neon migration and apply it to the isolated Neon migration branch (2026-10-17 21:00 MYT).
 - [ ] Add memory management UI for manual review/edit/delete and global on/off control.
 
 ## Phase 2 — Relevant memory retrieval
@@ -88,21 +88,21 @@
 - [ ] Add PWA service-worker outbox for offline chat sends during UI phase.
 - [ ] Add UI retry/cancel controls using `AbortController` during UI phase.
 
-## Phase 12 — Supabase to Neon backend migration
+## Phase 12 — Neon backend migration (completed)
 
 - [x] Link the repository to the existing Neon `JomLuah` project.
-- [x] Create the isolated `migration-supabase-to-neon` database branch.
-- [x] Convert Supabase user foreign keys to `neon_auth."user"`.
+- [x] Create the isolated Neon database migration branch.
+- [x] Convert legacy auth-user foreign keys to `neon_auth."user"`.
 - [x] Preserve user ownership policies with Neon `auth.uid()` and Data API roles.
 - [x] Consolidate the application schema in `neon_migrations/001_initial_schema.sql`.
 - [x] Apply the migration twice successfully with the direct connection.
 - [x] Verify all 11 public tables have RLS, 24 policies exist, and 15 quotes seed exactly once.
 - [x] Verify anonymous access is limited to quotes and unauthenticated writes are rejected.
-- [x] Replace Supabase Auth calls with Neon Auth through a same-origin Next.js handler and compatibility facade.
-- [x] Replace Supabase data clients with Neon Data API clients carrying Neon Auth JWTs.
+- [x] Replace legacy Auth calls with Neon Auth through a same-origin Next.js handler and compatibility facade.
+- [x] Replace legacy data clients with Neon Data API clients carrying Neon Auth JWTs.
 - [x] Run signed-in CRUD and cross-user isolation acceptance tests on the migration branch.
 - [x] Apply the verified migration to the Neon `production` branch and re-verify RLS/schema counts.
-- [x] Remove direct Supabase dependencies and obsolete local Supabase environment variables.
+- [x] Remove the previous backend dependencies and obsolete environment variables.
 - [x] Rotate the exposed `neondb_owner` password on production and the migration branch; refresh local migration credentials (2026-10-17 21:22 MYT).
 - [x] Authenticate Vercel, resolve the stale project, and configure the actual Git-connected `afuqaeros-projects/jomluahv2` project with production Neon variables (2026-10-17 22:01 MYT).
 - [x] Connect `https://github.com/afuqaero/jomluahv2` to the Vercel project and verify the connection (2026-10-17 21:49 MYT).
@@ -176,7 +176,7 @@ EMBEDDING_MODEL=
 
 ## Deployment order
 
-1. Keep database work on the Neon `migration-supabase-to-neon` branch.
+1. Keep database work on the isolated Neon migration branch until promotion is explicitly verified.
 2. Configure the listed Neon variables in the deployment environment.
 3. Run signed-in CRUD, RLS-isolation, backend test, and production-build checks.
 4. Configure Neon and DeepSeek environment variables in Vercel.

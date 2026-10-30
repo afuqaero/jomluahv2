@@ -39,7 +39,7 @@ Research shows that over 43.8% of university students in Malaysia experience dep
 ## 4. System Modules
 
 ### 4.1 User Registration & Authentication
-- Sign up / login with email and password via Supabase Auth
+- Sign up / login with email and password via Neon Auth
 - Role-based access: Student, Counsellor, Admin
 - Onboarding questionnaire on first login — captures user background (ADHD, depression, anxiety, stress history, academic year, faculty)
 - Profile management
@@ -82,7 +82,7 @@ The student dashboard is the first screen a user sees after logging in. It is in
 - From the journal, a "Continue with AI" button opens a new chat seeded with that entry's content
 
 ### 4.5 Memory & Retrieval (RAG)
-- The current implementation uses persisted rolling conversation summaries to control token usage. The full transcript remains available in Supabase for the user interface, while the LLM receives the summary plus a bounded recent-message window.
+- The current implementation uses persisted rolling conversation summaries to control token usage. The full transcript remains available in Neon for the user interface, while the LLM receives the summary plus a bounded recent-message window. Chat history is client-side encrypted at rest in Neon.
 - When the unsummarised part of an active chat becomes large, `/api/chat` asks the configured LLM to create a compact summary and stores it in `chat_sessions.context_summary`.
 - `chat_sessions.summary_message_count` records how much of the transcript is represented by the summary, so the next request only sends newly unsummarised turns and recent context.
 - Semantic retrieval of journal entries is a planned RAG extension. It will later embed conversation turns and journal entries in pgvector and retrieve top-k relevant memories across sessions.
@@ -95,7 +95,7 @@ The student dashboard is the first screen a user sees after logging in. It is in
   - Detected emotional tone over the session
   - Notable entries flagged by the system
   - Disclaimer: AI-generated, for guidance only, not a clinical diagnosis
-- Reports are stored in Supabase and accessible only to the assigned counsellor and the student
+- Reports are stored in Neon and accessible only to the assigned counsellor and the student
 
 ### 4.7 Counsellor Dashboard
 - View all assigned students with their latest mood status
@@ -122,7 +122,7 @@ The student dashboard is the first screen a user sees after logging in. It is in
 ### 4.10 Additional Features
 - **Throwback Memories:** on the dashboard, the system surfaces a "On this day last year..." card showing a journal entry or conversation from the same date in a previous year — similar to Facebook memories
 - **Daily Quotes:** a rotating inspirational or reflective quote displayed on the student dashboard
-- **Image Upload:** students can attach images to journal entries as personal mementos (kenangan)
+- **Image Upload:** students can attach images to journal entries as personal mementos (kenangan). Photo data is AES-GCM encrypted in the browser before it is saved in Neon; journal text and metadata are not encrypted.
 - **Conversation Quoting:** from any past chat, a user can quote a specific message into a new journal entry or a new conversation
 
 ---
@@ -143,23 +143,23 @@ The student dashboard is the first screen a user sees after logging in. It is in
 
 **Why TypeScript:** Catches type errors at compile time, improves IDE autocompletion, and makes the codebase safer as it grows across multiple modules with different data shapes (user profiles, conversation turns, sentiment scores, etc.).
 
-### 5.2 Backend & Database — Supabase
+### 5.2 Backend & Database — Neon
 
 | Feature | Details |
 |---|---|
 | Database | PostgreSQL (managed) |
-| Auth | Supabase Auth — email/password, JWT tokens |
-| Storage | Supabase Storage — for journal image uploads |
-| Realtime | Supabase Realtime — live updates on counsellor dashboard |
-| Row-Level Security | Enforced per user role so students can only read their own data |
-| Edge Functions | Supabase Edge Functions for serverless backend logic |
+| Auth | Neon Auth — email/password and signed sessions |
+| Database | Neon Postgres accessed through Neon Data API |
+| Journal photos | Base64 data URLs in `journal_entries.images`, encrypted in the browser with AES-GCM before saving |
+| Row-Level Security | Enforced on user-owned data |
+| Server logic | Next.js route handlers deployed on Vercel |
 
-**Why Supabase:** Open-source, free tier sufficient for development and early deployment, native PostgreSQL means pgvector works as a simple extension without a separate vector database service. Row-level security ensures student data is properly sandboxed by design.
+The application does not currently use Neon Object Storage for journal photos. Existing plaintext photo values are migrated to ciphertext in the browser when a user unlocks their account. Journal titles, excerpts, moods, and tags remain unencrypted.
 
 ### 5.3 Vector Database — pgvector
 
 ```sql
--- Enable the extension in Supabase
+-- Enable the extension in PostgreSQL
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Example: conversation_embeddings table
@@ -179,7 +179,7 @@ USING ivfflat (embedding vector_cosine_ops)
 WITH (lists = 100);
 ```
 
-**Why pgvector over Pinecone/Weaviate:** Runs inside the same Supabase instance, zero extra service cost, and PostgreSQL's relational structure allows joins between embeddings and user data in a single query. Perfect for a student project where simplicity and cost matter.
+**Why pgvector over Pinecone/Weaviate:** It runs inside PostgreSQL and allows joins between embeddings and user data in one query. The current application stores embeddings in JSONB and ranks them in application code; pgvector remains a possible future optimization.
 
 ### 5.4 LLM Access — OpenRouter + Ollama
 
@@ -224,11 +224,11 @@ LangChain.js is being evaluated as the orchestration layer. Relevant modules:
 | LangChain Module | Purpose in JomLuah |
 |---|---|
 | `ConversationSummaryMemory` | Compresses long conversation history into rolling summaries |
-| `SupabaseVectorStore` | Wraps pgvector for seamless retrieval |
+| `Neon Postgres` | Stores user data and JSONB embeddings |
 | `RetrievalQAChain` | Retrieves relevant past entries and feeds them into the prompt |
 | `PromptTemplate` | Structures the system prompt using user profile + context |
 
-If LangChain.js proves too heavy for the PWA context, a custom lightweight RAG pipeline will be implemented directly using the Supabase JS client and the OpenAI embeddings API.
+The current app uses a lightweight RAG pipeline with the Neon Data API and a configurable embeddings provider.
 
 ### 5.6 Deployment — Vercel
 
@@ -268,12 +268,11 @@ If LangChain.js proves too heavy for the PWA context, a custom lightweight RAG p
 └──────┬───────────────┬──────────────────┬────────────┘
        │               │                  │
 ┌──────▼──────┐ ┌──────▼──────┐  ┌───────▼──────────┐
-│  Supabase   │ │  LLM Layer  │  │  Sentiment /     │
-│  (Postgres  │ │ OpenRouter  │  │  Risk Detection  │
-│  + pgvector │ │  / Ollama   │  │  Pipeline        │
-│  + Auth     │ │  + LangChain│  │                  │
-│  + Storage) │ └─────────────┘  └──────────────────┘
-└─────────────┘
+│    Neon     │ │  LLM Layer  │  │  Sentiment /     │
+│  Postgres   │ │ Configured  │  │  Risk Detection  │
+│  + Neon Auth│ │  provider   │  │  Pipeline        │
+│  + Data API │ │             │  │                  │
+└─────────────┘ └─────────────┘  └──────────────────┘
 ```
 
 **Request flow for a chat message:**
@@ -292,9 +291,9 @@ If LangChain.js proves too heavy for the PWA context, a custom lightweight RAG p
 ## 7. Database Schema Overview
 
 ```sql
--- Users (managed by Supabase Auth, extended here)
+-- Users managed by Neon Auth, extended here
 CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  id UUID PRIMARY KEY REFERENCES neon_auth."user"(id),
   full_name TEXT,
   matric_no TEXT,
   role TEXT CHECK (role IN ('student', 'counsellor', 'admin')),
@@ -408,7 +407,7 @@ Send to LLM (OpenRouter or Ollama)
 Stream response back to client
         │
         ▼
-Save message + response to Supabase
+Save encrypted message + response to Neon
 ```
 
 Semantic pgvector retrieval is planned as a later extension to this rolling
@@ -552,9 +551,9 @@ Reports include an **AI disclaimer** at the top:
 ## 12. Authentication & Role Management
 
 ```
-Supabase Auth handles JWT issuance.
+Neon Auth handles session issuance.
 Roles are stored in the profiles table and enforced via:
-  1. Row-Level Security (RLS) in Supabase — database level
+  1. Row-Level Security (RLS) in Neon Postgres — database level
   2. Next.js middleware — route protection at the app level
 
 Routes:
@@ -601,10 +600,10 @@ Key PWA behaviours:
 ```bash
 # .env.local
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# Neon
+NEON_AUTH_BASE_URL=your-neon-auth-url
+NEON_DATA_API_URL=your-neon-data-api-url
+NEXT_PUBLIC_NEON_URL=your-neon-database-url
 
 # LLM - OpenRouter
 OPENROUTER_API_KEY=your-openrouter-key
@@ -667,9 +666,8 @@ jomluah/
 │   │   └── RiskAlert.tsx
 │   └── ui/                       # shadcn/ui components
 ├── lib/
-│   ├── supabase/
-│   │   ├── client.ts
-│   │   └── server.ts
+├── app/lib/neonClient.ts
+├── app/lib/serverNeon.ts
 │   ├── llm/
 │   │   ├── openrouter.ts
 │   │   ├── ollama.ts
