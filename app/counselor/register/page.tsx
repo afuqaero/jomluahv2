@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { counselorButtonClass, CounselorAuthShell, counselorInputClass } from "../auth-shell";
+import { CounselorAuthNotice } from "../auth-notice";
 import { neon } from "../../lib/neonClient";
 
 export default function CounselorRegisterPage() {
@@ -50,6 +51,10 @@ export default function CounselorRegisterPage() {
       await neon.auth.signOut();
       document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
       setRegistered(true);
+      setFullName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Account registration failed. Please try again.");
     } finally {
@@ -59,19 +64,12 @@ export default function CounselorRegisterPage() {
 
   return (
     <CounselorAuthShell
-      eyebrow="Counselor account"
+      compact
       title="Register for access"
-      description="Create your account first. A JomLuah administrator must verify and assign counselor access before you can view shared check-ins."
+      description="Create your counselor account. An admin must assign access before you can view shared mood check-ins."
     >
-      {registered ? (
-        <div role="status" className="rounded-2xl border border-[#c7d2fe] bg-[#eef2ff] p-5 text-sm leading-6 text-[#3730a3]">
-          <p className="font-bold">Account created</p>
-          <p className="mt-2">Your account has no counselor privileges yet. Ask your JomLuah administrator to verify and assign counselor access.</p>
-          <Link href="/counselor/login" className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#6366F1] px-4 font-bold text-white transition hover:bg-[#4F46E5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F46E5]">Go to counselor sign in</Link>
-        </div>
-      ) : (
-        <>
-          <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
+      <>
+          <form onSubmit={handleSubmit} className="mt-4 space-y-3" aria-busy={loading}>
             {error && <p role="alert" className="rounded-xl border border-[#e5b9ae] bg-[#fff2ee] px-4 py-3 text-sm leading-6 text-[#813b30]">{error}</p>}
             <div>
               <label htmlFor="counselor-name" className="text-sm font-semibold text-[#393b64]">Full name</label>
@@ -97,8 +95,8 @@ export default function CounselorRegisterPage() {
           <p className="mt-6 text-center text-sm text-[#59617e]">
             Already have a staff account? <Link href="/counselor/login" className="font-bold text-[#4F46E5] underline decoration-[#4F46E5]/35 underline-offset-4 hover:decoration-[#4F46E5]">Sign in</Link>
           </p>
-        </>
-      )}
+          {registered && <CounselorAuthNotice onClose={() => setRegistered(false)} />}
+      </>
     </CounselorAuthShell>
   );
 }

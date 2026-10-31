@@ -1,59 +1,55 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 export function CounselorAuthShell({
   children,
-  eyebrow,
   title,
   description,
+  compact = false,
 }: {
   children: ReactNode;
-  eyebrow: string;
   title: string;
   description: string;
+  compact?: boolean;
 }) {
   return (
-    <main className="min-h-screen bg-[#f5f6ff] text-[#1c1a48]">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-        <Link href="/counselor/login" className="flex items-center gap-3 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#4F46E5]">
-          <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-xl bg-[#6366F1] text-sm font-extrabold tracking-tight text-white">JL</span>
-          <span className="leading-tight">
-            <span className="block text-sm font-bold tracking-tight">JomLuah</span>
-            <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[0.16em] text-[#6b7190]">Counselor portal</span>
-          </span>
-        </Link>
-        <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-semibold text-[#393b64] transition hover:bg-white hover:text-[#4F46E5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F46E5]">
-          Student portal
-        </Link>
-      </header>
-
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 pb-10 pt-4 sm:px-8 lg:min-h-[calc(100vh-80px)] lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:pb-16 lg:pt-2">
-        <section className="relative isolate overflow-hidden rounded-[1.6rem] bg-gradient-to-br from-[#6366F1] to-[#4F46E5] px-7 py-9 text-white sm:px-10 sm:py-12 lg:min-h-[540px] lg:rounded-[2rem] lg:px-12 lg:py-14">
-          <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-30" style={{ backgroundImage: "linear-gradient(90deg, transparent 49.8%, rgba(224,231,255,.25) 50%, transparent 50.2%), linear-gradient(0deg, transparent 49.8%, rgba(224,231,255,.2) 50%, transparent 50.2%)", backgroundSize: "72px 72px" }} />
-          <div aria-hidden="true" className="absolute -bottom-24 -right-20 -z-10 h-72 w-72 rounded-full border border-white/20" />
-          <div aria-hidden="true" className="absolute -bottom-12 -right-8 -z-10 h-52 w-52 rounded-full border border-white/25" />
-          <div className="flex h-full min-h-[360px] flex-col justify-between gap-12 lg:min-h-[428px]">
-            <p className="text-xs font-bold uppercase tracking-[0.19em] text-[#e0e7ff]">Student wellbeing · staff access</p>
-            <div>
-              <p className="mb-4 text-sm font-semibold text-[#e0e7ff]">A view built for care teams</p>
-              <h1 className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-[-0.045em] sm:text-5xl">See the mood trend. Keep the story private.</h1>
-              <p className="mt-6 max-w-lg text-base leading-7 text-[#eef2ff]">Counselors can view shared morning and evening check-ins for students assigned to them. Their chats and journal entries stay private.</p>
-            </div>
-            <div className="flex items-center gap-3 border-t border-white/25 pt-5 text-sm text-[#eef2ff]">
-              <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-full border border-white/40 text-white">✓</span>
-              <span>Access follows each student’s sharing choice.</span>
+    <main className="min-h-screen overflow-x-hidden bg-white font-sans text-[#151b3b]">
+      <div className="grid min-h-screen w-full min-w-0 lg:grid-cols-[57.5%_42.5%]">
+        <section className="relative isolate flex min-h-[460px] min-w-0 flex-col justify-center overflow-hidden bg-[#f0f1ff] px-7 py-12 sm:px-12 lg:min-h-0 lg:px-[5.5vw] lg:py-16">
+          <div aria-hidden="true" className="absolute -right-24 -top-64 -z-10 h-[620px] w-[620px] rounded-full bg-[#d9d9ff]/75" />
+          <div aria-hidden="true" className="absolute -right-36 -top-52 -z-10 h-[650px] w-[650px] rounded-full border-[34px] border-white/35" />
+          <div aria-hidden="true" className="absolute -bottom-[440px] -left-52 -z-10 h-[660px] w-[112%] rotate-[-8deg] rounded-[50%] bg-[#d6d4ff]/90" />
+          <div aria-hidden="true" className="absolute -bottom-[490px] -left-44 -z-10 h-[660px] w-[116%] rotate-[-8deg] rounded-[50%] border-t-[30px] border-white/30" />
+          <div className="mx-auto w-full max-w-[760px]">
+            <p className="mb-8 text-[11px] font-bold uppercase tracking-[0.28em] text-[#5146dc]">JomLuah counselor portal</p>
+            <h1 className="max-w-[700px] text-[clamp(2.75rem,6.3vw,5.5rem)] font-extrabold leading-[1.02] tracking-[-0.055em] text-[#101936]">A clearer<br />view of care.</h1>
+            <p className="mt-6 max-w-[590px] text-base leading-7 text-[#56617e] sm:mt-7 sm:text-lg sm:leading-8">A private space for university counselors to view assigned students’ shared mood check-ins and offer thoughtful support.</p>
+            <div className="mt-9 grid max-w-[720px] grid-cols-1 gap-5 sm:mt-16 sm:grid-cols-3 sm:gap-8">
+              {([
+                ["/images/counselor-privacy.webp", "Watercolor illustration of a privacy lock on paper", "Private by design", "Chats and journals stay private."],
+                ["/images/counselor-support.webp", "Watercolor illustration of two people offering support", "Assigned students", "Access is limited to your roster."],
+                ["/images/counselor-mood.webp", "Watercolor mood trend chart on paper", "Shared check-ins", "See moods students choose to share."],
+              ] as [string, string, string, string][]).map(([imageSrc, imageAlt, heading, detail]) => (
+                <div key={heading} className="flex items-center gap-3 sm:block sm:max-w-[180px]">
+                  <Image src={imageSrc} alt={imageAlt} width={128} height={128} className="h-11 w-11 shrink-0 object-contain sm:mb-4 sm:h-16 sm:w-16" />
+                  <div>
+                    <h2 className="text-sm font-bold leading-5 text-[#151b3b] sm:text-lg sm:leading-6">{heading}</h2>
+                    <p className="mt-1 text-xs leading-5 text-[#66708b] sm:mt-2 sm:text-sm sm:leading-6">{detail}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[480px] py-3 lg:py-10">
-          <div className="mb-7">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.17em] text-[#4F46E5]">{eyebrow}</p>
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-[#1c1a48] sm:text-[2.15rem]">{title}</h2>
-            <p className="mt-3 text-sm leading-6 text-[#59617e]">{description}</p>
+        <section className={`flex min-w-0 items-center justify-center bg-white px-5 sm:px-12 lg:px-[5.5vw] ${compact ? "py-8 sm:py-10" : "py-12 sm:py-14"}`}>
+          <div className="w-full min-w-0 max-w-[510px]">
+            <p className={`${compact ? "mb-3" : "mb-5"} text-[11px] font-bold uppercase tracking-[0.28em] text-[#5146dc]`}>JomLuah</p>
+            <h2 className="text-3xl font-extrabold leading-tight tracking-[-0.04em] text-[#101936] sm:text-4xl">{title}</h2>
+            <p className={`${compact ? "mt-2 text-sm leading-5" : "mt-4 text-base leading-7"} text-[#59617e]`}>{description}</p>
+            {children}
+            {!compact && <p className="mt-5 text-center text-xs leading-5 text-[#68708b]">For access support, contact your JomLuah administrator.</p>}
           </div>
-          {children}
-          <p className="mt-7 text-center text-xs leading-5 text-[#68708b]">For access support, contact your JomLuah administrator.</p>
         </section>
       </div>
     </main>

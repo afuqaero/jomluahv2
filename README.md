@@ -61,6 +61,22 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Saturday, 31 October 2026 — Google Calendar handoff
+
+* Added **Add to Google Calendar** to each counselor appointment. The counselor reviews and saves a prefilled event; JomLuah sends only the time and generic title, never the student name or private content.
+* This is a one-off handoff, not automatic synchronization. Editing or cancelling a JomLuah appointment does not update a saved Google event. Automatic two-way sync would require a Google Cloud OAuth app, counselor consent, securely stored refresh tokens, per-event ID mapping, revocation handling, and Google Calendar API operations. MCP access for the developer is not a substitute for each counselor connecting their own account.
+
+### Saturday, 31 October 2026 — Counselor live data
+
+* Replaced the counselor demo roster, charts, schedule, and appointment cards with authenticated Neon-backed data. Removed the public demo route and demo sign-in shortcut.
+* Added counselor-only appointment listing, creation, and cancellation, restricted in the database to the signed-in counselor and actively assigned students. Appointment records contain scheduling metadata only, not chats or journal content.
+* Added a database-backed multi-month mood trend view using only assigned students' consented morning/evening check-ins. Empty states appear until students submit and share check-ins.
+* Added `neon_migrations/005_counselor_appointments.sql`. **Migration 005 is not yet applied**: apply it to a Neon test branch, verify access boundaries, then apply to production before using appointment features. No direct database connection is available in this local environment.
+
+### Saturday, 31 October 2026 — 11:42 MYT
+
+* Replaced the project-local anti-slop agent skills with [unslop](https://github.com/heydamir/unslop), created by Damir Sokolovsky and licensed under CC BY 4.0. The existing landing-page comparison preview and `DESIGN.md` remain project assets; only the agent skills changed.
+
 ### Friday, 30 October 2026 — 19:20 MYT
 
 #### Counselor and admin foundations

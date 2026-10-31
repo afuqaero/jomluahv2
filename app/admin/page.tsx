@@ -143,7 +143,7 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(145deg,#f7f8ff_0%,#edf2ff_52%,#f7f8ff_100%)] text-[#1c1a48]">
+    <main className="min-h-screen bg-[linear-gradient(145deg,#f7f8ff_0%,#edf2ff_52%,#f7f8ff_100%)] font-sans text-[#1c1a48]">
       <header className="border-b border-[#dce2f3] bg-white/85">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 md:px-8">
           <Link href="/" className="text-lg font-extrabold tracking-tight text-[#201d56]">JomLuah <span className="ml-2 text-xs font-semibold text-[#6b7190]">ADMIN</span></Link>
