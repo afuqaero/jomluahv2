@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowClockwise, ArrowRight, CaretDown, Check, MagnifyingGlass, ShieldCheck, SignOut, UserSwitch, UsersThree } from "@phosphor-icons/react";
 import { neon } from "../lib/neonClient";
+import { useInactivityLogout } from "../lib/useInactivityLogout";
 
 type DirectoryPerson = {
   user_id: string;
@@ -71,6 +72,7 @@ function StyledPicker({ id, value, onChange, placeholder, options, disabled = fa
 
 export default function AdminPage() {
   const router = useRouter();
+  useInactivityLogout(60_000, "/admin/login?reason=timeout");
   const [directory, setDirectory] = useState<DirectoryPerson[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedStudent, setSelectedStudent] = useState("");
@@ -209,7 +211,7 @@ export default function AdminPage() {
 
   const signOut = async () => {
     await neon.auth.signOut();
-    router.replace("/login");
+    router.replace("/admin/login");
   };
 
   return (
@@ -335,7 +337,7 @@ export default function AdminPage() {
                         <td className="py-3 pr-4"><span className="block font-semibold">{person.full_name || "Name not set"}</span><span className="text-xs text-[#747b95]">{person.student_number || "No student ID"}</span></td>
                         <td className="py-3 pr-4 text-[#555d7b]">{person.email}</td>
                         <td className="py-3 pr-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${person.role === "counselor" ? "bg-[#e9e7ff] text-[#5146c8]" : "bg-[#e4f6f2] text-[#137968]"}`}>{person.role === "counselor" ? "Counselor" : "Student"}</span></td>
-                        <td className="py-3 pr-4 text-xs text-[#59617e]">{person.role === "user" ? assignments.find((assignment) => assignment.student_id === person.user_id)?.counselor_name || (person.counselor_access_requested ? "Awaiting staff review" : "Not assigned") : `${assignments.filter((assignment) => assignment.counselor_id === person.user_id).length} students assigned`}{person.counselor_access_requested && <span className="ml-2 rounded-full bg-amber-50 px-2 py-1 font-semibold text-amber-800">Staff request</span>}</td>
+                        <td className="py-3 pr-4 text-xs text-[#59617e]">{person.role === "user" ? assignments.find((assignment) => assignment.student_id === person.user_id)?.counselor_name || (person.counselor_access_requested ? "Awaiting staff review" : "Not assigned") : `${assignments.filter((assignment) => assignment.counselor_id === person.user_id).length} students assigned`}{person.role === "user" && person.counselor_access_requested && <span className="ml-2 rounded-full bg-amber-50 px-2 py-1 font-semibold text-amber-800">Staff request</span>}</td>
                         <td className="py-3 text-right">{person.role === "user" ? person.counselor_access_requested ? <button type="button" disabled={isSaving} onClick={() => void changeRole(person)} className="rounded-lg border border-[#d9deed] px-3 py-2 text-xs font-bold text-[#3e4564] hover:bg-[#f7f8fc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#6366F1] disabled:opacity-50">Approve staff access</button> : <span className="text-xs text-[#858ba0]">Student account</span> : <button type="button" disabled={isSaving} onClick={() => void changeRole(person)} className="rounded-lg border border-[#d9deed] px-3 py-2 text-xs font-bold text-[#3e4564] hover:bg-[#f7f8fc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#6366F1] disabled:opacity-50">Remove counselor role</button>}</td>
                       </tr>
                     ))}</tbody>

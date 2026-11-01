@@ -131,18 +131,19 @@ export default function CounselorPage() {
 
   return (
     <main className="min-h-screen bg-[#fafdff] font-sans text-[#101936]">
-      <div className="flex min-h-screen w-full bg-[#fafdff]">
-        <aside className="hidden w-[260px] shrink-0 flex-col border-r border-[#e6eef9] bg-white/75 px-5 py-7 lg:flex">
-          <Link href="/counselor" className="mb-12 text-[26px] font-extrabold tracking-[-0.06em] text-[#101936]"><span className="mr-2 text-[#5068f7]">◇</span>JomLuah</Link>
-          <nav aria-label="Counselor navigation" className="space-y-1.5">
-            {([[House, "Dashboard", "dashboard"], [CalendarBlank, "Appointments", "appointments"], [UsersThree, "Clients", "clients"]] as const).map(([Icon, label, target]) => (
-              <button key={label} type="button" onClick={() => setView(target)} className={`flex min-h-12 w-full items-center gap-4 rounded-xl px-4 text-left text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-[#4269ff] ${target === view ? "bg-[#eaf1ff] text-[#295cf2]" : "text-[#526184] hover:bg-[#f4f7ff]"}`}><Icon size={22} weight={target === view ? "fill" : "regular"} />{label}</button>
-            ))}
-          </nav>
-          <div className="mt-auto border-t border-[#e8eef8] pt-6"><p className="font-bold">Counselor portal</p><p className="text-xs text-[#657498]">Assigned students only</p><button type="button" onClick={signOut} className="mt-4 flex items-center gap-2 text-sm text-[#526184] hover:text-[#295cf2]"><SignOut size={18} /> Sign out</button></div>
-        </aside>
-        <div className="min-w-0 flex-1 px-5 py-6 sm:px-8 lg:px-10">
-          <div className="mb-9 flex flex-wrap items-center justify-between gap-3 lg:hidden"><div className="flex flex-wrap items-center gap-3"><span className="text-xl font-extrabold">JomLuah</span><button type="button" onClick={() => setView("dashboard")} className="text-sm text-[#315ef1]">Dashboard</button><button type="button" onClick={() => setView("appointments")} className="text-sm text-[#315ef1]">Appointments</button><button type="button" onClick={() => setView("clients")} className="text-sm text-[#315ef1]">Clients</button></div><button type="button" onClick={signOut} className="text-xs text-[#526184]">Sign out</button></div>
+      <div className="min-h-screen w-full bg-[#fafdff]">
+        <header className="sticky top-0 z-20 border-b border-[#e6eef9] bg-[#fafdff]/95 backdrop-blur-sm">
+          <div className="flex w-full flex-wrap items-center justify-between gap-x-8 gap-y-3 px-4 py-3 sm:px-8 lg:px-10">
+            <Link href="/counselor" className="shrink-0 text-[24px] font-extrabold tracking-[-0.06em] text-[#101936]"><span className="mr-2 text-[#5068f7]">◇</span>JomLuah</Link>
+            <nav aria-label="Counselor pages" className="order-3 flex w-full items-center gap-1 overflow-x-auto sm:order-none sm:w-auto sm:overflow-visible">
+              {([[House, "Dashboard", "dashboard"], [CalendarBlank, "Appointments", "appointments"], [UsersThree, "Clients", "clients"]] as const).map(([Icon, label, target]) => (
+                <button key={label} type="button" aria-pressed={target === view} onClick={() => setView(target)} className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-2.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-[#4269ff] sm:flex-none sm:px-4 sm:text-sm ${target === view ? "bg-[#eaf1ff] text-[#295cf2]" : "text-[#526184] hover:bg-[#f4f7ff]"}`}><Icon size={19} weight={target === view ? "fill" : "regular"} />{label}</button>
+              ))}
+            </nav>
+            <button type="button" onClick={signOut} className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-[#526184] transition hover:bg-[#f4f7ff] hover:text-[#295cf2] sm:gap-2 sm:px-3 sm:text-sm"><SignOut size={18} /> Sign out</button>
+          </div>
+        </header>
+        <div className="min-w-0 px-4 py-6 sm:px-8 lg:px-10">
           {view === "dashboard" ? <>
             {error && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
             <div className="mb-7 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-3xl font-extrabold tracking-[-0.045em] sm:text-4xl">Counselor overview</h1><p className="mt-2 text-[#667498]">Assigned students and scheduled sessions. Private conversations remain private.</p></div><time className="pt-2 text-sm text-[#667498]">{new Date().toLocaleDateString("en-MY", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</time></div>
@@ -155,7 +156,7 @@ export default function CounselorPage() {
               </section>
               <section className="rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(50,80,130,0.04)]"><h2 className="text-xl font-extrabold">Quick actions</h2><button type="button" onClick={() => setView("clients")} className="mt-6 flex min-h-20 w-full items-center gap-4 rounded-xl bg-[#edf5ff] p-4 text-left"><span className="grid h-12 w-12 place-items-center rounded-xl bg-[#dcecff] text-[#3570f6]"><UsersThree size={27} /></span><span><strong className="block">Client profiles</strong><span className="text-sm text-[#667498]">View assigned students’ shared moods</span></span><ArrowRight className="ml-auto text-[#3570f6]" /></button><button type="button" onClick={() => setView("appointments")} className="mt-3 min-h-11 text-sm font-semibold text-[#315ef1]">Manage appointments →</button></section>
             </div>
-          </> : view === "appointments" ? <CounselorAppointments students={students} /> : <CounselorClients students={students} selectedId={selectedId} onSelect={setSelectedId} search={search} onSearch={setSearch} loading={loadingRoster} error={error} onRefresh={() => void loadStudents()} from={from} to={to} onFrom={setFrom} onTo={setTo} checkinCount={visibleCheckins.length} average={average} chart={loadingCheckins || checkinsKey !== `${selectedId}:${from}:${to}` && selectedStudent?.mood_sharing_enabled ? <p role="status" className="text-sm text-[#687898]">Loading check-ins…</p> : visibleCheckins.length ? <MoodChart checkins={visibleCheckins} /> : <p className="rounded-lg bg-[#f5f8ff] p-4 text-sm text-[#687898]">No shared check-ins in this period.</p>} />}
+          </> : view === "appointments" ? <CounselorAppointments students={students} /> : <CounselorClients students={students} selectedId={selectedId} onSelect={setSelectedId} search={search} onSearch={setSearch} loading={loadingRoster} error={error} onRefresh={loadStudents} from={from} to={to} onFrom={setFrom} onTo={setTo} checkinCount={visibleCheckins.length} average={average} chart={loadingCheckins || checkinsKey !== `${selectedId}:${from}:${to}` && selectedStudent?.mood_sharing_enabled ? <p role="status" className="text-sm text-[#687898]">Loading check-ins…</p> : visibleCheckins.length ? <MoodChart checkins={visibleCheckins} /> : <p className="rounded-lg bg-[#f5f8ff] p-4 text-sm text-[#687898]">No shared check-ins in this period.</p>} />}
         </div>
       </div>
     </main>

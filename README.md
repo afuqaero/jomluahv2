@@ -68,6 +68,10 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Counselor staff registration now records an access request. The admin directory can approve only accounts that registered through the counselor staff flow; student accounts cannot be promoted through the dashboard.
 * Added directory filters for student/counselor assignment status and counselor-specific student assignments, plus pagination, clearer role/status labels, and confirmation dialogs for sensitive changes.
 * Applied `neon_migrations/008_counselor_access_requests.sql` to the Neon production database. The migration adds the staff-request marker, returns it from the protected admin directory function, and enforces the request requirement inside the role-change function.
+* Added one-minute inactivity sign-out for admins and route-correct sign-out/timeout redirects. The counselor portal navigation is now a responsive top tab bar on desktop and mobile.
+* Applied `neon_migrations/009_clear_promoted_staff_requests.sql` to clear stale staff-request markers from already-promoted counselors and enforce that only non-counselor accounts can have a pending request.
+* Counselors can now add unassigned students from the Clients page. The picker lists only unassigned student accounts; a counselor-only database function rechecks availability atomically, records the assignment, and prevents competing counselors from claiming the same student. Students assigned to other counselors are not exposed by this list.
+* Applied `neon_migrations/010_counselor_self_assign_students.sql` to the Neon production database and verified both self-assignment functions are present. Existing student mood-sharing consent remains required before counselors can view mood check-ins.
 
 ### Sunday, 1 November 2026 — Security audit status (incomplete)
 

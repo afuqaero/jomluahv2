@@ -11,7 +11,10 @@ export const INACTIVITY_TIMEOUT_MS = 2 * 60 * 1000;
 const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"] as const;
 
 /** Signs the user out and redirects to /login after a period of inactivity. */
-export function useInactivityLogout(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
+export function useInactivityLogout(
+  timeoutMs: number = INACTIVITY_TIMEOUT_MS,
+  loginPath = "/login?reason=timeout",
+) {
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -19,7 +22,7 @@ export function useInactivityLogout(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
     const logout = async () => {
       document.cookie = "jl_ob=; path=/; max-age=0; SameSite=Lax";
       await neon.auth.signOut();
-      router.replace("/login?reason=timeout");
+      router.replace(loginPath);
     };
 
     const resetTimer = () => {
@@ -34,5 +37,5 @@ export function useInactivityLogout(timeoutMs: number = INACTIVITY_TIMEOUT_MS) {
       if (timerRef.current) clearTimeout(timerRef.current);
       ACTIVITY_EVENTS.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [router, timeoutMs]);
+  }, [router, timeoutMs, loginPath]);
 }
