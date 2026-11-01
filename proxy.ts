@@ -4,6 +4,7 @@ import { auth } from "./app/lib/auth/server";
 const PROTECTED_ROUTES = ["/dashboard", "/journal", "/chat", "/memories", "/onboarding", "/counselor", "/admin"];
 const protectWithNeonAuth = auth.middleware({ loginUrl: "/login" });
 const protectCounselorWithNeonAuth = auth.middleware({ loginUrl: "/counselor/login" });
+const protectAdminWithNeonAuth = auth.middleware({ loginUrl: "/admin/login" });
 
 /**
  * Neon Auth validates protected routes and refreshes its signed session cookie.
@@ -13,13 +14,14 @@ const protectCounselorWithNeonAuth = auth.middleware({ loginUrl: "/counselor/log
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isCounselorAuthRoute = pathname === "/counselor/login" || pathname === "/counselor/register";
-  const isProtectedRoute = !isCounselorAuthRoute && PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
+  const isAdminAuthRoute = pathname === "/admin/login";
+  const isProtectedRoute = !isCounselorAuthRoute && !isAdminAuthRoute && PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
 
   if (!isProtectedRoute) {
     return NextResponse.next({ request });
   }
 
-  const authResponse = await (pathname.startsWith("/counselor") ? protectCounselorWithNeonAuth : protectWithNeonAuth)(request);
+  const authResponse = await (pathname.startsWith("/admin") ? protectAdminWithNeonAuth : pathname.startsWith("/counselor") ? protectCounselorWithNeonAuth : protectWithNeonAuth)(request);
   if (authResponse.headers.has("location")) {
     return authResponse;
   }

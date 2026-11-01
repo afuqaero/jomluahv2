@@ -25,7 +25,8 @@ export async function GET(request: Request) {
   const error = directory.error ?? assignments.error;
   if (error) {
     const message = error.message || "Administrator access could not be verified.";
-    return NextResponse.json({ error: message }, { status: statusForError(message), headers });
+    const status = statusForError(message);
+    return NextResponse.json({ error: message, code: status === 403 ? "ADMIN_ROLE_REQUIRED" : undefined }, { status, headers });
   }
 
   return NextResponse.json({ directory: directory.data ?? [], assignments: assignments.data ?? [] }, { headers });

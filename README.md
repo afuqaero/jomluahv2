@@ -61,6 +61,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 1 November 2026 — Admin access and staff approval
+
+* Added a dedicated `/admin/login` page so administrator authentication is separate from student and counselor sign-in; access remains enforced by the database role.
+* Updated admin route handling to send authenticated non-admin users to the admin sign-in page with a clear access explanation.
+* Counselor staff registration now records an access request. The admin directory can approve only accounts that registered through the counselor staff flow; student accounts cannot be promoted through the dashboard.
+* Added directory filters for student/counselor assignment status and counselor-specific student assignments, plus pagination, clearer role/status labels, and confirmation dialogs for sensitive changes.
+* Applied `neon_migrations/008_counselor_access_requests.sql` to the Neon production database. The migration adds the staff-request marker, returns it from the protected admin directory function, and enforces the request requirement inside the role-change function.
+
 ### Sunday, 1 November 2026 — Security boundary hardening
 
 * Require a signed-in user at `/api/chat` before parsing messages or calling the AI provider; anonymous requests now receive `401`.

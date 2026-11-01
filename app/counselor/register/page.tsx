@@ -42,9 +42,10 @@ export default function CounselorRegisterPage() {
           id: data.user.id,
           email: data.user.email,
           full_name: fullName.trim(),
+          counselor_access_requested: true,
         });
         if (profile.error) {
-          localStorage.setItem("jl_pending_profile", JSON.stringify({ email: data.user.email, full_name: fullName.trim() }));
+          localStorage.setItem("jl_pending_profile", JSON.stringify({ email: data.user.email, full_name: fullName.trim(), counselor_access_requested: true }));
         }
       }
 
