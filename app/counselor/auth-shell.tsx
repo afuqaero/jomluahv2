@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
+import { ChartNoAxesCombined, ShieldCheck, UsersRound } from "lucide-react";
 
 export function CounselorAuthShell({
   children,
@@ -26,12 +26,14 @@ export function CounselorAuthShell({
             <p className="mt-6 max-w-[590px] text-base leading-7 text-[#56617e] sm:mt-7 sm:text-lg sm:leading-8">A private space for university counselors to view assigned students’ shared mood check-ins and offer thoughtful support.</p>
             <div className="mt-9 grid max-w-[720px] grid-cols-1 gap-5 sm:mt-16 sm:grid-cols-3 sm:gap-8">
               {([
-                ["/images/counselor-privacy.webp", "Watercolor illustration of a privacy lock on paper", "Private by design", "Chats and journals stay private."],
-                ["/images/counselor-support.webp", "Watercolor illustration of two people offering support", "Assigned students", "Access is limited to your roster."],
-                ["/images/counselor-mood.webp", "Watercolor mood trend chart on paper", "Shared check-ins", "See moods students choose to share."],
-              ] as [string, string, string, string][]).map(([imageSrc, imageAlt, heading, detail]) => (
+                [ShieldCheck, "Private by design", "Chats and journals stay private."],
+                [UsersRound, "Assigned students", "Access is limited to your roster."],
+                [ChartNoAxesCombined, "Shared check-ins", "See moods students choose to share."],
+              ] as const).map(([Icon, heading, detail]) => (
                 <div key={heading} className="flex items-center gap-3 sm:block sm:max-w-[180px]">
-                  <Image src={imageSrc} alt={imageAlt} width={128} height={128} className="h-11 w-11 shrink-0 object-contain sm:mb-4 sm:h-16 sm:w-16" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d8daf7] bg-[#e4e5ff] text-[#5146dc] sm:mb-4 sm:h-16 sm:w-16" aria-hidden="true">
+                    <Icon className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.75} />
+                  </span>
                   <div>
                     <h2 className="text-sm font-bold leading-5 text-[#151b3b] sm:text-lg sm:leading-6">{heading}</h2>
                     <p className="mt-1 text-xs leading-5 text-[#66708b] sm:mt-2 sm:text-sm sm:leading-6">{detail}</p>

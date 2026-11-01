@@ -61,6 +61,14 @@ This comprehensive documentation covers:
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
+### Sunday, 1 November 2026 — Security boundary hardening
+
+* Require a signed-in user at `/api/chat` before parsing messages or calling the AI provider; anonymous requests now receive `401`.
+* Applied `neon_migrations/006_profile_insert_role.sql` to the JomLuah Neon production branch. Read-back of `pg_policies.with_check` confirms new profiles may only insert with the `user` role.
+* Applied `neon_migrations/005_counselor_appointments.sql` and `neon_migrations/007_counselor_cancel_assignment.sql` together in one production transaction after a rollback-only SQL test. Read-back confirms the appointments table exists with RLS enabled, authenticated users have no direct table `SELECT` grant, and cancellation checks active assignment. Refreshed the Neon Data API schema cache.
+* A schema-only test branch could not be created through the Neon console, so dummy-account authorization tests on an isolated branch remain pending. Deployment-side AI rate/spend limits remain a separate control to verify.
+* The documented privacy model is unchanged: journal text, notes, saved memories, and preferences are still readable by privileged database operators. Encrypting them requires a separate product design because journal retrieval and memory features currently depend on readable text.
+
 ### Saturday, 31 October 2026 — Google Calendar handoff
 
 * Added **Add to Google Calendar** to each counselor appointment. The counselor reviews and saves a prefilled event; JomLuah sends only the time and generic title, never the student name or private content.
@@ -71,7 +79,7 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Replaced the counselor demo roster, charts, schedule, and appointment cards with authenticated Neon-backed data. Removed the public demo route and demo sign-in shortcut.
 * Added counselor-only appointment listing, creation, and cancellation, restricted in the database to the signed-in counselor and actively assigned students. Appointment records contain scheduling metadata only, not chats or journal content.
 * Added a database-backed multi-month mood trend view using only assigned students' consented morning/evening check-ins. Empty states appear until students submit and share check-ins.
-* Added `neon_migrations/005_counselor_appointments.sql`. **Migration 005 is not yet applied**: apply it to a Neon test branch, verify access boundaries, then apply to production before using appointment features. No direct database connection is available in this local environment.
+* Added `neon_migrations/005_counselor_appointments.sql`. This migration was applied to production on 1 November 2026 together with the cancellation safeguard in migration `007`; dummy-account authorization tests on an isolated branch remain pending.
 
 ### Saturday, 31 October 2026 — 11:42 MYT
 

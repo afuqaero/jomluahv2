@@ -353,6 +353,12 @@ export async function POST(req: Request) {
   const startedAt = Date.now();
   const providerSignal = AbortSignal.any([req.signal, AbortSignal.timeout(90_000)]);
   try {
+    const neon = await createRouteNeonClient();
+    const { data: { user } } = await neon.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Sign in to use the AI companion." }, { status: 401 });
+    }
+
     const body = await req.json();
     const messages = normaliseMessages(body.messages);
     const messagesToSummarize = normaliseMessages(body.messagesToSummarize);
@@ -369,8 +375,6 @@ export async function POST(req: Request) {
     const latestUserText = [...messages].reverse().find((message) => message.sender === "user")?.text || "";
     const safety = assessSafety(latestUserText);
 
-    const neon = await createRouteNeonClient();
-    const { data: { user } } = await neon.auth.getUser();
     let memories: MemoryRecord[] = [];
     let availableMemories: MemoryRecord[] = [];
     let journals: JournalRecord[] = [];
