@@ -69,6 +69,15 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Added directory filters for student/counselor assignment status and counselor-specific student assignments, plus pagination, clearer role/status labels, and confirmation dialogs for sensitive changes.
 * Applied `neon_migrations/008_counselor_access_requests.sql` to the Neon production database. The migration adds the staff-request marker, returns it from the protected admin directory function, and enforces the request requirement inside the role-change function.
 
+### Sunday, 1 November 2026 — Security audit status (incomplete)
+
+* Started a full-scope, source-first security review at commit `0aba52e`, covering authentication, API authorization, database isolation, browser rendering, AI/provider use, resource exhaustion, dependencies, and deployment boundaries. This is an incomplete source-only review, not a penetration test or a security assurance.
+* The required independent audit agents and strict OS-enforced execution sandbox were unavailable. No builds, tests, live requests, database queries, or deployment checks were run. The skill's findings and coverage validators failed before reading the audit files because this Windows host does not provide the required no-follow/nonblocking file protection. No confirmed findings are claimed.
+* Source review identified a counselor-request provenance concern for follow-up. A staff request is not itself a role grant; counselor promotion still requires separate admin approval. Confirm that administrators verify staff eligibility rather than treating the request marker as proof.
+* `/api/chat` rejects unauthenticated requests and bounds model context, but no app-level per-user rate/spend quota or explicit request-body byte limit is visible in source. Vercel/provider protections remain unverified. Cookie/CSRF behavior, response security headers, production migration state, and secret scopes also require owner-side review.
+* Source search found no direct raw-HTML insertion sink. This is not a complete XSS test. Existing RLS and role controls are positive source patterns, not proof of deployed configuration.
+* Keep any previously shared Neon connection credential rotated and stored only in local/deployment secret stores. Full audit status and source-only leads are recorded outside the repository at `security-audit-skill/JomLuahv2/run-3`.
+
 ### Sunday, 1 November 2026 — Security boundary hardening
 
 * Require a signed-in user at `/api/chat` before parsing messages or calling the AI provider; anonymous requests now receive `401`.
