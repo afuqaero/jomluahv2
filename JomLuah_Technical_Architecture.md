@@ -127,6 +127,16 @@ Relevant memories and journal entries are ranked with embeddings when a compatib
 embedding endpoint is configured. A lexical scorer remains available as a fallback.
 Journal evidence is supplied with `[Journal: title | date]` citations.
 
+Adaptive routing skips private retrieval for fresh conversation. For recall requests,
+the **JomLuah Recall Agent** can choose a user-scoped, read-only memory or journal
+search, inspect the returned evidence, and make at most one additional search.
+Each search uses the existing embedding/keyword ranker rather than a new index.
+The same configured DeepSeek key powers planning and the final answer. The agent
+cannot access encrypted chat history, counselor/admin data, or write tools; source
+preferences and urgent-safety handling remain enforced outside the model.
+Development enables the agent by default, while production requires
+`RECALL_AGENT_ENABLED=true` after live recall, privacy, latency, and cost evaluation.
+
 ### 5.6 Safety, Feedback, and Observability (Implemented)
 A deterministic English/BM classifier runs before DeepSeek. Urgent self-harm
 matches bypass generative output and return reviewed Malaysian crisis resources.

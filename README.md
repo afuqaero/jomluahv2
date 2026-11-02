@@ -20,8 +20,18 @@ JomLuah acts as a digital complement to human counselling, giving students a saf
 
 *   **Frontend**: Next.js 16.4.2 (App Router), React 19, TypeScript, Tailwind CSS 4.
 *   **Backend & Database**: Neon Postgres, Neon Auth, and Neon Data API.
-*   **Retrieval**: Provider-neutral embeddings stored in PostgreSQL JSONB with cosine ranking and lexical fallback. A pgvector migration remains a future scale optimization.
+*   **Retrieval**: Adaptive memory/journal routing searches private history only when a message refers to saved information, journal content, or earlier conversations. Provider-neutral embeddings are stored in PostgreSQL JSONB with cosine ranking and lexical fallback; a pgvector migration remains a future scale optimization.
 *   **LLM Integration**: DeepSeek V4 Pro with token streaming, strict tool calling, saved memory, journal retrieval, and a separate safety layer.
+
+### JomLuah Recall Agent
+
+**In simple words:** When a student asks about something they shared before, the Recall Agent looks through that student's allowed saved memories or journal excerpts, checks what it found, and may try one different search before JomLuah replies. It does not search every ordinary chat message.
+
+**Why it belongs in the RAG system:** Adaptive routing decides *whether* past information is needed. The Recall Agent decides *what to search next* when recall is difficult. Each search still uses JomLuah's existing semantic-plus-keyword ranking (or keyword-only fallback); this does not add BM25 or a separate vector database.
+
+The agent uses the existing `DEEPSEEK_API_KEY` and model configuration, not a new provider key. It has only read-only `search_memories` and `search_journal` tools, is limited to two searches per reply, and can access only the signed-in student's records permitted by their memory/journal settings. Urgent-safety replies bypass it. It cannot search browser-encrypted chat history, view counselor/admin records, or change user data. Searches currently inspect at most the 100 most recent records per source; older records need a future indexed-search design.
+
+The agent runs by default in local development. Production uses the existing adaptive retrieval path until `RECALL_AGENT_ENABLED=true` is set after consented live evaluation. Automated tests cover routing, search limits, disabled sources, and irrelevant-result rejection; real-model recall quality, citation accuracy, latency, cost, and user-isolation testing against Neon still require validation before enabling production.
 
 ## Data Security and Privacy
 
@@ -60,6 +70,16 @@ This comprehensive documentation covers:
 ## Development Change Log
 
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
+
+### Monday, 2 November 2026 — Adaptive retrieval
+
+* Added **JomLuah Recall Agent**, a bounded read-only two-search loop that lets the existing DeepSeek model choose a private memory or journal query, inspect results, and stop or try once more. It replaces the journal tool's old behavior of returning preselected entries without using the requested query.
+* Kept the agent behind `RECALL_AGENT_ENABLED=true` in production pending live evaluation; local development enables it by default. No new API key or database migration is required.
+* Tightened memory-write intent checks so recall questions such as “Do you remember…?” cannot be mistaken for permission to save a new memory. Ranking no longer returns unrelated high-importance memories solely because of their importance score.
+* Added a deterministic retrieval plan for companion chat: fresh messages use recent conversation and its rolling summary without loading saved memories or journals or calling the embedding provider. Memory, journal, and prior-conversation references retrieve only the relevant private sources.
+* Existing user memory/journal preferences, ownership filters, tool permissions, and urgent-safety handling remain in place. Added backend tests for ordinary, English, and Malay recall requests.
+* This is a rule-based first step, not BM25, a reranker, or a guarantee that every indirect reference will be detected. Review consented recall examples and expand routing rules based on measured misses.
+* Verification on 2 November: 13 backend tests passed; TypeScript, targeted ESLint, and the production build passed. Live DeepSeek/Neon recall evaluation remains pending, so production activation stays off by default.
 
 ### Sunday, 1 November 2026 — Admin access and staff approval
 

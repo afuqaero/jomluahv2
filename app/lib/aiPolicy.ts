@@ -16,11 +16,12 @@ export function hasToolIntent(text: string) {
 }
 
 export function allowsMemorySave(text: string) {
-  return /\b(?:remember|save (?:this|that)|store (?:this|that|a memory|memory))\b|\b(?:ingat|simpan)\b/i.test(text);
+  if (/\bremember\s+(?:what|when|how|whether|if)\b|\bingat\s+tak\b/i.test(text)) return false;
+  return /^(?:(?:please|tolong)\s+|(?:can|could|would)\s+you\s+|i\s+(?:want|need)\s+you\s+to\s+)?(?:remember|save|store|ingat|simpan)\b/i.test(text.trim());
 }
 
 export function allowsMemoryForget(text: string) {
-  return /\b(?:forget|delete (?:that|my )?memory)\b|\b(?:lupa|padam memori)\b/i.test(text);
+  return /^(?:(?:please|tolong)\s+|(?:can|could|would)\s+you\s+|i\s+(?:want|need)\s+you\s+to\s+)?(?:forget|delete|lupa|padam)\b/i.test(text.trim());
 }
 
 export function containsSecretData(content: string) {

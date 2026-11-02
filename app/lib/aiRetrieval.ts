@@ -118,9 +118,9 @@ export function rankRecords<T extends EmbeddedRecord>(
         : 0;
       const lexical = lexicalSimilarity(query, record.content);
       const importance = Math.max(1, Math.min(5, record.importance || 3)) / 5;
-      return { record, score: semantic * 0.7 + lexical * 0.25 + importance * 0.05 };
+      return { record, semantic, lexical, score: semantic * 0.7 + lexical * 0.25 + importance * 0.05 };
     })
-    .filter(({ score }) => score > 0.04)
+    .filter(({ semantic, lexical }) => semantic > 0.25 || lexical > 0)
     .sort((left, right) => right.score - left.score)
     .slice(0, limit)
     .map(({ record }) => record);
