@@ -4,6 +4,10 @@ import { parseEnv } from "node:util";
 
 const isolated = parseEnv(readFileSync(".env.isolated.local", "utf8"));
 const provider = parseEnv(readFileSync(".env.local", "utf8"));
+const testFile = process.argv[2] || "tests/integration/agentic-live.test.ts";
+if (!/^tests\/(?:integration\/)?[a-z0-9_-]+\.test\.ts$/i.test(testFile)) {
+  throw new Error("Test runner accepts only a single tests/*.test.ts or tests/integration/*.test.ts file.");
+}
 const testKeys = Object.fromEntries(Object.entries(isolated).filter(([name]) => name.startsWith("JOMLUAH_TEST_")));
 const environment = {
   PATH: process.env.PATH,
@@ -33,7 +37,7 @@ if (preflight.status !== 0) process.exit(preflight.status || 1);
 const result = spawnSync(process.execPath, [
   "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON",
   "--test",
-  "tests/integration/agentic-live.test.ts",
-], { env: environment, stdio: "inherit", timeout: 180_000 });
+  testFile,
+], { env: environment, stdio: "inherit", timeout: 360_000 });
 if (result.error) throw new Error(`Isolated provider test process failed: ${result.error.message}`);
 process.exit(result.status || 0);

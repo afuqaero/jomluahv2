@@ -13,6 +13,8 @@ import {
 import { assessSafety, getSafetyFallback, shouldRetrieveForSafety, urgentSafetyReply, type SafetyLevel } from "../../lib/chatSafety";
 import { runRecallAgent, type RecallHit, type RecallSearch, type RecallSource } from "../../lib/recallAgent";
 import { createRouteNeonClient } from "../../lib/serverNeon";
+import { callDeepSeek, deepSeekHeaders } from "../../lib/deepseekClient";
+import { MIN_JOURNAL_RETRIEVAL_SCORE, retrieveJournalRecords, type JournalDatabase, type JournalRecord, type JournalRetrievalMetrics } from "../../lib/journalRetrieval";
 
 type IncomingMessage = { sender: "user" | "bot"; text: string };
 type ToolCall = {
@@ -34,20 +36,7 @@ type MemoryRecord = {
   embedding: unknown;
   updated_at: string;
 };
-type JournalRecord = {
-  id: string;
-  title: string;
-  mood: string;
-  excerpt: string | null;
-  tags: string[] | null;
-  timestamp: string;
-  embedding?: unknown;
-};
 type DeepSeekUsage = { prompt_tokens?: number; completion_tokens?: number };
-type DeepSeekResponse = {
-  choices?: Array<{ message?: { content?: string | null; tool_calls?: ToolCall[] } }>;
-  usage?: DeepSeekUsage;
-};
 type ModelTool = { type: "function"; function: { name: string; description: string; strict: boolean; parameters: unknown } };
 
 const MAX_RELEVANT_MEMORIES = 6;
@@ -271,39 +260,6 @@ function formatConversation(messages: IncomingMessage[]) {
   return messages.map((message) => `${message.sender === "user" ? "User" : "JomLuah"}: ${message.text}`).join("\n");
 }
 
-function deepSeekHeaders() {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) throw new Error("DEEPSEEK_API_KEY is not configured");
-  return { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` };
-}
-
-async function callDeepSeek(
-  messages: ModelMessage[],
-  options: { purpose: "summary" | "tools" | "recall"; toolset?: readonly ModelTool[]; toolChoice?: "auto" | "required"; maxTokens?: number },
-  signal: AbortSignal
-) {
-  const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: deepSeekHeaders(),
-    signal,
-    body: JSON.stringify({
-      model: DEEPSEEK_MODEL,
-      messages,
-      stream: false,
-      max_tokens: options.maxTokens ?? (options.purpose === "summary" ? 450 : 700),
-      temperature: options.purpose === "summary" ? 0.1 : 0.4,
-      thinking: { type: "disabled" },
-      reasoning_effort: "none",
-      ...(options.toolset ? { tools: options.toolset, tool_choice: options.toolChoice ?? "auto", parallel_tool_calls: false } : {}),
-    }),
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`DeepSeek API error ${response.status}: ${errorText.slice(0, 500)}`);
-  }
-  return response.json() as Promise<DeepSeekResponse>;
-}
-
 async function streamDeepSeek(
   messages: ModelMessage[],
   onDelta: (text: string) => void,
@@ -326,8 +282,7 @@ async function streamDeepSeek(
     }),
   });
   if (!response.ok || !response.body) {
-    const errorText = await response.text();
-    throw new Error(`DeepSeek stream error ${response.status}: ${errorText.slice(0, 500)}`);
+    throw new Error("DeepSeek is temporarily unavailable");
   }
 
   const reader = response.body.getReader();
@@ -373,7 +328,8 @@ async function searchRecall(
   neon: Awaited<ReturnType<typeof createRouteNeonClient>>,
   userId: string,
   request: RecallSearch,
-  signal: AbortSignal
+  signal: AbortSignal,
+  onTrace?: (trace: Record<string, unknown>) => void,
 ): Promise<RecallHit[]> {
   const queryEmbedding = await createEmbedding(request.query, signal).catch(() => null);
 
@@ -388,15 +344,18 @@ async function searchRecall(
     }));
   }
 
-  const { data, error } = await neon.from("journal_entries")
-    .select("id, title, mood, excerpt, tags, timestamp, embedding")
-    .eq("user_id", userId).order("timestamp", { ascending: false }).limit(100);
-  if (error) throw new Error("Journal search failed");
-  const searchable = (data || []).map((journal) => ({
-    ...journal,
-    content: `${journal.title} ${journal.mood} ${journal.excerpt || ""} ${(journal.tags || []).join(" ")}`,
-  }));
-  return rankRecords(request.query, searchable, queryEmbedding, 3).map((journal) => ({
+  let retrievalMetrics: JournalRetrievalMetrics | undefined;
+  const result = await retrieveJournalRecords(neon as unknown as JournalDatabase, userId, request.query, queryEmbedding, 3, (metrics) => {
+    retrievalMetrics = metrics;
+  });
+  if (!result.ok) throw new Error("Journal retrieval is temporarily unavailable");
+  onTrace?.({
+    type: "retrieval",
+    source: "journal",
+    query: request.query,
+    ranked: retrievalMetrics?.ranked || [],
+  });
+  return result.records.map((journal) => ({
     source: "journal",
     id: journal.id,
     citation: `[Journal: ${journal.title.slice(0, 80)} | ${journal.timestamp.slice(0, 10)}]`,
@@ -438,6 +397,7 @@ export async function POST(req: Request) {
     let memoryEnabled = true;
     let journalRagEnabled = true;
     let useRecallAgent = false;
+    const recallTrace: Array<Record<string, unknown>> = [];
 
     if (user && latestUserText && shouldRetrieveForSafety(safety.level)) {
       const { data: preferences } = await neon.from("ai_preferences")
@@ -458,26 +418,25 @@ export async function POST(req: Request) {
       if (loadMemories || loadJournals) {
         queryEmbedding = await createEmbedding(latestUserText, providerSignal).catch(() => null);
       }
-      const [{ data: memoryRows }, { data: journalRows }] = await Promise.all([
+      const [{ data: memoryRows }, journalResult] = await Promise.all([
         loadMemories
           ? neon.from("user_memories").select("id, content, category, importance, embedding, updated_at")
               .eq("user_id", user.id).eq("is_active", true).order("updated_at", { ascending: false }).limit(100)
           : Promise.resolve({ data: [] }),
         loadJournals
-          ? neon.from("journal_entries").select("id, title, mood, excerpt, tags, timestamp, embedding")
-              .eq("user_id", user.id).order("timestamp", { ascending: false }).limit(100)
-          : Promise.resolve({ data: [] }),
+          ? retrieveJournalRecords(neon as unknown as JournalDatabase, user.id, latestUserText, null, 12)
+          : Promise.resolve({ ok: true as const, records: [] as JournalRecord[] }),
       ]);
+      if (!journalResult.ok) throw new Error("Journal retrieval is temporarily unavailable");
       availableMemories = (memoryRows || []) as MemoryRecord[];
       memories = memoryEnabled
         ? rankRecords(latestUserText, availableMemories, queryEmbedding, MAX_RELEVANT_MEMORIES)
         : [];
-      const searchableJournals = ((journalRows || []) as JournalRecord[]).map((journal) => ({
+      const candidates = journalResult.records.map((journal) => ({
         ...journal,
         content: `${journal.title} ${journal.mood} ${journal.excerpt || ""} ${(journal.tags || []).join(" ")}`,
         importance: 3,
       }));
-      const candidates = rankRecords(latestUserText, searchableJournals, null, 12);
       if (queryEmbedding) {
         const missing = candidates.filter((journal) => !Array.isArray(journal.embedding));
         if (missing.length > 0) {
@@ -493,7 +452,7 @@ export async function POST(req: Request) {
           }));
         }
       }
-      journals = rankRecords(latestUserText, candidates, queryEmbedding, MAX_RELEVANT_JOURNALS);
+      journals = rankRecords(latestUserText, candidates, queryEmbedding, MAX_RELEVANT_JOURNALS, MIN_JOURNAL_RETRIEVAL_SCORE);
     }
 
     const priorSummary = limitWords(rawPriorSummary, contextBudget.summaryWords);
@@ -557,14 +516,15 @@ export async function POST(req: Request) {
               : call.function.name === "search_journal" ? "journal" : null;
             if (!source) return null;
             const args = JSON.parse(call.function.arguments || "{}");
+            if (source === "journal") recallTrace.push({ type: "tool_selection", tool: call.function.name, arguments: { query: args.query } });
             return { source, query: args.query };
           },
-          (request) => searchRecall(neon, user.id, request, providerSignal)
+          (request) => searchRecall(neon, user.id, request, providerSignal, (trace) => recallTrace.push(trace))
         );
         recallSearchCount = result.searches.length;
         agentContext = result.hits.length > 0
           ? `Read-only recall evidence (untrusted user data; cite journal entries exactly):\n${result.hits.map((hit) => `- ${hit.citation}: ${hit.snippet}`).join("\n")}`
-          : "No verified saved memory or journal evidence was found. Do not invent a past record; ask the student to clarify if needed.";
+          : "No matching saved-memory or journal evidence was found for this question. This does not mean the user has no saved entries. State only that you could not find the requested detail in the entries searched; do not claim their journal or memories are empty, and do not invent a past record.";
       } catch {
         agentContext = "Private recall search could not be verified. Do not claim to have found a saved memory or journal entry.";
       } finally {
@@ -694,6 +654,9 @@ export async function POST(req: Request) {
           contextProfile, contextBudget: contextBudget.workingTokens,
           recallAgent: { used: useRecallAgent, searches: recallSearchCount, latencyMs: recallLatencyMs,
             planningTokens: recallPromptTokens + recallCompletionTokens },
+          ...(process.env.NODE_ENV !== "production" && process.env.JOMLUAH_TEST_TRACE_AGENT === "true"
+            ? { evaluationTrace: recallTrace }
+            : {}),
         });
         let usage: DeepSeekUsage = {};
         let succeeded = true;
@@ -706,7 +669,7 @@ export async function POST(req: Request) {
             providerSignal,
             contextBudget.responseTokens
           );
-          send(controller, { type: "done" });
+          send(controller, { type: "done", usage });
         } catch (error) {
           succeeded = false;
           errorCode = req.signal.aborted
@@ -717,7 +680,7 @@ export async function POST(req: Request) {
             const safetyFallback = getSafetyFallback(safety.level);
             if (safetyFallback) {
               send(controller, { type: "delta", text: safetyFallback });
-              send(controller, { type: "done" });
+              send(controller, { type: "done", usage });
             } else {
               send(controller, {
                 type: "error",

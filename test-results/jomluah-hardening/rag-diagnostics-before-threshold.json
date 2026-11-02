@@ -1,0 +1,2375 @@
+{
+  "run_id": "jl-rag20-44cbb98e-f351-49d8-9174-68f1d62baaf4",
+  "executed_at": "2026-11-02T08:42:41.888Z",
+  "mode": "real Qwen provider + isolated Neon Data API; synthetic journals only",
+  "fixture_count": 8,
+  "query_count": 28,
+  "original_20_comparison": {
+    "count": 20,
+    "answerable_count": 19,
+    "recall_at_1": 0.9736842105263158,
+    "recall_at_3": 1,
+    "recall_at_5": 1,
+    "mrr_at_5": 1,
+    "no_answer_count": 1,
+    "no_answer_false_positive_count": 1
+  },
+  "provider": {
+    "name": "OpenRouter Qwen embeddings",
+    "calls": 29,
+    "sanitized_trace": [
+      {
+        "status": 200,
+        "latency_ms": 6735
+      },
+      {
+        "status": 200,
+        "latency_ms": 1178
+      },
+      {
+        "status": 200,
+        "latency_ms": 1245
+      },
+      {
+        "status": 200,
+        "latency_ms": 1211
+      },
+      {
+        "status": 200,
+        "latency_ms": 1207
+      },
+      {
+        "status": 200,
+        "latency_ms": 1844
+      },
+      {
+        "status": 200,
+        "latency_ms": 2082
+      },
+      {
+        "status": 200,
+        "latency_ms": 1015
+      },
+      {
+        "status": 200,
+        "latency_ms": 1272
+      },
+      {
+        "status": 200,
+        "latency_ms": 1067
+      },
+      {
+        "status": 200,
+        "latency_ms": 2496
+      },
+      {
+        "status": 200,
+        "latency_ms": 2850
+      },
+      {
+        "status": 200,
+        "latency_ms": 1429
+      },
+      {
+        "status": 200,
+        "latency_ms": 931
+      },
+      {
+        "status": 200,
+        "latency_ms": 927
+      },
+      {
+        "status": 200,
+        "latency_ms": 2493
+      },
+      {
+        "status": 200,
+        "latency_ms": 1771
+      },
+      {
+        "status": 200,
+        "latency_ms": 2641
+      },
+      {
+        "status": 200,
+        "latency_ms": 974
+      },
+      {
+        "status": 200,
+        "latency_ms": 1069
+      },
+      {
+        "status": 200,
+        "latency_ms": 1063
+      },
+      {
+        "status": 200,
+        "latency_ms": 962
+      },
+      {
+        "status": 200,
+        "latency_ms": 2281
+      },
+      {
+        "status": 200,
+        "latency_ms": 1045
+      },
+      {
+        "status": 200,
+        "latency_ms": 1432
+      },
+      {
+        "status": 200,
+        "latency_ms": 968
+      },
+      {
+        "status": 200,
+        "latency_ms": 992
+      },
+      {
+        "status": 200,
+        "latency_ms": 969
+      },
+      {
+        "status": 200,
+        "latency_ms": 1040
+      }
+    ]
+  },
+  "overall": {
+    "count": 28,
+    "answerable_count": 23,
+    "recall_at_1": 0.9782608695652174,
+    "recall_at_3": 1,
+    "recall_at_5": 1,
+    "mrr_at_5": 1,
+    "no_answer_count": 5,
+    "no_answer_false_positive_count": 5
+  },
+  "latency_ms": {
+    "p50": 1465,
+    "p95": 2999,
+    "max": 3061,
+    "mean": 1712
+  },
+  "latency_stages": {
+    "embedding_provider": {
+      "p50": 1181,
+      "p95": 2649,
+      "max": 2864,
+      "mean": 1467
+    },
+    "neon_fetch": {
+      "p50": 171,
+      "p95": 700,
+      "max": 798,
+      "mean": 244
+    },
+    "application_ranking": {
+      "p50": 1,
+      "p95": 3,
+      "max": 3,
+      "mean": 1
+    }
+  },
+  "stage_max_by_query": [
+    {
+      "id": "EN-1",
+      "embedding_provider": 1181,
+      "neon_fetch": 700,
+      "application_ranking": 1,
+      "combined": 1882
+    },
+    {
+      "id": "EN-2",
+      "embedding_provider": 1246,
+      "neon_fetch": 798,
+      "application_ranking": 1,
+      "combined": 2046
+    },
+    {
+      "id": "EN-3",
+      "embedding_provider": 1323,
+      "neon_fetch": 392,
+      "application_ranking": 0,
+      "combined": 1715
+    },
+    {
+      "id": "EN-4",
+      "embedding_provider": 1216,
+      "neon_fetch": 248,
+      "application_ranking": 1,
+      "combined": 1465
+    },
+    {
+      "id": "EN-5",
+      "embedding_provider": 1937,
+      "neon_fetch": 152,
+      "application_ranking": 2,
+      "combined": 2091
+    },
+    {
+      "id": "BM-1",
+      "embedding_provider": 2095,
+      "neon_fetch": 185,
+      "application_ranking": 2,
+      "combined": 2282
+    },
+    {
+      "id": "BM-2",
+      "embedding_provider": 1016,
+      "neon_fetch": 145,
+      "application_ranking": 1,
+      "combined": 1162
+    },
+    {
+      "id": "BM-3",
+      "embedding_provider": 1278,
+      "neon_fetch": 346,
+      "application_ranking": 1,
+      "combined": 1625
+    },
+    {
+      "id": "BM-4",
+      "embedding_provider": 1068,
+      "neon_fetch": 131,
+      "application_ranking": 0,
+      "combined": 1200
+    },
+    {
+      "id": "BM-5",
+      "embedding_provider": 2533,
+      "neon_fetch": 463,
+      "application_ranking": 2,
+      "combined": 2999
+    },
+    {
+      "id": "MG-1",
+      "embedding_provider": 2864,
+      "neon_fetch": 196,
+      "application_ranking": 1,
+      "combined": 3061
+    },
+    {
+      "id": "MG-2",
+      "embedding_provider": 1446,
+      "neon_fetch": 160,
+      "application_ranking": 1,
+      "combined": 1607
+    },
+    {
+      "id": "MG-3",
+      "embedding_provider": 951,
+      "neon_fetch": 122,
+      "application_ranking": 1,
+      "combined": 1074
+    },
+    {
+      "id": "MG-4",
+      "embedding_provider": 973,
+      "neon_fetch": 156,
+      "application_ranking": 1,
+      "combined": 1130
+    },
+    {
+      "id": "MG-5",
+      "embedding_provider": 2521,
+      "neon_fetch": 287,
+      "application_ranking": 2,
+      "combined": 2811
+    },
+    {
+      "id": "PI-1",
+      "embedding_provider": 1787,
+      "neon_fetch": 192,
+      "application_ranking": 1,
+      "combined": 1980
+    },
+    {
+      "id": "PI-2",
+      "embedding_provider": 2649,
+      "neon_fetch": 239,
+      "application_ranking": 2,
+      "combined": 2890
+    },
+    {
+      "id": "PI-3",
+      "embedding_provider": 980,
+      "neon_fetch": 127,
+      "application_ranking": 2,
+      "combined": 1109
+    },
+    {
+      "id": "CH-1",
+      "embedding_provider": 1078,
+      "neon_fetch": 203,
+      "application_ranking": 1,
+      "combined": 1282
+    },
+    {
+      "id": "CH-2",
+      "embedding_provider": 1082,
+      "neon_fetch": 145,
+      "application_ranking": 3,
+      "combined": 1229
+    },
+    {
+      "id": "NA-1",
+      "embedding_provider": 981,
+      "neon_fetch": 134,
+      "application_ranking": 1,
+      "combined": 1115
+    },
+    {
+      "id": "NA-2",
+      "embedding_provider": 2305,
+      "neon_fetch": 171,
+      "application_ranking": 1,
+      "combined": 2477
+    },
+    {
+      "id": "NA-3",
+      "embedding_provider": 1060,
+      "neon_fetch": 199,
+      "application_ranking": 3,
+      "combined": 1261
+    },
+    {
+      "id": "NA-4",
+      "embedding_provider": 1448,
+      "neon_fetch": 171,
+      "application_ranking": 1,
+      "combined": 1620
+    },
+    {
+      "id": "BL-1",
+      "embedding_provider": 984,
+      "neon_fetch": 407,
+      "application_ranking": 1,
+      "combined": 1392
+    },
+    {
+      "id": "BL-2",
+      "embedding_provider": 1005,
+      "neon_fetch": 108,
+      "application_ranking": 1,
+      "combined": 1115
+    },
+    {
+      "id": "BL-3",
+      "embedding_provider": 974,
+      "neon_fetch": 133,
+      "application_ranking": 1,
+      "combined": 1108
+    },
+    {
+      "id": "BL-4",
+      "embedding_provider": 1084,
+      "neon_fetch": 130,
+      "application_ranking": 1,
+      "combined": 1214
+    }
+  ],
+  "score_distributions": {
+    "relevant": {
+      "count": 24,
+      "min": 0.397279,
+      "median": 0.529952,
+      "max": 0.695127,
+      "mean": 0.537275
+    },
+    "irrelevant_returned": {
+      "count": 116,
+      "min": 0.222408,
+      "median": 0.343619,
+      "max": 0.501792,
+      "mean": 0.353174
+    },
+    "no_answer_returned": {
+      "count": 25,
+      "min": 0.275545,
+      "median": 0.3117,
+      "max": 0.361799,
+      "mean": 0.318234
+    }
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.05,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0,
+      "no_answer_queries_accepted": 5
+    },
+    {
+      "threshold": 0.1,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0,
+      "no_answer_queries_accepted": 5
+    },
+    {
+      "threshold": 0.15,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0,
+      "no_answer_queries_accepted": 5
+    },
+    {
+      "threshold": 0.2,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0,
+      "no_answer_queries_accepted": 5
+    },
+    {
+      "threshold": 0.25,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0,
+      "no_answer_queries_accepted": 5
+    },
+    {
+      "threshold": 0.3,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0,
+      "no_answer_queries_accepted": 5
+    },
+    {
+      "threshold": 0.35,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0.8,
+      "no_answer_queries_accepted": 1
+    },
+    {
+      "threshold": 0.355,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0.8,
+      "no_answer_queries_accepted": 1
+    },
+    {
+      "threshold": 0.36,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 0.8,
+      "no_answer_queries_accepted": 1
+    },
+    {
+      "threshold": 0.375,
+      "answerable_query_retention": 1,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": 0.9782608695652174,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "5/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 1,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.4,
+      "answerable_query_retention": 0.9130434782608695,
+      "answerable_queries_rejected": 2,
+      "recall_at_1": 0.8913043478260869,
+      "recall_at_3": 0.9130434782608695,
+      "recall_at_5": 0.9130434782608695,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "3/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 1,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.45,
+      "answerable_query_retention": 0.782608695652174,
+      "answerable_queries_rejected": 5,
+      "recall_at_1": 0.7608695652173914,
+      "recall_at_3": 0.782608695652174,
+      "recall_at_5": 0.782608695652174,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "0/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "4/4"
+      },
+      "no_answer_rejection": 1,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.5,
+      "answerable_query_retention": 0.7391304347826086,
+      "answerable_queries_rejected": 6,
+      "recall_at_1": 0.717391304347826,
+      "recall_at_3": 0.717391304347826,
+      "recall_at_5": 0.717391304347826,
+      "answerable_category_coverage": {
+        "English": "5/5",
+        "Bahasa Melayu": "0/5",
+        "Manglish": "5/5",
+        "Paraphrased/indirect": "3/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "3/4"
+      },
+      "no_answer_rejection": 1,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.55,
+      "answerable_query_retention": 0.4782608695652174,
+      "answerable_queries_rejected": 12,
+      "recall_at_1": 0.45652173913043476,
+      "recall_at_3": 0.45652173913043476,
+      "recall_at_5": 0.45652173913043476,
+      "answerable_category_coverage": {
+        "English": "4/5",
+        "Bahasa Melayu": "0/5",
+        "Manglish": "4/5",
+        "Paraphrased/indirect": "1/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "1/4"
+      },
+      "no_answer_rejection": 1,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.6,
+      "answerable_query_retention": 0.2608695652173913,
+      "answerable_queries_rejected": 17,
+      "recall_at_1": 0.2391304347826087,
+      "recall_at_3": 0.2391304347826087,
+      "recall_at_5": 0.2391304347826087,
+      "answerable_category_coverage": {
+        "English": "2/5",
+        "Bahasa Melayu": "0/5",
+        "Manglish": "2/5",
+        "Paraphrased/indirect": "0/3",
+        "Challenging": "1/1",
+        "Borderline relevance": "1/4"
+      },
+      "no_answer_rejection": 1,
+      "no_answer_queries_accepted": 0
+    }
+  ],
+  "by_category": {
+    "English": {
+      "count": 5,
+      "answerable_count": 5,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Bahasa Melayu": {
+      "count": 5,
+      "answerable_count": 5,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Manglish": {
+      "count": 5,
+      "answerable_count": 5,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Paraphrased/indirect": {
+      "count": 3,
+      "answerable_count": 3,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Challenging": {
+      "count": 2,
+      "answerable_count": 1,
+      "recall_at_1": 0.5,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 1,
+      "no_answer_false_positive_count": 1
+    },
+    "No-answer diagnostic": {
+      "count": 4,
+      "answerable_count": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "mrr_at_5": null,
+      "no_answer_count": 4,
+      "no_answer_false_positive_count": 4
+    },
+    "Borderline relevance": {
+      "count": 4,
+      "answerable_count": 4,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    }
+  },
+  "queries": [
+    {
+      "id": "EN-1",
+      "category": "English",
+      "query": "What helped me cope with all the assignment deadlines?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "evening-walk",
+        "homesick",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "exam-stress",
+          "score": 0.569144,
+          "semantic": 0.591635,
+          "lexical": 0.5
+        },
+        {
+          "id": "meal-break",
+          "score": 0.436398,
+          "semantic": 0.521044,
+          "lexical": 0.166667
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.429202,
+          "semantic": 0.510765,
+          "lexical": 0.166667
+        },
+        {
+          "id": "homesick",
+          "score": 0.384995,
+          "semantic": 0.447612,
+          "lexical": 0.166667
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.379619,
+          "semantic": 0.439932,
+          "lexical": 0.166667
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1181,
+        "neon_fetch": 700,
+        "application_ranking": 1,
+        "combined": 1882
+      }
+    },
+    {
+      "id": "EN-2",
+      "category": "English",
+      "query": "How did I feel less homesick at university?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "evening-walk",
+        "meal-break",
+        "roommate-boundary",
+        "exam-stress"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "homesick",
+          "score": 0.61864,
+          "semantic": 0.662343,
+          "lexical": 0.5
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.396942,
+          "semantic": 0.524203,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.386277,
+          "semantic": 0.508967,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.364027,
+          "semantic": 0.477181,
+          "lexical": 0
+        },
+        {
+          "id": "exam-stress",
+          "score": 0.337024,
+          "semantic": 0.379082,
+          "lexical": 0.166667
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1246,
+        "neon_fetch": 798,
+        "application_ranking": 1,
+        "combined": 2046
+      }
+    },
+    {
+      "id": "EN-3",
+      "category": "English",
+      "query": "What change improved my sleep?",
+      "expected_ids": [
+        "sleep-routine"
+      ],
+      "retrieved_ids": [
+        "sleep-routine",
+        "exam-sleep",
+        "meal-break",
+        "evening-walk",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "sleep-routine",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "sleep-routine",
+          "score": 0.543192,
+          "semantic": 0.614084,
+          "lexical": 0.333333
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.499187,
+          "semantic": 0.55122,
+          "lexical": 0.333333
+        },
+        {
+          "id": "meal-break",
+          "score": 0.411331,
+          "semantic": 0.544759,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.405175,
+          "semantic": 0.535964,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.342206,
+          "semantic": 0.446009,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1323,
+        "neon_fetch": 392,
+        "application_ranking": 0,
+        "combined": 1715
+      }
+    },
+    {
+      "id": "EN-4",
+      "category": "English",
+      "query": "What agreement did my roommate and I make?",
+      "expected_ids": [
+        "roommate-boundary"
+      ],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "meal-break",
+        "homesick",
+        "evening-walk",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "roommate-boundary",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "roommate-boundary",
+          "score": 0.576087,
+          "semantic": 0.637267,
+          "lexical": 0.4
+        },
+        {
+          "id": "meal-break",
+          "score": 0.398161,
+          "semantic": 0.454516,
+          "lexical": 0.2
+        },
+        {
+          "id": "homesick",
+          "score": 0.376857,
+          "semantic": 0.424081,
+          "lexical": 0.2
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.341285,
+          "semantic": 0.444692,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.339593,
+          "semantic": 0.370847,
+          "lexical": 0.2
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1216,
+        "neon_fetch": 248,
+        "application_ranking": 1,
+        "combined": 1465
+      }
+    },
+    {
+      "id": "EN-5",
+      "category": "English",
+      "query": "What helped me calm down after a difficult day?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "sleep-routine",
+        "homesick",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "evening-walk",
+          "score": 0.606136,
+          "semantic": 0.680194,
+          "lexical": 0.4
+        },
+        {
+          "id": "meal-break",
+          "score": 0.501792,
+          "semantic": 0.60256,
+          "lexical": 0.2
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.455263,
+          "semantic": 0.53609,
+          "lexical": 0.2
+        },
+        {
+          "id": "homesick",
+          "score": 0.413903,
+          "semantic": 0.477004,
+          "lexical": 0.2
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.369954,
+          "semantic": 0.485649,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1937,
+        "neon_fetch": 152,
+        "application_ranking": 2,
+        "combined": 2091
+      }
+    },
+    {
+      "id": "BM-1",
+      "category": "Bahasa Melayu",
+      "query": "Macam mana saya uruskan banyak deadline assignment?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "exam-sleep",
+        "evening-walk",
+        "roommate-boundary",
+        "meal-break"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "exam-stress",
+          "score": 0.438148,
+          "semantic": 0.523545,
+          "lexical": 0.166667
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.316132,
+          "semantic": 0.40876,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.311837,
+          "semantic": 0.402624,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.310365,
+          "semantic": 0.400522,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.310062,
+          "semantic": 0.400088,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 2095,
+        "neon_fetch": 185,
+        "application_ranking": 2,
+        "combined": 2282
+      }
+    },
+    {
+      "id": "BM-2",
+      "category": "Bahasa Melayu",
+      "query": "Apa yang buat saya rasa kurang rindu keluarga dekat universiti?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "meal-break",
+        "evening-walk",
+        "exam-stress",
+        "exam-sleep"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "homesick",
+          "score": 0.397634,
+          "semantic": 0.525191,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.251111,
+          "semantic": 0.315872,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.249232,
+          "semantic": 0.313189,
+          "lexical": 0
+        },
+        {
+          "id": "exam-stress",
+          "score": 0.228014,
+          "semantic": 0.282877,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.222408,
+          "semantic": 0.274869,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1016,
+        "neon_fetch": 145,
+        "application_ranking": 1,
+        "combined": 1162
+      }
+    },
+    {
+      "id": "BM-3",
+      "category": "Bahasa Melayu",
+      "query": "Perubahan apa yang bantu saya tidur lebih lena?",
+      "expected_ids": [
+        "sleep-routine"
+      ],
+      "retrieved_ids": [
+        "sleep-routine",
+        "meal-break",
+        "exam-sleep",
+        "evening-walk",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "sleep-routine",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "sleep-routine",
+          "score": 0.405461,
+          "semantic": 0.536372,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.337414,
+          "semantic": 0.439163,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.329688,
+          "semantic": 0.428126,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.324853,
+          "semantic": 0.421219,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.287203,
+          "semantic": 0.367433,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1278,
+        "neon_fetch": 346,
+        "application_ranking": 1,
+        "combined": 1625
+      }
+    },
+    {
+      "id": "BM-4",
+      "category": "Bahasa Melayu",
+      "query": "Apa persetujuan saya dengan rakan sebilik pasal waktu senyap?",
+      "expected_ids": [
+        "roommate-boundary"
+      ],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "exam-sleep",
+        "sleep-routine",
+        "evening-walk",
+        "meal-break"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "roommate-boundary",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "roommate-boundary",
+          "score": 0.401307,
+          "semantic": 0.530438,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.303723,
+          "semantic": 0.391032,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.301107,
+          "semantic": 0.387296,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.288874,
+          "semantic": 0.369821,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.286747,
+          "semantic": 0.366781,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1068,
+        "neon_fetch": 131,
+        "application_ranking": 0,
+        "combined": 1200
+      }
+    },
+    {
+      "id": "BM-5",
+      "category": "Bahasa Melayu",
+      "query": "Apa yang bantu saya tenang selepas hari yang stres?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "sleep-routine",
+        "exam-sleep",
+        "exam-stress"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "evening-walk",
+          "score": 0.397279,
+          "semantic": 0.524685,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.352866,
+          "semantic": 0.461238,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.314238,
+          "semantic": 0.406055,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.287666,
+          "semantic": 0.368094,
+          "lexical": 0
+        },
+        {
+          "id": "exam-stress",
+          "score": 0.27898,
+          "semantic": 0.355685,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 2533,
+        "neon_fetch": 463,
+        "application_ranking": 2,
+        "combined": 2999
+      }
+    },
+    {
+      "id": "MG-1",
+      "category": "Manglish",
+      "query": "Bila assignment banyak sangat, what did I do to make it manageable?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "evening-walk",
+        "exam-sleep",
+        "club-presentation"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "exam-stress",
+          "score": 0.523436,
+          "semantic": 0.602868,
+          "lexical": 0.285714
+        },
+        {
+          "id": "meal-break",
+          "score": 0.366813,
+          "semantic": 0.481161,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.35873,
+          "semantic": 0.469614,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.354401,
+          "semantic": 0.463431,
+          "lexical": 0
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.331745,
+          "semantic": 0.431065,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 2864,
+        "neon_fetch": 196,
+        "application_ranking": 1,
+        "combined": 3061
+      }
+    },
+    {
+      "id": "MG-2",
+      "category": "Manglish",
+      "query": "I miss family dekat uni, what helped me feel connected balik?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "meal-break",
+        "evening-walk",
+        "roommate-boundary",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "homesick",
+          "score": 0.695127,
+          "semantic": 0.77161,
+          "lexical": 0.5
+        },
+        {
+          "id": "meal-break",
+          "score": 0.405648,
+          "semantic": 0.491997,
+          "lexical": 0.125
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.393236,
+          "semantic": 0.474266,
+          "lexical": 0.125
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.347869,
+          "semantic": 0.454099,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.342207,
+          "semantic": 0.401367,
+          "lexical": 0.125
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1446,
+        "neon_fetch": 160,
+        "application_ranking": 1,
+        "combined": 1607
+      }
+    },
+    {
+      "id": "MG-3",
+      "category": "Manglish",
+      "query": "My sleep got better sebab I changed what routine?",
+      "expected_ids": [
+        "sleep-routine"
+      ],
+      "retrieved_ids": [
+        "sleep-routine",
+        "exam-sleep",
+        "meal-break",
+        "evening-walk",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "sleep-routine",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "sleep-routine",
+          "score": 0.58985,
+          "semantic": 0.680738,
+          "lexical": 0.333333
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.469616,
+          "semantic": 0.568499,
+          "lexical": 0.166667
+        },
+        {
+          "id": "meal-break",
+          "score": 0.432742,
+          "semantic": 0.575346,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.41782,
+          "semantic": 0.554028,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.363291,
+          "semantic": 0.47613,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 951,
+        "neon_fetch": 122,
+        "application_ranking": 1,
+        "combined": 1074
+      }
+    },
+    {
+      "id": "MG-4",
+      "category": "Manglish",
+      "query": "Dengan roommate, we agreed about quiet time macam mana?",
+      "expected_ids": [
+        "roommate-boundary"
+      ],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "exam-sleep",
+        "meal-break",
+        "evening-walk",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "roommate-boundary",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "roommate-boundary",
+          "score": 0.566366,
+          "semantic": 0.613177,
+          "lexical": 0.428571
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.311062,
+          "semantic": 0.401518,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.305934,
+          "semantic": 0.394191,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.305684,
+          "semantic": 0.393835,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.303829,
+          "semantic": 0.391184,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 973,
+        "neon_fetch": 156,
+        "application_ranking": 1,
+        "combined": 1130
+      }
+    },
+    {
+      "id": "MG-5",
+      "category": "Manglish",
+      "query": "After stressful day, what small thing buat me feel calmer?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "homesick",
+        "exam-stress",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "evening-walk",
+          "score": 0.61695,
+          "semantic": 0.685439,
+          "lexical": 0.428571
+        },
+        {
+          "id": "meal-break",
+          "score": 0.450419,
+          "semantic": 0.600598,
+          "lexical": 0
+        },
+        {
+          "id": "homesick",
+          "score": 0.405467,
+          "semantic": 0.48536,
+          "lexical": 0.142857
+        },
+        {
+          "id": "exam-stress",
+          "score": 0.402766,
+          "semantic": 0.481502,
+          "lexical": 0.142857
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.391594,
+          "semantic": 0.516563,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 2521,
+        "neon_fetch": 287,
+        "application_ranking": 2,
+        "combined": 2811
+      }
+    },
+    {
+      "id": "PI-1",
+      "category": "Paraphrased/indirect",
+      "query": "Which small step made the pile of coursework feel less impossible?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "evening-walk",
+        "club-presentation",
+        "homesick"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "exam-stress",
+          "score": 0.573781,
+          "semantic": 0.669688,
+          "lexical": 0.3
+        },
+        {
+          "id": "meal-break",
+          "score": 0.434143,
+          "semantic": 0.577348,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.427585,
+          "semantic": 0.567978,
+          "lexical": 0
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.403272,
+          "semantic": 0.497532,
+          "lexical": 0.1
+        },
+        {
+          "id": "homesick",
+          "score": 0.392848,
+          "semantic": 0.48264,
+          "lexical": 0.1
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1787,
+        "neon_fetch": 192,
+        "application_ranking": 1,
+        "combined": 1980
+      }
+    },
+    {
+      "id": "PI-2",
+      "category": "Paraphrased/indirect",
+      "query": "What helped me feel close to home while living on campus?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "evening-walk",
+        "meal-break",
+        "roommate-boundary",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "homesick",
+          "score": 0.519518,
+          "semantic": 0.59727,
+          "lexical": 0.285714
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.459787,
+          "semantic": 0.51194,
+          "lexical": 0.285714
+        },
+        {
+          "id": "meal-break",
+          "score": 0.3989,
+          "semantic": 0.475979,
+          "lexical": 0.142857
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.348553,
+          "semantic": 0.455076,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.322108,
+          "semantic": 0.366276,
+          "lexical": 0.142857
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 2649,
+        "neon_fetch": 239,
+        "application_ranking": 2,
+        "combined": 2890
+      }
+    },
+    {
+      "id": "PI-3",
+      "category": "Paraphrased/indirect",
+      "query": "What did I do to wind down outdoors in the evening?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "sleep-routine",
+        "exam-sleep",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "evening-walk",
+          "score": 0.529952,
+          "semantic": 0.654693,
+          "lexical": 0.166667
+        },
+        {
+          "id": "meal-break",
+          "score": 0.348146,
+          "semantic": 0.454495,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.342495,
+          "semantic": 0.446421,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.31422,
+          "semantic": 0.406029,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.306669,
+          "semantic": 0.395241,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 980,
+        "neon_fetch": 127,
+        "application_ranking": 2,
+        "combined": 1109
+      }
+    },
+    {
+      "id": "CH-1",
+      "category": "Challenging",
+      "query": "During exam week, what did I do for both revision and rest?",
+      "expected_ids": [
+        "exam-stress",
+        "exam-sleep"
+      ],
+      "retrieved_ids": [
+        "exam-sleep",
+        "exam-stress",
+        "meal-break",
+        "evening-walk",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 2
+        },
+        {
+          "id": "exam-sleep",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "exam-sleep",
+          "score": 0.691701,
+          "semantic": 0.786557,
+          "lexical": 0.444444
+        },
+        {
+          "id": "exam-stress",
+          "score": 0.480686,
+          "semantic": 0.564472,
+          "lexical": 0.222222
+        },
+        {
+          "id": "meal-break",
+          "score": 0.418504,
+          "semantic": 0.515324,
+          "lexical": 0.111111
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.368172,
+          "semantic": 0.483103,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.359308,
+          "semantic": 0.430757,
+          "lexical": 0.111111
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1078,
+        "neon_fetch": 203,
+        "application_ranking": 1,
+        "combined": 1282
+      }
+    },
+    {
+      "id": "CH-2",
+      "category": "Challenging",
+      "query": "What was the name of the counsellor I met last month?",
+      "expected_ids": [],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "meal-break",
+        "evening-walk",
+        "club-presentation",
+        "homesick"
+      ],
+      "relevant_ranks": [],
+      "ranked_scores": [
+        {
+          "id": "roommate-boundary",
+          "score": 0.307918,
+          "semantic": 0.397026,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.307777,
+          "semantic": 0.396824,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.307581,
+          "semantic": 0.396545,
+          "lexical": 0
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.307165,
+          "semantic": 0.39595,
+          "lexical": 0
+        },
+        {
+          "id": "homesick",
+          "score": 0.303639,
+          "semantic": 0.390912,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1082,
+        "neon_fetch": 145,
+        "application_ranking": 3,
+        "combined": 1229
+      },
+      "no_answer_returned_results": true
+    },
+    {
+      "id": "NA-1",
+      "category": "No-answer diagnostic",
+      "query": "Which medication did my doctor prescribe for me?",
+      "expected_ids": [],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "club-presentation",
+        "homesick",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [],
+      "ranked_scores": [
+        {
+          "id": "evening-walk",
+          "score": 0.326749,
+          "semantic": 0.423927,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.320078,
+          "semantic": 0.414397,
+          "lexical": 0
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.309005,
+          "semantic": 0.398578,
+          "lexical": 0
+        },
+        {
+          "id": "homesick",
+          "score": 0.288768,
+          "semantic": 0.369669,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.275545,
+          "semantic": 0.350778,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 981,
+        "neon_fetch": 134,
+        "application_ranking": 1,
+        "combined": 1115
+      },
+      "no_answer_returned_results": true
+    },
+    {
+      "id": "NA-2",
+      "category": "No-answer diagnostic",
+      "query": "What chemistry grade did I receive on the midterm?",
+      "expected_ids": [],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "exam-sleep",
+        "evening-walk",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [],
+      "ranked_scores": [
+        {
+          "id": "exam-stress",
+          "score": 0.348147,
+          "semantic": 0.394971,
+          "lexical": 0.166667
+        },
+        {
+          "id": "meal-break",
+          "score": 0.343619,
+          "semantic": 0.448027,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.32458,
+          "semantic": 0.420829,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.322665,
+          "semantic": 0.418093,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.294012,
+          "semantic": 0.377161,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 2305,
+        "neon_fetch": 171,
+        "application_ranking": 1,
+        "combined": 2477
+      },
+      "no_answer_returned_results": true
+    },
+    {
+      "id": "NA-3",
+      "category": "No-answer diagnostic",
+      "query": "When is my next counselling appointment?",
+      "expected_ids": [],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "homesick",
+        "roommate-boundary",
+        "club-presentation"
+      ],
+      "relevant_ranks": [],
+      "ranked_scores": [
+        {
+          "id": "evening-walk",
+          "score": 0.361799,
+          "semantic": 0.473999,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.34912,
+          "semantic": 0.455885,
+          "lexical": 0
+        },
+        {
+          "id": "homesick",
+          "score": 0.336688,
+          "semantic": 0.438126,
+          "lexical": 0
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.329906,
+          "semantic": 0.428438,
+          "lexical": 0
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.32755,
+          "semantic": 0.425071,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1060,
+        "neon_fetch": 199,
+        "application_ranking": 3,
+        "combined": 1261
+      },
+      "no_answer_returned_results": true
+    },
+    {
+      "id": "NA-4",
+      "category": "No-answer diagnostic",
+      "query": "What diagnosis did the therapist give me?",
+      "expected_ids": [],
+      "retrieved_ids": [
+        "evening-walk",
+        "club-presentation",
+        "meal-break",
+        "exam-stress",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [],
+      "ranked_scores": [
+        {
+          "id": "evening-walk",
+          "score": 0.331846,
+          "semantic": 0.431208,
+          "lexical": 0
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.3117,
+          "semantic": 0.402429,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.309005,
+          "semantic": 0.398578,
+          "lexical": 0
+        },
+        {
+          "id": "exam-stress",
+          "score": 0.308937,
+          "semantic": 0.327053,
+          "lexical": 0.2
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.302056,
+          "semantic": 0.388652,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1448,
+        "neon_fetch": 171,
+        "application_ranking": 1,
+        "combined": 1620
+      },
+      "no_answer_returned_results": true
+    },
+    {
+      "id": "BL-1",
+      "category": "Borderline relevance",
+      "query": "How did I make a huge pile of coursework feel doable?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "evening-walk",
+        "exam-sleep",
+        "homesick"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "exam-stress",
+          "score": 0.514697,
+          "semantic": 0.647782,
+          "lexical": 0.125
+        },
+        {
+          "id": "meal-break",
+          "score": 0.40146,
+          "semantic": 0.530657,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.387382,
+          "semantic": 0.510546,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.37558,
+          "semantic": 0.493685,
+          "lexical": 0
+        },
+        {
+          "id": "homesick",
+          "score": 0.372018,
+          "semantic": 0.443955,
+          "lexical": 0.125
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 984,
+        "neon_fetch": 407,
+        "application_ranking": 1,
+        "combined": 1392
+      }
+    },
+    {
+      "id": "BL-2",
+      "category": "Borderline relevance",
+      "query": "Call rumah helped when campus felt far from family, right?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "evening-walk",
+        "meal-break",
+        "roommate-boundary",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "homesick",
+          "score": 0.635957,
+          "semantic": 0.687082,
+          "lexical": 0.5
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.432721,
+          "semantic": 0.48603,
+          "lexical": 0.25
+        },
+        {
+          "id": "meal-break",
+          "score": 0.376701,
+          "semantic": 0.450644,
+          "lexical": 0.125
+        },
+        {
+          "id": "roommate-boundary",
+          "score": 0.347518,
+          "semantic": 0.453597,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.332062,
+          "semantic": 0.386875,
+          "lexical": 0.125
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1005,
+        "neon_fetch": 108,
+        "application_ranking": 1,
+        "combined": 1115
+      }
+    },
+    {
+      "id": "BL-3",
+      "category": "Borderline relevance",
+      "query": "Malam punya routine that made mornings easier?",
+      "expected_ids": [
+        "sleep-routine"
+      ],
+      "retrieved_ids": [
+        "sleep-routine",
+        "club-presentation",
+        "evening-walk",
+        "meal-break",
+        "exam-sleep"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "sleep-routine",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "sleep-routine",
+          "score": 0.511622,
+          "semantic": 0.628508,
+          "lexical": 0.166667
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.427809,
+          "semantic": 0.449251,
+          "lexical": 0.333333
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.426109,
+          "semantic": 0.56587,
+          "lexical": 0
+        },
+        {
+          "id": "meal-break",
+          "score": 0.395641,
+          "semantic": 0.522345,
+          "lexical": 0
+        },
+        {
+          "id": "exam-sleep",
+          "score": 0.380669,
+          "semantic": 0.500955,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 974,
+        "neon_fetch": 133,
+        "application_ranking": 1,
+        "combined": 1108
+      }
+    },
+    {
+      "id": "BL-4",
+      "category": "Borderline relevance",
+      "query": "Bila housemate bising, what quiet-time deal did we make?",
+      "expected_ids": [
+        "roommate-boundary"
+      ],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "meal-break",
+        "evening-walk",
+        "club-presentation",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "roommate-boundary",
+          "rank": 1
+        }
+      ],
+      "ranked_scores": [
+        {
+          "id": "roommate-boundary",
+          "score": 0.491921,
+          "semantic": 0.615244,
+          "lexical": 0.125
+        },
+        {
+          "id": "meal-break",
+          "score": 0.361213,
+          "semantic": 0.473162,
+          "lexical": 0
+        },
+        {
+          "id": "evening-walk",
+          "score": 0.355625,
+          "semantic": 0.465179,
+          "lexical": 0
+        },
+        {
+          "id": "club-presentation",
+          "score": 0.337043,
+          "semantic": 0.438632,
+          "lexical": 0
+        },
+        {
+          "id": "sleep-routine",
+          "score": 0.33545,
+          "semantic": 0.436357,
+          "lexical": 0
+        }
+      ],
+      "timing_ms": {
+        "embedding_provider": 1084,
+        "neon_fetch": 130,
+        "application_ranking": 1,
+        "combined": 1214
+      }
+    }
+  ],
+  "fixture_cleanup": {
+    "attempted": true,
+    "success": true,
+    "deleted": 8,
+    "verifiedRemaining": 0
+  }
+}

@@ -131,6 +131,32 @@ test("adaptive retrieval skips fresh chat and routes history requests", () => {
   assert.equal(shouldUseRecallAgent("Show my mood trend"), false);
 });
 
+const journalRecallQuestions = [
+  ["BM1", "Ingat tak apa yang buat saya rasa dekat dengan family masa mula duduk kampus?"],
+  ["MM1", "Assignment tengah bertimbun tu, what small thing made me start ah?"],
+  ["M2", "What helped me feel more comfortable speaking up, from my presentation and discussion group notes?"],
+];
+
+for (const [caseId, question] of journalRecallQuestions) {
+  test(`${caseId} autobiographical recall routes to journal search`, () => {
+    assert.deepEqual(planRetrieval(question), { memories: false, journals: true }, question);
+    assert.equal(shouldUseRecallAgent(question), true, question);
+  });
+}
+
+test("ordinary and advice-seeking conversations do not trigger recall", () => {
+  const noRecallQuestions = [
+    "I feel overwhelmed with assignments today.",
+    "What can help me start my assignment now?",
+    "I feel nervous about speaking in class.",
+    "Can you help me calm down tonight?",
+  ];
+  for (const question of noRecallQuestions) {
+    assert.deepEqual(planRetrieval(question), { memories: false, journals: false }, question);
+    assert.equal(shouldUseRecallAgent(question), false, question);
+  }
+});
+
 test("recall agent searches at most twice and stops when evidence is sufficient", async () => {
   const seen: string[] = [];
   const result = await runRecallAgent(

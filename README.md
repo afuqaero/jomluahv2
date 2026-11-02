@@ -69,6 +69,14 @@ This comprehensive documentation covers:
 
 ## Development Change Log
 
+### Monday, 2 November 2026 — Better journal recall in everyday language
+
+* Fixed three missed recall phrasings: a Malay “ingat tak” question, a Manglish assignment question, and an English question about what helped with speaking. The chat now checks the signed-in user's journal for these past-event questions.
+* Ordinary support messages like “I feel overwhelmed today” do not start journal searching. Urgent safety replies still take priority.
+* When no matching journal detail exists, the assistant now says it could not find that detail instead of saying the user has no journal entries.
+* Tested 12 made-up conversations using a separate Neon test project: all 12 passed, the expected journal notes were found, no other test user's notes appeared, and the test notes were deleted afterward. No production data was used.
+* Backend checks passed (36/36), and TypeScript passed. These tests are a good technical check, not proof that every real conversation is perfect or clinical validation.
+
 ### Monday, 2 November 2026 — Isolated AI conversation test
 
 * Set up a separate Neon test project with two made-up student accounts. Real student data and the production database were not used.

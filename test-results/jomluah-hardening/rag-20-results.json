@@ -1,0 +1,612 @@
+{
+  "run_id": "jl-rag20-a2eb7995-1a59-4e4f-8e83-2a2a15b803bc",
+  "executed_at": "2026-11-02T08:33:38.381Z",
+  "mode": "real Qwen provider + isolated Neon Data API; synthetic journals only",
+  "fixture_count": 8,
+  "query_count": 20,
+  "provider": {
+    "name": "OpenRouter Qwen embeddings",
+    "calls": 21,
+    "sanitized_trace": [
+      {
+        "status": 200,
+        "latency_ms": 2070
+      },
+      {
+        "status": 200,
+        "latency_ms": 5814
+      },
+      {
+        "status": 200,
+        "latency_ms": 15147
+      },
+      {
+        "status": 200,
+        "latency_ms": 910
+      },
+      {
+        "status": 200,
+        "latency_ms": 1351
+      },
+      {
+        "status": 200,
+        "latency_ms": 4883
+      },
+      {
+        "status": 200,
+        "latency_ms": 5897
+      },
+      {
+        "status": 200,
+        "latency_ms": 17014
+      },
+      {
+        "status": 200,
+        "latency_ms": 24068
+      },
+      {
+        "status": 200,
+        "latency_ms": 5017
+      },
+      {
+        "status": 200,
+        "latency_ms": 977
+      },
+      {
+        "status": 200,
+        "latency_ms": 2092
+      },
+      {
+        "status": 200,
+        "latency_ms": 21699
+      },
+      {
+        "status": 200,
+        "latency_ms": 11455
+      },
+      {
+        "status": 200,
+        "latency_ms": 1089
+      },
+      {
+        "status": 200,
+        "latency_ms": 917
+      },
+      {
+        "status": 200,
+        "latency_ms": 1210
+      },
+      {
+        "status": 200,
+        "latency_ms": 996
+      },
+      {
+        "status": 200,
+        "latency_ms": 3026
+      },
+      {
+        "status": 200,
+        "latency_ms": 1014
+      },
+      {
+        "status": 200,
+        "latency_ms": 1079
+      }
+    ]
+  },
+  "overall": {
+    "count": 20,
+    "answerable_count": 19,
+    "recall_at_1": 0.9736842105263158,
+    "recall_at_3": 1,
+    "recall_at_5": 1,
+    "mrr_at_5": 1,
+    "no_answer_count": 1,
+    "no_answer_false_positive_count": 1
+  },
+  "latency_ms": {
+    "p50": 2238,
+    "p95": 21924,
+    "mean": 6586
+  },
+  "by_category": {
+    "English": {
+      "count": 5,
+      "answerable_count": 5,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Bahasa Melayu": {
+      "count": 5,
+      "answerable_count": 5,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Manglish": {
+      "count": 5,
+      "answerable_count": 5,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Paraphrased/indirect": {
+      "count": 3,
+      "answerable_count": 3,
+      "recall_at_1": 1,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 0,
+      "no_answer_false_positive_count": 0
+    },
+    "Challenging": {
+      "count": 2,
+      "answerable_count": 1,
+      "recall_at_1": 0.5,
+      "recall_at_3": 1,
+      "recall_at_5": 1,
+      "mrr_at_5": 1,
+      "no_answer_count": 1,
+      "no_answer_false_positive_count": 1
+    }
+  },
+  "queries": [
+    {
+      "id": "EN-1",
+      "category": "English",
+      "query": "What helped me cope with all the assignment deadlines?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "evening-walk",
+        "sleep-routine",
+        "homesick"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 6811
+    },
+    {
+      "id": "EN-2",
+      "category": "English",
+      "query": "How did I feel less homesick at university?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "evening-walk",
+        "meal-break",
+        "roommate-boundary",
+        "club-presentation"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 15395
+    },
+    {
+      "id": "EN-3",
+      "category": "English",
+      "query": "What change improved my sleep?",
+      "expected_ids": [
+        "sleep-routine"
+      ],
+      "retrieved_ids": [
+        "sleep-routine",
+        "exam-sleep",
+        "meal-break",
+        "evening-walk",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "sleep-routine",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1091
+    },
+    {
+      "id": "EN-4",
+      "category": "English",
+      "query": "What agreement did my roommate and I make?",
+      "expected_ids": [
+        "roommate-boundary"
+      ],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "meal-break",
+        "homesick",
+        "sleep-routine",
+        "evening-walk"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "roommate-boundary",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1525
+    },
+    {
+      "id": "EN-5",
+      "category": "English",
+      "query": "What helped me calm down after a difficult day?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "sleep-routine",
+        "homesick",
+        "exam-sleep"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 5104
+    },
+    {
+      "id": "BM-1",
+      "category": "Bahasa Melayu",
+      "query": "Macam mana saya uruskan banyak deadline assignment?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "exam-sleep",
+        "roommate-boundary",
+        "meal-break",
+        "evening-walk"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 6199
+    },
+    {
+      "id": "BM-2",
+      "category": "Bahasa Melayu",
+      "query": "Apa yang buat saya rasa kurang rindu keluarga dekat universiti?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "meal-break",
+        "evening-walk",
+        "exam-sleep",
+        "exam-stress"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 17283
+    },
+    {
+      "id": "BM-3",
+      "category": "Bahasa Melayu",
+      "query": "Perubahan apa yang bantu saya tidur lebih lena?",
+      "expected_ids": [
+        "sleep-routine"
+      ],
+      "retrieved_ids": [
+        "sleep-routine",
+        "exam-sleep",
+        "meal-break",
+        "evening-walk",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "sleep-routine",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 24327
+    },
+    {
+      "id": "BM-4",
+      "category": "Bahasa Melayu",
+      "query": "Apa persetujuan saya dengan rakan sebilik pasal waktu senyap?",
+      "expected_ids": [
+        "roommate-boundary"
+      ],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "sleep-routine",
+        "exam-sleep",
+        "evening-walk",
+        "meal-break"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "roommate-boundary",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 5273
+    },
+    {
+      "id": "BM-5",
+      "category": "Bahasa Melayu",
+      "query": "Apa yang bantu saya tenang selepas hari yang stres?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "sleep-routine",
+        "exam-sleep",
+        "exam-stress"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1127
+    },
+    {
+      "id": "MG-1",
+      "category": "Manglish",
+      "query": "Bila assignment banyak sangat, what did I do to make it manageable?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "exam-sleep",
+        "evening-walk",
+        "club-presentation"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 2238
+    },
+    {
+      "id": "MG-2",
+      "category": "Manglish",
+      "query": "I miss family dekat uni, what helped me feel connected balik?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "meal-break",
+        "evening-walk",
+        "sleep-routine",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 21924
+    },
+    {
+      "id": "MG-3",
+      "category": "Manglish",
+      "query": "My sleep got better sebab I changed what routine?",
+      "expected_ids": [
+        "sleep-routine"
+      ],
+      "retrieved_ids": [
+        "sleep-routine",
+        "exam-sleep",
+        "meal-break",
+        "evening-walk",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "sleep-routine",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 11730
+    },
+    {
+      "id": "MG-4",
+      "category": "Manglish",
+      "query": "Dengan roommate, we agreed about quiet time macam mana?",
+      "expected_ids": [
+        "roommate-boundary"
+      ],
+      "retrieved_ids": [
+        "roommate-boundary",
+        "sleep-routine",
+        "exam-sleep",
+        "evening-walk",
+        "meal-break"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "roommate-boundary",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1265
+    },
+    {
+      "id": "MG-5",
+      "category": "Manglish",
+      "query": "After stressful day, what small thing buat me feel calmer?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "meal-break",
+        "sleep-routine",
+        "homesick",
+        "exam-stress"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1106
+    },
+    {
+      "id": "PI-1",
+      "category": "Paraphrased/indirect",
+      "query": "Which small step made the pile of coursework feel less impossible?",
+      "expected_ids": [
+        "exam-stress"
+      ],
+      "retrieved_ids": [
+        "exam-stress",
+        "meal-break",
+        "evening-walk",
+        "exam-sleep",
+        "club-presentation"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1394
+    },
+    {
+      "id": "PI-2",
+      "category": "Paraphrased/indirect",
+      "query": "What helped me feel close to home while living on campus?",
+      "expected_ids": [
+        "homesick"
+      ],
+      "retrieved_ids": [
+        "homesick",
+        "evening-walk",
+        "meal-break",
+        "roommate-boundary",
+        "sleep-routine"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "homesick",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1488
+    },
+    {
+      "id": "PI-3",
+      "category": "Paraphrased/indirect",
+      "query": "What did I do to wind down outdoors in the evening?",
+      "expected_ids": [
+        "evening-walk"
+      ],
+      "retrieved_ids": [
+        "evening-walk",
+        "sleep-routine",
+        "meal-break",
+        "exam-sleep",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "evening-walk",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 3229
+    },
+    {
+      "id": "CH-1",
+      "category": "Challenging",
+      "query": "During exam week, what did I do for both revision and rest?",
+      "expected_ids": [
+        "exam-stress",
+        "exam-sleep"
+      ],
+      "retrieved_ids": [
+        "exam-sleep",
+        "exam-stress",
+        "meal-break",
+        "sleep-routine",
+        "evening-walk"
+      ],
+      "relevant_ranks": [
+        {
+          "id": "exam-stress",
+          "rank": 2
+        },
+        {
+          "id": "exam-sleep",
+          "rank": 1
+        }
+      ],
+      "latency_ms": 1586
+    },
+    {
+      "id": "CH-2",
+      "category": "Challenging",
+      "query": "What was the name of the counsellor I met last month?",
+      "expected_ids": [],
+      "retrieved_ids": [
+        "club-presentation",
+        "homesick",
+        "exam-stress",
+        "meal-break",
+        "roommate-boundary"
+      ],
+      "relevant_ranks": [],
+      "latency_ms": 1615,
+      "no_answer_returned_results": true
+    }
+  ],
+  "fixture_cleanup": {
+    "attempted": true,
+    "success": true,
+    "deleted": 8,
+    "verified_remaining": 0,
+    "verification": "isolated User A query by unique run ID returned zero rows (HTTP 200)"
+  }
+}

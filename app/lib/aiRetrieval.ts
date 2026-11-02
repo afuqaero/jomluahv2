@@ -108,7 +108,18 @@ export function rankRecords<T extends EmbeddedRecord>(
   query: string,
   records: T[],
   queryEmbedding: number[] | null,
-  limit: number
+  limit: number,
+  minimumScore?: number,
+) {
+  return rankRecordsWithScores(query, records, queryEmbedding, limit, minimumScore).map(({ record }) => record);
+}
+
+export function rankRecordsWithScores<T extends EmbeddedRecord>(
+  query: string,
+  records: T[],
+  queryEmbedding: number[] | null,
+  limit: number,
+  minimumScore?: number,
 ) {
   return records
     .map((record) => {
@@ -120,8 +131,10 @@ export function rankRecords<T extends EmbeddedRecord>(
       const importance = Math.max(1, Math.min(5, record.importance || 3)) / 5;
       return { record, semantic, lexical, score: semantic * 0.7 + lexical * 0.25 + importance * 0.05 };
     })
-    .filter(({ semantic, lexical }) => semantic > 0.25 || lexical > 0)
+    .filter(({ score, semantic, record, lexical }) => minimumScore === undefined
+      ? semantic > 0.25 || lexical > 0
+      : score >= minimumScore || (lexical > 0 && (!queryEmbedding || !parseEmbedding(record.embedding))))
     .sort((left, right) => right.score - left.score)
     .slice(0, limit)
-    .map(({ record }) => record);
+    .map(({ record, semantic, lexical, score }) => ({ record, semantic, lexical, score }));
 }

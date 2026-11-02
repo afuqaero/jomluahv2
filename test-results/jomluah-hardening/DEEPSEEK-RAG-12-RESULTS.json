@@ -1,0 +1,2083 @@
+{
+  "runId": "jl-route-13fe7231-57d1-4fb2-8658-e9ae0b254eac",
+  "isolatedProject": "shy-wildflower-28479163",
+  "providerCalls": "real",
+  "conversations": [
+    {
+      "id": "R1",
+      "category": "relevant",
+      "question": "From my journal, what helped me start when assignment deadlines piled up?",
+      "status": 200,
+      "latencyMs": 6507,
+      "expected": [
+        "assignment"
+      ],
+      "expectedIds": [
+        "b741fa54-d892-412b-9a10-e40f27e6f315"
+      ],
+      "retrieved": [
+        "assignment",
+        "walk"
+      ],
+      "retrievedIds": [
+        "b741fa54-d892-412b-9a10-e40f27e6f315",
+        "d6bd6fe3-cbd2-4305-b352-8d291558dc33"
+      ],
+      "retrievedScores": [
+        {
+          "label": "assignment",
+          "score": 0.618626260024753,
+          "semantic": 0.6623232286067899,
+          "lexical": 0.5
+        },
+        {
+          "label": "walk",
+          "score": 0.37813836284119073,
+          "semantic": 0.49734051834455817,
+          "lexical": 0
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "assignment deadlines piled up starting"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 1,
+        "latencyMs": 3470,
+        "planningTokens": 1076
+      },
+      "answer": "From your journal, it was breaking revision into ten-minute tasks that helped you get started when deadlines piled up [Journal: Assignment deadlines | 2026-11-02]. You noted that the smaller chunks made it easier to begin.\n\nAlso, your entry from that same day mentioned a short evening walk around campus helped you settle after a stressful day [Journal: Evening walk | 2026-11-02].\n\nSo maybe try the ten-minute trick again next time you feel stuck, and pair it with a quick walk to reset. How are the deadlines looking right now?",
+      "finalUsage": {
+        "prompt_tokens": 556,
+        "completion_tokens": 115,
+        "total_tokens": 671,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 300
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "R2",
+      "category": "relevant",
+      "question": "According to my journal, what helped when I felt homesick at university?",
+      "status": 200,
+      "latencyMs": 4988,
+      "expected": [
+        "family"
+      ],
+      "expectedIds": [
+        "ac37864d-e3a2-494c-9dee-e2416b578ef4"
+      ],
+      "retrieved": [
+        "family",
+        "walk"
+      ],
+      "retrievedIds": [
+        "ac37864d-e3a2-494c-9dee-e2416b578ef4",
+        "d6bd6fe3-cbd2-4305-b352-8d291558dc33"
+      ],
+      "retrievedScores": [
+        {
+          "label": "family",
+          "score": 0.7622227604041922,
+          "semantic": 0.6888896577202746,
+          "lexical": 1
+        },
+        {
+          "label": "walk",
+          "score": 0.4000607833174503,
+          "semantic": 0.528658261882072,
+          "lexical": 0
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "homesick university"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 1,
+        "latencyMs": 3319,
+        "planningTokens": 1091
+      },
+      "answer": "Based on your journal, calling your family helped — you had a video call with them and it made you feel more connected. [Journal: Missing home | 2026-11-02]\n\nThere's also a separate entry where a short evening walk around campus helped you settle after a stressful day. [Journal: Evening walk | 2026-11-02]\n\nMissing home is so normal, especially kat uni. Want to talk about how you're feeling now, or just reminiscing?",
+      "finalUsage": {
+        "prompt_tokens": 558,
+        "completion_tokens": 99,
+        "total_tokens": 657,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 302
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "R3",
+      "category": "relevant",
+      "question": "What did I change in my routine to sleep better? Check my journal.",
+      "status": 200,
+      "latencyMs": 4557,
+      "expected": [
+        "sleep"
+      ],
+      "expectedIds": [
+        "7a03c18e-cdd8-49d5-84c4-0db43bf86983"
+      ],
+      "retrieved": [
+        "sleep",
+        "exam-rest",
+        "walk"
+      ],
+      "retrievedIds": [
+        "7a03c18e-cdd8-49d5-84c4-0db43bf86983",
+        "02c4ee9b-36f0-471a-abad-103613825114",
+        "d6bd6fe3-cbd2-4305-b352-8d291558dc33"
+      ],
+      "retrievedScores": [
+        {
+          "label": "sleep",
+          "score": 0.6639665600630645,
+          "semantic": 0.6675712762805684,
+          "lexical": 0.6666666666666666
+        },
+        {
+          "label": "exam-rest",
+          "score": 0.46980129812999594,
+          "semantic": 0.5092399497095181,
+          "lexical": 0.3333333333333333
+        },
+        {
+          "label": "walk",
+          "score": 0.3892761610225094,
+          "semantic": 0.5132516586035849,
+          "lexical": 0
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "sleep routine change"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 1,
+        "latencyMs": 3099,
+        "planningTokens": 1208
+      },
+      "answer": "Based on your journal, here's what you changed:\n\n- You started putting your phone away before midnight and kept a regular bedtime — [Journal: Sleep routine | 2026-11-02]\n- During exam week, you stopped revising before midnight to protect your sleep — [Journal: Rest during exams | 2026-11-02]\n\nSounds like a solid plan that actually worked for you. Are you still keeping to it now?",
+      "finalUsage": {
+        "prompt_tokens": 650,
+        "completion_tokens": 89,
+        "total_tokens": 739,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 394
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "N1",
+      "category": "no_answer",
+      "question": "According to my journal, what was the name of the counsellor I met last month?",
+      "status": 200,
+      "latencyMs": 5565,
+      "expected": [],
+      "expectedIds": [],
+      "retrieved": [],
+      "retrievedIds": [],
+      "retrievedScores": [],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "counsellor met last month"
+          }
+        },
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "counsellor name appointment"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 2,
+        "latencyMs": 3969,
+        "planningTokens": 987
+      },
+      "answer": "I checked your saved entries for last month, but I couldn't find the counsellor's name in the ones searched. That doesn't mean you never wrote about it—it just isn't showing up in what I can see right now.\n\nIf you remember roughly when you met them or what else you wrote in that entry, tell me and I can try again. You could also check your journal directly for that date.",
+      "finalUsage": {
+        "prompt_tokens": 415,
+        "completion_tokens": 84,
+        "total_tokens": 499,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 159
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "N2",
+      "category": "no_answer",
+      "question": "What colour was the kite I flew last weekend? Check my journal.",
+      "status": 200,
+      "latencyMs": 5683,
+      "expected": [],
+      "expectedIds": [],
+      "retrieved": [],
+      "retrievedIds": [],
+      "retrievedScores": [],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "kite flew last weekend colour"
+          }
+        },
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "kite"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 2,
+        "latencyMs": 3830,
+        "planningTokens": 843
+      },
+      "answer": "I checked the journal entries I could search, and I couldn't find any detail about a kite you flew last weekend — no colour, or any kite mention at all. That doesn't mean your journal is empty or that it didn't happen; it just isn't in the entries I could see.\n\nIf you tell me roughly what you wrote it under (or the date/title), I can help you look again. Or honestly, what colour was it? 😄",
+      "finalUsage": {
+        "prompt_tokens": 411,
+        "completion_tokens": 94,
+        "total_tokens": 505,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 155
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "N3",
+      "category": "no_answer",
+      "question": "What medication did my doctor prescribe for headaches? Is it in my journal?",
+      "status": 200,
+      "latencyMs": 7131,
+      "expected": [],
+      "expectedIds": [],
+      "retrieved": [],
+      "retrievedIds": [],
+      "retrievedScores": [],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "headache medication prescribed doctor"
+          }
+        },
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "headache prescription medicine"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 2,
+        "latencyMs": 5193,
+        "planningTokens": 845
+      },
+      "answer": "I checked the entries I could search, and I couldn't find any detail about a headache medication your doctor prescribed. That doesn't mean your journal is empty—just that this specific info didn't come up in what I searched.\n\nA couple of things that might help:\n- If you remember roughly when you wrote about it, tell me the date or topic and I can look again.\n- For anything about your actual prescription, it's safest to check with your doctor or pharmacist (or your clinic's record) rather than rely on journal notes—medication details are easy to misremember.\n\nWant me to try searching again with a different keyword, like the clinic name or the month?",
+      "finalUsage": {
+        "prompt_tokens": 412,
+        "completion_tokens": 137,
+        "total_tokens": 549,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 156
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "BM1",
+      "category": "indirect_malay_manglish",
+      "question": "Ingat tak apa yang buat saya rasa dekat dengan family masa mula duduk kampus?",
+      "status": 200,
+      "latencyMs": 6241,
+      "expected": [
+        "family"
+      ],
+      "expectedIds": [
+        "ac37864d-e3a2-494c-9dee-e2416b578ef4"
+      ],
+      "retrieved": [
+        "family"
+      ],
+      "retrievedIds": [
+        "ac37864d-e3a2-494c-9dee-e2416b578ef4"
+      ],
+      "retrievedScores": [
+        {
+          "label": "family",
+          "score": 0.40445139021209875,
+          "semantic": 0.4902877003029982,
+          "lexical": 0.125
+        },
+        {
+          "label": "family",
+          "score": 0.6941487179220918,
+          "semantic": 0.6630695970315598,
+          "lexical": 0.8
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "rasa dekat dengan family masa mula duduk kampus"
+          }
+        },
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "video call family homesick kampus"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 2,
+        "latencyMs": 4365,
+        "planningTokens": 1009
+      },
+      "answer": "Ingat! Masa tu you rasa homesick bila mula duduk kampus, tapi video call dengan family yang buat you rasa lebih dekat dengan diorang. [Journal: Missing home | 2026-11-02]\n\nRasa homesick tu normal lah, especially awal-awal duduk asrama. Video call tu memang penyelamat kan — boleh nampak muka diorang, dengar suara, rasa macam balik rumah sekejap. Sekarang macam mana, dah kurang homesick ke masih ada rasa tu kadang-kadang?",
+      "finalUsage": {
+        "prompt_tokens": 472,
+        "completion_tokens": 122,
+        "total_tokens": 594,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 216
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "MM1",
+      "category": "indirect_malay_manglish",
+      "question": "Assignment tengah bertimbun tu, what small thing made me start ah?",
+      "status": 200,
+      "latencyMs": 4572,
+      "expected": [
+        "assignment"
+      ],
+      "expectedIds": [
+        "b741fa54-d892-412b-9a10-e40f27e6f315"
+      ],
+      "retrieved": [
+        "assignment",
+        "walk"
+      ],
+      "retrievedIds": [
+        "b741fa54-d892-412b-9a10-e40f27e6f315",
+        "d6bd6fe3-cbd2-4305-b352-8d291558dc33"
+      ],
+      "retrievedScores": [
+        {
+          "label": "assignment",
+          "score": 0.4636637954731734,
+          "semantic": 0.4766625649616762,
+          "lexical": 0.4
+        },
+        {
+          "label": "walk",
+          "score": 0.3828552775235272,
+          "semantic": 0.5040789678907531,
+          "lexical": 0
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "assignment bertimbun start small thing"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 1,
+        "latencyMs": 2693,
+        "planningTokens": 1115
+      },
+      "answer": "From your journal, you actually wrote about this before — [Journal: Assignment deadlines | 2026-11-02] — you said breaking revision into ten-minute tasks helped you start. So that small thing was just 10 minutes je, one task at a time.\n\nAnd in another entry [Journal: Evening walk | 2026-11-02], you noted a short evening walk around campus helped you settle after a stressful day. So maybe try that combo — 10 min task, then walk kalau dah penat.\n\nNak try start dengan satu 10-minute task sekarang?",
+      "finalUsage": {
+        "prompt_tokens": 558,
+        "completion_tokens": 120,
+        "total_tokens": 678,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 174
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "M1",
+      "category": "multiple_relevant",
+      "question": "From my journal, how did I prepare for exams and protect my rest during exam week?",
+      "status": 200,
+      "latencyMs": 5516,
+      "expected": [
+        "exam-prep",
+        "exam-rest"
+      ],
+      "expectedIds": [
+        "87bd8082-75a2-4861-8bad-4280ca1a641d",
+        "02c4ee9b-36f0-471a-abad-103613825114"
+      ],
+      "retrieved": [
+        "exam-rest",
+        "exam-prep",
+        "sleep"
+      ],
+      "retrievedIds": [
+        "02c4ee9b-36f0-471a-abad-103613825114",
+        "87bd8082-75a2-4861-8bad-4280ca1a641d",
+        "7a03c18e-cdd8-49d5-84c4-0db43bf86983"
+      ],
+      "retrievedScores": [
+        {
+          "label": "exam-rest",
+          "score": 0.6927970923026905,
+          "semantic": 0.6611387032895578,
+          "lexical": 0.8
+        },
+        {
+          "label": "exam-prep",
+          "score": 0.5415479636449929,
+          "semantic": 0.5879256623499899,
+          "lexical": 0.4
+        },
+        {
+          "label": "sleep",
+          "score": 0.45701344469805905,
+          "semantic": 0.5385906352829416,
+          "lexical": 0.2
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "exam week preparation rest sleep"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 1,
+        "latencyMs": 3053,
+        "planningTokens": 1305
+      },
+      "answer": "Based on your journal entries, here's what you wrote:\n\n**Exam prep** — you used flashcards and reviewed biology topics with a study partner [Journal: Exam preparation | 2026-11-02].\n\n**Protecting your rest** — you stopped revising before midnight so you could protect your sleep [Journal: Rest during exams | 2026-11-02]. You also mentioned putting your phone away before midnight and keeping a regular bedtime helped your sleep [Journal: Sleep routine | 2026-11-02].\n\nSo the combo was: study partner + flashcards for the academics, and a midnight cut-off (including phone away) for the rest. Pretty solid routine actually. Planning to keep it going for the next exam week?",
+      "finalUsage": {
+        "prompt_tokens": 654,
+        "completion_tokens": 149,
+        "total_tokens": 803,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 270
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "M2",
+      "category": "multiple_relevant",
+      "question": "What helped me feel more comfortable speaking up, from my presentation and discussion group notes?",
+      "status": 200,
+      "latencyMs": 6661,
+      "expected": [
+        "presentation",
+        "speaking-confidence"
+      ],
+      "expectedIds": [
+        "d30c9e23-9a4d-428c-beb4-827426a521be",
+        "4d98ff87-132a-430c-a539-ee356755e98d"
+      ],
+      "retrieved": [
+        "speaking-confidence",
+        "presentation"
+      ],
+      "retrievedIds": [
+        "4d98ff87-132a-430c-a539-ee356755e98d",
+        "d30c9e23-9a4d-428c-beb4-827426a521be"
+      ],
+      "retrievedScores": [
+        {
+          "label": "speaking-confidence",
+          "score": 0.6433380924958669,
+          "semantic": 0.6619115607083814,
+          "lexical": 0.6
+        },
+        {
+          "label": "presentation",
+          "score": 0.5456319865296222,
+          "semantic": 0.5937599807566032,
+          "lexical": 0.4
+        },
+        {
+          "label": "speaking-confidence",
+          "score": 0.625293523523349,
+          "semantic": 0.5825621764619272,
+          "lexical": 0.75
+        },
+        {
+          "label": "presentation",
+          "score": 0.41228154990552635,
+          "semantic": 0.4568307855793234,
+          "lexical": 0.25
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "presentation discussion group speaking up comfortable"
+          }
+        },
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "discussion group notes speaking up"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 2,
+        "latencyMs": 4920,
+        "planningTokens": 1116
+      },
+      "answer": "From your notes, two things stand out:\n\n- Practising your club presentation with a friend helped you feel more confident speaking [Journal: Presentation practice | 2026-11-02]\n- Practising speaking slowly in a small discussion group made sharing your ideas feel easier [Journal: Speaking confidence | 2026-11-02]\n\nSo the common thread is low-pressure practice with people you trust — a friend for the presentation, a small group for discussions. Sounds like a pattern worth repeating before your next one. How are you feeling about speaking up these days?",
+      "finalUsage": {
+        "prompt_tokens": 561,
+        "completion_tokens": 114,
+        "total_tokens": 675,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 177
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "B1",
+      "category": "borderline",
+      "question": "In my journal, what helped make the shared room feel less tense?",
+      "status": 200,
+      "latencyMs": 5226,
+      "expected": [
+        "roommate"
+      ],
+      "expectedIds": [
+        "43e1b694-49b0-4c20-bdbd-2de0c8064261"
+      ],
+      "retrieved": [
+        "roommate",
+        "walk",
+        "family"
+      ],
+      "retrievedIds": [
+        "43e1b694-49b0-4c20-bdbd-2de0c8064261",
+        "d6bd6fe3-cbd2-4305-b352-8d291558dc33",
+        "ac37864d-e3a2-494c-9dee-e2416b578ef4"
+      ],
+      "retrievedScores": [
+        {
+          "label": "roommate",
+          "score": 0.4782164031466092,
+          "semantic": 0.6403091473522989,
+          "lexical": 0
+        },
+        {
+          "label": "walk",
+          "score": 0.4003041877834267,
+          "semantic": 0.5290059825477524,
+          "lexical": 0
+        },
+        {
+          "label": "family",
+          "score": 0.3839389367676642,
+          "semantic": 0.5056270525252347,
+          "lexical": 0
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "shared room less tense"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 1,
+        "latencyMs": 3516,
+        "planningTokens": 1289
+      },
+      "answer": "Based on your journal, talking it out seems to be the main thing that helped. You wrote about speaking calmly with your roommate about quiet hours and agreeing on a study schedule — that eased the tension in the shared room [Journal: Roommate quiet hours | 2026-11-02].\n\nYou also noted a short evening walk around campus helped you settle after a stressful day [Journal: Evening walk | 2026-11-02]. So it sounds like a mix of an honest conversation plus some time to decompress on your own.\n\nWant to talk more about how things are going with the roommate now?",
+      "finalUsage": {
+        "prompt_tokens": 654,
+        "completion_tokens": 123,
+        "total_tokens": 777,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 270
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    },
+    {
+      "id": "B2",
+      "category": "borderline",
+      "question": "What small night-time change helped me feel less groggy the next day? See if my journal mentions it.",
+      "status": 200,
+      "latencyMs": 5618,
+      "expected": [
+        "sleep"
+      ],
+      "expectedIds": [
+        "7a03c18e-cdd8-49d5-84c4-0db43bf86983"
+      ],
+      "retrieved": [
+        "sleep",
+        "walk"
+      ],
+      "retrievedIds": [
+        "7a03c18e-cdd8-49d5-84c4-0db43bf86983",
+        "d6bd6fe3-cbd2-4305-b352-8d291558dc33"
+      ],
+      "retrievedScores": [
+        {
+          "label": "sleep",
+          "score": 0.42401155012451686,
+          "semantic": 0.5628736430350242,
+          "lexical": 0
+        },
+        {
+          "label": "walk",
+          "score": 0.42048626187582894,
+          "semantic": 0.5068171088022047,
+          "lexical": 0.14285714285714285
+        }
+      ],
+      "toolCalls": [
+        {
+          "tool": "search_journal",
+          "arguments": {
+            "query": "night-time change less groggy next day"
+          }
+        }
+      ],
+      "recallAgent": {
+        "used": true,
+        "searches": 1,
+        "latencyMs": 3833,
+        "planningTokens": 1185
+      },
+      "answer": "Yes, your journal does mention it! In [Journal: Sleep routine | 2026-11-02] you wrote that putting your phone away before midnight and keeping a regular bedtime helped your sleep. So that's the small night-time change — phone down before midnight plus a steady bedtime.\n\nThere's also a nice one in [Journal: Evening walk | 2026-11-02] — a short evening walk around campus helped you settle after a stressful day, which can feed into better rest too.\n\nWant to try bringing the phone-before-midnight habit back this week?",
+      "finalUsage": {
+        "prompt_tokens": 562,
+        "completion_tokens": 119,
+        "total_tokens": 681,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 178
+      },
+      "checks": {
+        "httpOk": true,
+        "completed": true,
+        "correctRetrieval": true,
+        "groundedAnswer": true,
+        "noCrossUserIds": true,
+        "noForbiddenClaim": true,
+        "noUnsupportedAbsenceClaim": true,
+        "realToolSelection": true
+      },
+      "result": "PASS"
+    }
+  ],
+  "providerTrace": [
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 348,
+      "usage": {
+        "prompt_tokens": 378,
+        "completion_tokens": 37,
+        "total_tokens": 415,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 250
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "assignment deadlines piled up starting"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1224,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 172,
+      "usage": {
+        "prompt_tokens": 645,
+        "completion_tokens": 16,
+        "total_tokens": 661,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 389
+      },
+      "tool_calls": []
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 130
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 130,
+      "usage": {
+        "prompt_tokens": 379,
+        "completion_tokens": 36,
+        "total_tokens": 415,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 251
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "homesick university"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1183,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 140,
+      "usage": {
+        "prompt_tokens": 647,
+        "completion_tokens": 29,
+        "total_tokens": 676,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 391
+      },
+      "tool_calls": []
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 172
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 147,
+      "usage": {
+        "prompt_tokens": 379,
+        "completion_tokens": 35,
+        "total_tokens": 414,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 251
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "sleep routine change"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1113,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 158,
+      "usage": {
+        "prompt_tokens": 774,
+        "completion_tokens": 20,
+        "total_tokens": 794,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 518
+      },
+      "tool_calls": []
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 148
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 187,
+      "usage": {
+        "prompt_tokens": 445,
+        "completion_tokens": 38,
+        "total_tokens": 483,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 189
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "counsellor met last month"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1066,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 130,
+      "usage": {
+        "prompt_tokens": 455,
+        "completion_tokens": 49,
+        "total_tokens": 504,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 199
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "counsellor name appointment"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1171,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 151
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 125,
+      "usage": {
+        "prompt_tokens": 378,
+        "completion_tokens": 38,
+        "total_tokens": 416,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 250
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "kite flew last weekend colour"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 933,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 138,
+      "usage": {
+        "prompt_tokens": 388,
+        "completion_tokens": 39,
+        "total_tokens": 427,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 260
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "kite"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 946,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 129
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 116,
+      "usage": {
+        "prompt_tokens": 379,
+        "completion_tokens": 37,
+        "total_tokens": 416,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 251
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "headache medication prescribed doctor"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1081,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 131,
+      "usage": {
+        "prompt_tokens": 388,
+        "completion_tokens": 41,
+        "total_tokens": 429,
+        "prompt_tokens_details": {
+          "cached_tokens": 254
+        },
+        "prompt_cache_hit_tokens": 254,
+        "prompt_cache_miss_tokens": 134
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "headache prescription medicine"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 2458,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 154
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 165,
+      "usage": {
+        "prompt_tokens": 385,
+        "completion_tokens": 45,
+        "total_tokens": 430,
+        "prompt_tokens_details": {
+          "cached_tokens": 251
+        },
+        "prompt_cache_hit_tokens": 251,
+        "prompt_cache_miss_tokens": 134
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "rasa dekat dengan family masa mula duduk kampus"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1092,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 128,
+      "usage": {
+        "prompt_tokens": 535,
+        "completion_tokens": 44,
+        "total_tokens": 579,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 279
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "video call family homesick kampus"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1298,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 192
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 156,
+      "usage": {
+        "prompt_tokens": 380,
+        "completion_tokens": 39,
+        "total_tokens": 419,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 252
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "assignment bertimbun start small thing"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1012,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 133,
+      "usage": {
+        "prompt_tokens": 649,
+        "completion_tokens": 47,
+        "total_tokens": 696,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 393
+      },
+      "tool_calls": []
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 160
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 125,
+      "usage": {
+        "prompt_tokens": 382,
+        "completion_tokens": 37,
+        "total_tokens": 419,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 254
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "exam week preparation rest sleep"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 967,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 143,
+      "usage": {
+        "prompt_tokens": 781,
+        "completion_tokens": 105,
+        "total_tokens": 886,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 525
+      },
+      "tool_calls": []
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 182
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 198,
+      "usage": {
+        "prompt_tokens": 381,
+        "completion_tokens": 39,
+        "total_tokens": 420,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 253
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "presentation discussion group speaking up comfortable"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1026,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 146,
+      "usage": {
+        "prompt_tokens": 653,
+        "completion_tokens": 43,
+        "total_tokens": 696,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 397
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "discussion group notes speaking up"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1700,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 135
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 132,
+      "usage": {
+        "prompt_tokens": 378,
+        "completion_tokens": 36,
+        "total_tokens": 414,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 250
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "shared room less tense"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1177,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 121,
+      "usage": {
+        "prompt_tokens": 781,
+        "completion_tokens": 94,
+        "total_tokens": 875,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 525
+      },
+      "tool_calls": []
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 240
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 124,
+      "usage": {
+        "prompt_tokens": 386,
+        "completion_tokens": 40,
+        "total_tokens": 426,
+        "prompt_tokens_details": {
+          "cached_tokens": 252
+        },
+        "prompt_cache_hit_tokens": 252,
+        "prompt_cache_miss_tokens": 134
+      },
+      "tool_calls": [
+        {
+          "name": "search_journal",
+          "arguments": {
+            "query": "night-time change less groggy next day"
+          }
+        }
+      ]
+    },
+    {
+      "provider": "qwen",
+      "operation": "embedding",
+      "model": "qwen/qwen3-embedding-8b",
+      "status": 200,
+      "latency_ms": 1224,
+      "input_count": 1
+    },
+    {
+      "provider": "deepseek",
+      "operation": "tool_planning",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 189,
+      "usage": {
+        "prompt_tokens": 657,
+        "completion_tokens": 102,
+        "total_tokens": 759,
+        "prompt_tokens_details": {
+          "cached_tokens": 256
+        },
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 401
+      },
+      "tool_calls": []
+    },
+    {
+      "provider": "deepseek",
+      "operation": "answer_stream",
+      "model": "deepseek-v4-flash",
+      "status": 200,
+      "latency_ms": 134
+    }
+  ],
+  "cleanup": {
+    "userADeleted": true,
+    "userBDeleted": true,
+    "verified": true
+  },
+  "fixtureLabels": {
+    "assignment": "b741fa54-d892-412b-9a10-e40f27e6f315",
+    "family": "ac37864d-e3a2-494c-9dee-e2416b578ef4",
+    "sleep": "7a03c18e-cdd8-49d5-84c4-0db43bf86983",
+    "roommate": "43e1b694-49b0-4c20-bdbd-2de0c8064261",
+    "walk": "d6bd6fe3-cbd2-4305-b352-8d291558dc33",
+    "exam-prep": "87bd8082-75a2-4861-8bad-4280ca1a641d",
+    "exam-rest": "02c4ee9b-36f0-471a-abad-103613825114",
+    "meal-break": "6b89b3cf-c238-444d-941f-71f7daca1e26",
+    "presentation": "d30c9e23-9a4d-428c-beb4-827426a521be",
+    "speaking-confidence": "4d98ff87-132a-430c-a539-ee356755e98d",
+    "user-b-canary": "4808440e-f1aa-43ff-aff6-a69a9c6f698d"
+  },
+  "summary": {
+    "completedConversations": 12,
+    "passed": 12,
+    "failed": 0,
+    "positiveRecall": {
+      "correct": 9,
+      "total": 9,
+      "rate": 1
+    },
+    "noAnswerRejection": {
+      "correct": 3,
+      "total": 3
+    },
+    "categoryMetrics": {
+      "relevant": {
+        "total": 3,
+        "retrievalCorrect": 3,
+        "grounded": 3
+      },
+      "no_answer": {
+        "total": 3,
+        "retrievalCorrect": 3,
+        "grounded": 3
+      },
+      "indirect_malay_manglish": {
+        "total": 2,
+        "retrievalCorrect": 2,
+        "grounded": 2
+      },
+      "multiple_relevant": {
+        "total": 2,
+        "retrievalCorrect": 2,
+        "grounded": 2
+      },
+      "borderline": {
+        "total": 2,
+        "retrievalCorrect": 2,
+        "grounded": 2
+      }
+    },
+    "groundedAnswerRate": 1,
+    "unsupportedPersonalMemoryClaims": 0,
+    "noAnswer": [
+      {
+        "id": "N1",
+        "uncertaintyAcknowledged": true,
+        "retrievedCount": 0
+      },
+      {
+        "id": "N2",
+        "uncertaintyAcknowledged": true,
+        "retrievedCount": 0
+      },
+      {
+        "id": "N3",
+        "uncertaintyAcknowledged": true,
+        "retrievedCount": 0
+      }
+    ],
+    "providerCalls": {
+      "qwenEmbeddingRequests": 17,
+      "deepseekToolPlanningRequests": 24,
+      "deepseekAnswerRequests": 12,
+      "toolPlanningUsage": [
+        {
+          "prompt_tokens": 378,
+          "completion_tokens": 37,
+          "total_tokens": 415,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 250
+        },
+        {
+          "prompt_tokens": 645,
+          "completion_tokens": 16,
+          "total_tokens": 661,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 389
+        },
+        {
+          "prompt_tokens": 379,
+          "completion_tokens": 36,
+          "total_tokens": 415,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 251
+        },
+        {
+          "prompt_tokens": 647,
+          "completion_tokens": 29,
+          "total_tokens": 676,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 391
+        },
+        {
+          "prompt_tokens": 379,
+          "completion_tokens": 35,
+          "total_tokens": 414,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 251
+        },
+        {
+          "prompt_tokens": 774,
+          "completion_tokens": 20,
+          "total_tokens": 794,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 518
+        },
+        {
+          "prompt_tokens": 445,
+          "completion_tokens": 38,
+          "total_tokens": 483,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 189
+        },
+        {
+          "prompt_tokens": 455,
+          "completion_tokens": 49,
+          "total_tokens": 504,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 199
+        },
+        {
+          "prompt_tokens": 378,
+          "completion_tokens": 38,
+          "total_tokens": 416,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 250
+        },
+        {
+          "prompt_tokens": 388,
+          "completion_tokens": 39,
+          "total_tokens": 427,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 260
+        },
+        {
+          "prompt_tokens": 379,
+          "completion_tokens": 37,
+          "total_tokens": 416,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 251
+        },
+        {
+          "prompt_tokens": 388,
+          "completion_tokens": 41,
+          "total_tokens": 429,
+          "prompt_tokens_details": {
+            "cached_tokens": 254
+          },
+          "prompt_cache_hit_tokens": 254,
+          "prompt_cache_miss_tokens": 134
+        },
+        {
+          "prompt_tokens": 385,
+          "completion_tokens": 45,
+          "total_tokens": 430,
+          "prompt_tokens_details": {
+            "cached_tokens": 251
+          },
+          "prompt_cache_hit_tokens": 251,
+          "prompt_cache_miss_tokens": 134
+        },
+        {
+          "prompt_tokens": 535,
+          "completion_tokens": 44,
+          "total_tokens": 579,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 279
+        },
+        {
+          "prompt_tokens": 380,
+          "completion_tokens": 39,
+          "total_tokens": 419,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 252
+        },
+        {
+          "prompt_tokens": 649,
+          "completion_tokens": 47,
+          "total_tokens": 696,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 393
+        },
+        {
+          "prompt_tokens": 382,
+          "completion_tokens": 37,
+          "total_tokens": 419,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 254
+        },
+        {
+          "prompt_tokens": 781,
+          "completion_tokens": 105,
+          "total_tokens": 886,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 525
+        },
+        {
+          "prompt_tokens": 381,
+          "completion_tokens": 39,
+          "total_tokens": 420,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 253
+        },
+        {
+          "prompt_tokens": 653,
+          "completion_tokens": 43,
+          "total_tokens": 696,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 397
+        },
+        {
+          "prompt_tokens": 378,
+          "completion_tokens": 36,
+          "total_tokens": 414,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 250
+        },
+        {
+          "prompt_tokens": 781,
+          "completion_tokens": 94,
+          "total_tokens": 875,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 525
+        },
+        {
+          "prompt_tokens": 386,
+          "completion_tokens": 40,
+          "total_tokens": 426,
+          "prompt_tokens_details": {
+            "cached_tokens": 252
+          },
+          "prompt_cache_hit_tokens": 252,
+          "prompt_cache_miss_tokens": 134
+        },
+        {
+          "prompt_tokens": 657,
+          "completion_tokens": 102,
+          "total_tokens": 759,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 401
+        }
+      ],
+      "finalAnswerUsage": [
+        {
+          "prompt_tokens": 556,
+          "completion_tokens": 115,
+          "total_tokens": 671,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 300
+        },
+        {
+          "prompt_tokens": 558,
+          "completion_tokens": 99,
+          "total_tokens": 657,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 302
+        },
+        {
+          "prompt_tokens": 650,
+          "completion_tokens": 89,
+          "total_tokens": 739,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 394
+        },
+        {
+          "prompt_tokens": 415,
+          "completion_tokens": 84,
+          "total_tokens": 499,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 159
+        },
+        {
+          "prompt_tokens": 411,
+          "completion_tokens": 94,
+          "total_tokens": 505,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 155
+        },
+        {
+          "prompt_tokens": 412,
+          "completion_tokens": 137,
+          "total_tokens": 549,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 156
+        },
+        {
+          "prompt_tokens": 472,
+          "completion_tokens": 122,
+          "total_tokens": 594,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 216
+        },
+        {
+          "prompt_tokens": 558,
+          "completion_tokens": 120,
+          "total_tokens": 678,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 174
+        },
+        {
+          "prompt_tokens": 654,
+          "completion_tokens": 149,
+          "total_tokens": 803,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 270
+        },
+        {
+          "prompt_tokens": 561,
+          "completion_tokens": 114,
+          "total_tokens": 675,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 177
+        },
+        {
+          "prompt_tokens": 654,
+          "completion_tokens": 123,
+          "total_tokens": 777,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 270
+        },
+        {
+          "prompt_tokens": 562,
+          "completion_tokens": 119,
+          "total_tokens": 681,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 178
+        }
+      ]
+    },
+    "latencyMs": {
+      "p50": 5565,
+      "p95": 7131,
+      "max": 7131
+    }
+  }
+}

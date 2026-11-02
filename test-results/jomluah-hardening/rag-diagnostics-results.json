@@ -1,0 +1,257 @@
+{
+  "run_id": "jl-rag20-be1ce5ca-9618-4e0d-b688-3f25aae55a0c",
+  "executed_at": "2026-11-02T09:06:09.373Z",
+  "mode": "real Qwen provider + isolated Neon Data API; synthetic journals only",
+  "fixture_count": 8,
+  "query_count": 0,
+  "original_20_comparison": {
+    "count": 0,
+    "answerable_count": 0,
+    "recall_at_1": null,
+    "recall_at_3": null,
+    "recall_at_5": null,
+    "mrr_at_5": null,
+    "no_answer_count": 0,
+    "no_answer_false_positive_count": 0
+  },
+  "provider": {
+    "name": "OpenRouter Qwen embeddings",
+    "calls": 0,
+    "sanitized_trace": []
+  },
+  "overall": {
+    "count": 0,
+    "answerable_count": 0,
+    "recall_at_1": null,
+    "recall_at_3": null,
+    "recall_at_5": null,
+    "mrr_at_5": null,
+    "no_answer_count": 0,
+    "no_answer_false_positive_count": 0
+  },
+  "latency_ms": {
+    "p50": null,
+    "p95": null,
+    "max": null,
+    "mean": null
+  },
+  "latency_stages": {
+    "embedding_provider": {
+      "p50": null,
+      "p95": null,
+      "max": null,
+      "mean": null
+    },
+    "neon_fetch": {
+      "p50": null,
+      "p95": null,
+      "max": null,
+      "mean": null
+    },
+    "application_ranking": {
+      "p50": null,
+      "p95": null,
+      "max": null,
+      "mean": null
+    }
+  },
+  "stage_max_by_query": [],
+  "score_distributions": {
+    "relevant": {
+      "count": 0,
+      "min": null,
+      "median": null,
+      "max": null,
+      "mean": null
+    },
+    "irrelevant_returned": {
+      "count": 0,
+      "min": null,
+      "median": null,
+      "max": null,
+      "mean": null
+    },
+    "no_answer_returned": {
+      "count": 0,
+      "min": null,
+      "median": null,
+      "max": null,
+      "mean": null
+    }
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.05,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.1,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.15,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.2,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.25,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.3,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.35,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.355,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.36,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.375,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.4,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.45,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.5,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.55,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    },
+    {
+      "threshold": 0.6,
+      "answerable_query_retention": null,
+      "answerable_queries_rejected": 0,
+      "recall_at_1": null,
+      "recall_at_3": null,
+      "recall_at_5": null,
+      "answerable_category_coverage": {},
+      "no_answer_rejection": null,
+      "no_answer_queries_accepted": 0
+    }
+  ],
+  "by_category": {},
+  "queries": [],
+  "fixture_cleanup": {
+    "attempted": false,
+    "success": false,
+    "deleted": 0,
+    "verifiedRemaining": -1
+  }
+}
