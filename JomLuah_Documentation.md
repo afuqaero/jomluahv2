@@ -1,11 +1,14 @@
 # JomLuah — Technical Documentation
+
+> **Archive note:** This is the original project proposal, not the source of truth for current features. Some later sections describe ideas that were not built or were changed for privacy. See [`README.md`](./README.md), [`JomLuah_Technical_Architecture.md`](./JomLuah_Technical_Architecture.md), and [`AI_IMPLEMENTATION_TODO.md`](./AI_IMPLEMENTATION_TODO.md) for current implementation and next steps.
+
 ---
 
 ## 1. Project Overview
 
 JomLuah is a Progressive Web Application (PWA) built to serve as an AI-powered emotional management assistant for university students, specifically tailored to the context of Pusat Kaunseling Universiti (PCU) at UTHM. The name "JomLuah" loosely translates to "let's express" in Malay — reflecting the core purpose of the app, which is to give students a safe, private, and intelligent space to express and reflect on their emotional state.
 
-The system is not a replacement for human counselling. Instead, it acts as a digital complement — a first layer of support that students can access at any time, even outside PCU operating hours. The system remembers past conversations, builds a longitudinal picture of the user's emotional patterns, and surfaces insights for both the student and their counsellor.
+The system is not a replacement for human counselling. It is a digital reflection companion that can recall a student's own saved memories and journal entries. Counselors do not see private chats or journals; they can see only assigned students' mood scores after the student explicitly consents to sharing.
 
 The application has two sides:
 - **Student-facing:** conversational AI reflection, private journaling, mood tracking, personal insights, memory of past entries

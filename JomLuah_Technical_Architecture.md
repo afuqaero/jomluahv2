@@ -2,24 +2,26 @@
 
 > **Project Name:** JomLuah (AI Emotional Companion & Counseling Triage PWA)  
 > **Target Institution:** Universiti Tun Hussein Onn Malaysia (UTHM) — Pusat Kaunseling Universiti (PCU)  
-> **Document Status:** Active Technical Specification  
+> **Document Status:** Active Technical Specification — reviewed 2 November 2026
 
 ---
 
 ## 1. Executive Summary & Core Domain Context
 
-**JomLuah** (*Malay:* "Let's Express") is a Progressive Web Application (PWA) designed as an AI-powered emotional management companion for university students and a triage dashboard for university counselors.
+**JomLuah** (*Malay:* "Let's Express") is a Progressive Web Application (PWA) designed as an AI-powered emotional reflection companion for university students, with separate counselor and admin portals.
 
-### Current dashboard scope (30 October 2026)
+### Current dashboard scope (2 November 2026)
 * `/counselor` displays only student-entered morning/evening mood scores for students assigned to the signed-in counselor, and only after the student explicitly consents. It does not expose chat, journal entries, narrative notes, or AI-inferred topics.
 * `/admin` manages student/counselor roles and one active counselor assignment per student. Admin accounts are provisioned through a trusted database operation; admin pages and APIs do not expose student mood check-ins.
 * Bootstrap the first admin only through trusted Neon SQL after migration: `UPDATE public.profiles SET role = 'admin'::public.user_role WHERE email = '<verified-admin-email>';`. Never expose admin promotion through the app.
-* `mood_checkins`, `mood_sharing_consents`, `counselor_assignments`, and `admin_audit_log` are defined in `neon_migrations/004_counselor_mood_sharing.sql`. Migration `004` has been applied to the `JomLuah` Neon production branch after dev-branch validation; production verification confirmed RLS on all four tables, eight dashboard functions, five mood-sharing policies, and the `admin` role value. The check-in table currently has no records.
-* The student dashboard is unchanged. Student check-in/consent APIs exist, but there is no student UI for submitting scores or enabling sharing yet. Existing journal moods are not backfilled or shared.
+* `mood_checkins`, `mood_sharing_consents`, `counselor_assignments`, and `admin_audit_log` are defined in `neon_migrations/004_counselor_mood_sharing.sql`. Migration `004` was applied to the `JomLuah` Neon production branch after dev-branch validation; production verification confirmed RLS on all four tables, eight dashboard functions, five mood-sharing policies, and the `admin` role value.
+* The student dashboard remains separate. Student check-in/consent APIs exist, but the student UI for submitting scores or enabling sharing is not complete. Existing journal moods are not backfilled or shared.
 
 ### Key Objectives
-* **Student-Facing**: Provides 24/7 conversational reflection, private journaling, mood check-ins, memory recall (RAG), and localized crisis hotline guidance.
-* **Counselor-Facing**: Surfaces aggregated mood trends, automated session summaries, and risk triage alerts for students expressing severe distress (depression, self-harm, suicidal ideation keywords).
+* **Student-Facing**: Provides conversational reflection, private journaling, saved-memory recall, journal retrieval (RAG), and localized crisis guidance. The separate mood-sharing check-in UI is still pending.
+* **Counselor-Facing**: Shows only consented morning/evening mood scores for assigned students. It does not show chats, journals, AI-generated session summaries, or risk alerts.
+* **Admin-Facing**: Manages counselor roles and student assignments; it does not show student mood check-ins or private content.
+* **Future work, not implemented**: Automated session summaries, counselor risk alerts, cross-student analysis, and student check-in/consent UI require separate product, consent, privacy, and clinical review.
 * **Domain Adaptation**: Custom-tailored to the Malaysian academic context (UTHM), featuring colloquial Malaysian Malay (*Bahasa Melayu Pasar*) and *Manglish* language capabilities.
 
 ---
@@ -63,8 +65,8 @@
                 │                                                                      │
 ┌───────────────▼──────────────────────────────────────────────────────────────────────┴──────────────────┐
 │                              AI Inference Engine & Memory/RAG Pipeline                                  │
-│  • DeepSeek API: https://api.deepseek.com/chat/completions                                              │
-│  • Default model: deepseek-v4-pro with streaming and strict tool calling                               │
+│  • FiqStore API: https://rootsys.cloud/v1/chat/completions                                              │
+│  • Local model: glm-5.3-flash; production rollout is pending                                            │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -72,7 +74,7 @@
 
 ## 4. Performance & Security Architecture (Edge Middleware)
 
-The application utilizes a custom performance-optimized Next.js Edge Middleware ([`proxy.ts`](file:///Users/feeq/Documents/Projects/JomLuahv2/proxy.ts)).
+The application uses Next.js route protection in [`proxy.ts`](./proxy.ts).
 
 ### Key Features
 * **Signed Session Validation**: Neon Auth middleware validates protected routes and refreshes the signed session cache when required.
@@ -89,12 +91,19 @@ if (authResponse.headers.has("location")) return authResponse;
 
 ## 5. AI Engine, Localization & Safety Protocols
 
-### 5.1 DeepSeek V4 Inference Strategy ([`app/api/chat/route.ts`](file:///Users/feeq/Documents/Projects/JomLuahv2/app/api/chat/route.ts))
-The chat service uses DeepSeek's OpenAI-compatible Chat Completions endpoint. The
-default model is `deepseek-flash`; `DEEPSEEK_BASE_URL` and `DEEPSEEK_MODEL` can
-override the endpoint and model. Replies use server-to-client token streaming.
-Tool selection and rolling summaries use non-thinking mode for predictable,
-low-latency structured behavior.
+### 5.1 FiqStore GLM Chat Provider ([`app/api/chat/route.ts`](./app/api/chat/route.ts), [`app/lib/chatProviderClient.ts`](./app/lib/chatProviderClient.ts))
+The current local chat provider is FiqStore's OpenAI-compatible Chat Completions
+API. It uses `FIQSTORE_BASE_URL` (default `https://rootsys.cloud/v1`),
+`FIQSTORE_MODEL` (default `glm-5.3-flash`), and the secret `FIQSTORE_API_KEY`.
+Replies stream from the server to the client. The request disables GLM reasoning
+so the configured response-token budget is used for visible reply text. The
+provider switch has passed a live text/stream smoke check and an isolated
+synthetic-data agent test; production configuration and authenticated
+`/api/chat` verification remain pending.
+
+Qwen3 Embedding 8B is configured separately through the embedding provider
+settings. FiqStore is the chat/tool provider; it is not used to create journal
+embeddings.
 
 ### 5.2 System Prompt & Language Normalization
 To ensure empathetic, natural conversations for UTHM students, the system prompt strictly enforces colloquial Malaysian Malay (*Bahasa Melayu Pasar*) and *Manglish*, while forbidding formal textbook Malay and Indonesian vocabulary:
@@ -131,14 +140,14 @@ Adaptive routing skips private retrieval for fresh conversation. For recall requ
 the **JomLuah Recall Agent** can choose a user-scoped, read-only memory or journal
 search, inspect the returned evidence, and make at most one additional search.
 Each search uses the existing embedding/keyword ranker rather than a new index.
-The same configured DeepSeek key powers planning and the final answer. The agent
+The configured FiqStore key powers planning and the final answer. The agent
 cannot access encrypted chat history, counselor/admin data, or write tools; source
 preferences and urgent-safety handling remain enforced outside the model.
 Development enables the agent by default, while production requires
 `RECALL_AGENT_ENABLED=true` after live recall, privacy, latency, and cost evaluation.
 
 ### 5.6 Safety, Feedback, and Observability (Implemented)
-A deterministic English/BM classifier runs before DeepSeek. Urgent self-harm
+A deterministic English/BM classifier runs before the configured chat model. Urgent self-harm
 matches bypass generative output and return reviewed Malaysian crisis resources.
 Users can rate assistant messages; feedback and privacy-safe LLM metrics are stored
 in RLS-protected tables. No raw prompt text is written to `llm_events`.
@@ -150,7 +159,7 @@ controls cross-chat memory and journal retrieval. `/api/ai/backfill` generates m
 embeddings in bounded, repeatable batches.
 
 Chat requests cap message count and message size, enforce a provider timeout, and
-propagate client disconnects to upstream DeepSeek and embedding requests. Private
+propagate client disconnects to upstream chat-provider and embedding requests. Private
 management endpoints use `Cache-Control: private, no-store`. These choices make the
 backend safe for mobile clients with limited bandwidth and unstable connections.
 Offline queues, background sync, retry buttons, and service-worker behavior remain
@@ -165,7 +174,7 @@ are implemented in `chat_sessions`; pgvector-based retrieval remains a planned
 extension for semantic journal-memory search.
 
 ### 6.1 Core Relational Tables
-1. **`public.profiles`**: Stores user attributes, role enum (`user`, `counselor`), onboarding questionnaire state, and mental health background tags. Its UUID references `neon_auth.user`; registration/onboarding performs the profile upsert.
+1. **`public.profiles`**: Stores user attributes, role values (`user`, `counselor`, `admin`), onboarding questionnaire state, and profile fields. Its UUID references `neon_auth.user`; registration/onboarding performs the profile upsert.
 2. **`public.journal_entries`**: User journal entries with title, excerpt, mood tags, favorite status, and an `images TEXT[]` column containing client-side AES-GCM ciphertext for photo data. The browser decrypts photos after unlocking the user's data key; journal text and metadata remain readable in the database.
 3. **`public.folders` & `public.notes`**: Personal organization board (todo lists, journal categorization).
 4. **`public.chat_sessions` & `public.chat_messages`**: Historical AI chat records. Each session also stores a compact `context_summary` and the number of messages already summarised, so the full transcript does not need to be resent to the LLM.
@@ -193,7 +202,7 @@ JomLuahv2/
 ├── app/
 │   ├── api/
 │   │   ├── auth/[...path]/      # Same-origin Neon Auth handler
-│   │   └── chat/route.ts        # DeepSeek streaming, tools, memory, RAG, safety
+│   │   └── chat/route.ts        # FiqStore streaming, tools, memory, RAG, safety
 │   ├── chat/                    # AI Conversational interface
 │   ├── dashboard/               # Student dashboard (unchanged by staff dashboard work)
 │   ├── counselor/               # Assigned-student, consent-gated mood dashboard
@@ -221,7 +230,7 @@ Staff API routes:
 
 * ✅ **Next.js 16 App Router & React 19** architecture.
 * ✅ **Neon Auth route guarding** with signed session caching.
-* ✅ **DeepSeek V4 Pro Backend** with streaming and controlled tool calls.
+* ✅ **FiqStore GLM-5.3-Flash Backend** locally with streaming and controlled tool calls; production rollout is pending.
 * ✅ **Colloquial Manglish & BM Pasar System Prompt Tuning**.
 * ✅ **Malaysian Crisis Hotline Interception Logic**.
 * ✅ **Persisted rolling conversation summaries for lower token usage**.

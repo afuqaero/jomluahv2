@@ -90,13 +90,13 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 
 ### Monday, 2 November 2026 — Adaptive retrieval
 
-* Added **JomLuah Recall Agent**, a bounded read-only two-search loop that lets the existing DeepSeek model choose a private memory or journal query, inspect results, and stop or try once more. It replaces the journal tool's old behavior of returning preselected entries without using the requested query.
+* Added **JomLuah Recall Agent**, a bounded read-only two-search loop that lets the configured chat model choose a private memory or journal query, inspect results, and stop or try once more. It initially used DeepSeek and switched to FiqStore GLM-5.3-Flash on 2 November 2026. It replaces the journal tool's old behavior of returning preselected entries without using the requested query.
 * Kept the agent behind `RECALL_AGENT_ENABLED=true` in production pending live evaluation; local development enables it by default. No new API key or database migration is required.
 * Tightened memory-write intent checks so recall questions such as “Do you remember…?” cannot be mistaken for permission to save a new memory. Ranking no longer returns unrelated high-importance memories solely because of their importance score.
 * Added a deterministic retrieval plan for companion chat: fresh messages use recent conversation and its rolling summary without loading saved memories or journals or calling the embedding provider. Memory, journal, and prior-conversation references retrieve only the relevant private sources.
 * Existing user memory/journal preferences, ownership filters, tool permissions, and urgent-safety handling remain in place. Added backend tests for ordinary, English, and Malay recall requests.
 * This is a rule-based first step, not BM25, a reranker, or a guarantee that every indirect reference will be detected. Review consented recall examples and expand routing rules based on measured misses.
-* Verification on 2 November: 13 backend tests passed; TypeScript, targeted ESLint, and the production build passed. Live DeepSeek/Neon recall evaluation remains pending, so production activation stays off by default.
+* At the time of this entry, 13 backend tests passed and TypeScript, targeted ESLint, and the production build passed. Later isolated synthetic retrieval/agent results are recorded in the 2 November entries below; production activation stays off until current-provider production checks are complete.
 
 ### Sunday, 1 November 2026 — Admin access and staff approval
 
@@ -198,6 +198,7 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Disabled GLM's internal reasoning for chat requests so it returns visible reply text within the app's output limits.
 * Verified a live text response and streaming response, then ran the isolated fictional-data agent checks: 4/4 passed. Deterministic backend checks passed 36/36 and TypeScript passed.
 * The production deployment has not been switched; add the FiqStore settings to deployment configuration and run an authenticated `/api/chat` check before deploying.
+* Refreshed the AI checklist, architecture guide, and isolated-test setup instructions; kept dated reports and exploratory ideas as historical records.
 
 ### Monday, 19 October 2026 — 12:41 MYT
 
@@ -478,31 +479,9 @@ UI/UX, offline service-worker outbox, retry/cancel controls, memory settings scr
 * Added route-level evaluation cases and `npm run eval:chat`.
 * Updated technical architecture for DeepSeek, memory, retrieval, safety, streaming, feedback, and telemetry.
 
-#### Verified
+#### Current AI status (2 November 2026)
 
-* Production build: passed.
-* TypeScript: passed.
-* ESLint for changed AI/chat files: passed.
-* Normal DeepSeek-compatible SSE streaming smoke test: passed using controlled mock provider.
-* Urgent-risk bypass smoke test: passed.
-* Whitespace/error check with `git diff --check`: passed.
-
-#### Required before features become live
-
-* Configure `DEEPSEEK_API_KEY` locally and in Vercel.
-* Configure `DEEPSEEK_BASE_URL=https://api.deepseek.com` and `DEEPSEEK_MODEL=deepseek-v4-pro`.
-* Configure an optional OpenAI-compatible embedding endpoint. DeepSeek currently handles chat/tool generation; no DeepSeek embedding endpoint is assumed by this implementation.
-* Run signed-in acceptance tests for save, list, forget, journal retrieval, feedback, and RLS isolation.
-* Run live-model evaluation with `npm run eval:chat` after starting the application.
-
-#### Still pending
-
-* Memory-management settings screen with manual edit/delete and global memory toggle.
-* Backfill embeddings for existing memories and journals.
-* Mood-history aggregation tool and authorized counselor appointment tool.
-* Cancel-generation button using `AbortController`.
-* Clickable journal citations that open their original entries.
-* PCU review of crisis detection phrases and escalation wording.
-* Admin quality/latency dashboard and CI evaluation job.
-
-Full task-level status lives in [`AI_IMPLEMENTATION_TODO.md`](./AI_IMPLEMENTATION_TODO.md).
+* Local chat uses FiqStore GLM-5.3-Flash; Qwen embeddings remain a separate provider. The FiqStore production settings and signed-in production `/api/chat` test are still pending.
+* After the provider switch, deterministic backend checks passed 36/36, TypeScript passed, and the isolated synthetic-data agent checks passed 4/4.
+* Remaining product work includes memory controls, clickable journal citations, cancel/retry controls, PCU review of crisis guidance, production latency/quality monitoring, and completing student mood check-in/consent UI.
+* See [`AI_IMPLEMENTATION_TODO.md`](./AI_IMPLEMENTATION_TODO.md) for the current prioritized checklist. Older dated entries above document historical provider states and test results.

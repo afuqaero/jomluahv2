@@ -1,5 +1,7 @@
 # Jom Luah System App - FYP Brainstorming & Research Concepts
 
+> Ideas archive only. These are proposals, not current product behavior or an approved roadmap. In particular, any counselor alerts, chat analysis, or cross-student analytics require separate consent, privacy, and clinical review before implementation.
+
 This document saves the advanced research-grade and engineering-focused ideas designed to make this Final Year Project (PSM) highly competitive, secure, and academically rigorous for UTHM evaluators and Pusat Kaunseling UTHM.
 
 ---
