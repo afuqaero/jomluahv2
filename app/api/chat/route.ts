@@ -10,7 +10,7 @@ import {
   normaliseMemoryCategory,
   normaliseMemoryContent,
 } from "../../lib/aiPolicy";
-import { assessSafety, urgentSafetyReply, type SafetyLevel } from "../../lib/chatSafety";
+import { assessSafety, getSafetyFallback, shouldRetrieveForSafety, urgentSafetyReply, type SafetyLevel } from "../../lib/chatSafety";
 import { runRecallAgent, type RecallHit, type RecallSearch, type RecallSource } from "../../lib/recallAgent";
 import { createRouteNeonClient } from "../../lib/serverNeon";
 
@@ -439,7 +439,7 @@ export async function POST(req: Request) {
     let journalRagEnabled = true;
     let useRecallAgent = false;
 
-    if (user && latestUserText) {
+    if (user && latestUserText && shouldRetrieveForSafety(safety.level)) {
       const { data: preferences } = await neon.from("ai_preferences")
         .select("memory_enabled, journal_rag_enabled, context_profile").eq("user_id", user.id).maybeSingle();
       memoryEnabled = preferences?.memory_enabled ?? true;
@@ -451,10 +451,10 @@ export async function POST(req: Request) {
       }
       const recallAgentEnabled = process.env.RECALL_AGENT_ENABLED === "true"
         || (process.env.NODE_ENV !== "production" && process.env.RECALL_AGENT_ENABLED !== "false");
-      useRecallAgent = recallAgentEnabled && safety.level !== "urgent" && shouldUseRecallAgent(latestUserText)
+      useRecallAgent = recallAgentEnabled && shouldUseRecallAgent(latestUserText)
         && ((retrievalPlan.memories && memoryEnabled) || (retrievalPlan.journals && journalRagEnabled));
-      const loadMemories = safety.level !== "urgent" && !useRecallAgent && retrievalPlan.memories && (memoryEnabled || hasToolIntent(latestUserText));
-      const loadJournals = safety.level !== "urgent" && !useRecallAgent && retrievalPlan.journals && journalRagEnabled;
+      const loadMemories = !useRecallAgent && retrievalPlan.memories && (memoryEnabled || hasToolIntent(latestUserText));
+      const loadJournals = !useRecallAgent && retrievalPlan.journals && journalRagEnabled;
       if (loadMemories || loadJournals) {
         queryEmbedding = await createEmbedding(latestUserText, providerSignal).catch(() => null);
       }
@@ -591,7 +591,7 @@ export async function POST(req: Request) {
       ...toModelMessages(boundedAnswerMessages),
     ];
 
-    if (user && hasToolIntent(latestUserText) && !shouldUseRecallAgent(latestUserText) && safety.level !== "urgent") {
+    if (user && hasToolIntent(latestUserText) && !shouldUseRecallAgent(latestUserText) && safety.level === "none") {
       try {
         const toolPlan = await callDeepSeek(modelMessages, { purpose: "tools", toolset: tools, toolChoice: "required" }, providerSignal);
         const toolCalls = toolPlan.choices?.[0]?.message?.tool_calls || [];
@@ -714,21 +714,31 @@ export async function POST(req: Request) {
             : error instanceof Error ? "provider_stream_error" : "unknown_error";
           console.error("DeepSeek streaming failed:", error);
           if (!req.signal.aborted) {
-            send(controller, {
-              type: "error",
-              error: "AI response unavailable. Please try again.",
-              retryable: true,
-            });
+            const safetyFallback = getSafetyFallback(safety.level);
+            if (safetyFallback) {
+              send(controller, { type: "delta", text: safetyFallback });
+              send(controller, { type: "done" });
+            } else {
+              send(controller, {
+                type: "error",
+                error: "AI response unavailable. Please try again.",
+                retryable: true,
+              });
+            }
           }
         } finally {
           if (user) {
-            await neon.from("llm_events").insert({
-              user_id: user.id, session_id: sessionId, provider: "deepseek", model: DEEPSEEK_MODEL,
-              purpose: "chat", latency_ms: Date.now() - startedAt,
-              prompt_tokens: (usage.prompt_tokens ?? 0) + recallPromptTokens,
-              completion_tokens: (usage.completion_tokens ?? 0) + recallCompletionTokens,
-              safety_level: safety.level satisfies SafetyLevel, succeeded, error_code: errorCode,
-            });
+            try {
+              await neon.from("llm_events").insert({
+                user_id: user.id, session_id: sessionId, provider: "deepseek", model: DEEPSEEK_MODEL,
+                purpose: "chat", latency_ms: Date.now() - startedAt,
+                prompt_tokens: (usage.prompt_tokens ?? 0) + recallPromptTokens,
+                completion_tokens: (usage.completion_tokens ?? 0) + recallCompletionTokens,
+                safety_level: safety.level satisfies SafetyLevel, succeeded, error_code: errorCode,
+              });
+            } catch (telemetryError) {
+              console.warn("Could not write LLM telemetry:", telemetryError);
+            }
           }
           controller.close();
         }

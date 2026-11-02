@@ -1,0 +1,92 @@
+{
+  "benchmark": "in-process ranker only; synthetic deterministic 4096D vectors; not DB or provider integration",
+  "dimensions": 4096,
+  "query_count": 40,
+  "memory_baseline_heap_mb": 7.42,
+  "corpus_results": [
+    {
+      "corpus_size": 100,
+      "heap_delta_mb": 3.34,
+      "rss_delta_mb": 7.81,
+      "requests": {
+        "burst_1": {
+          "n": 40,
+          "average_ms": 4.681,
+          "p50_ms": 4.677,
+          "p95_ms": 4.96,
+          "batch_average_ms": 4.687
+        },
+        "burst_4": {
+          "n": 40,
+          "average_ms": 11.458,
+          "p50_ms": 9.687,
+          "p95_ms": 18.463,
+          "batch_average_ms": 4.587
+        },
+        "burst_8": {
+          "n": 40,
+          "average_ms": 19.471,
+          "p50_ms": 18.606,
+          "p95_ms": 34.313,
+          "batch_average_ms": 4.326
+        }
+      }
+    },
+    {
+      "corpus_size": 500,
+      "heap_delta_mb": 17.62,
+      "rss_delta_mb": 17.89,
+      "requests": {
+        "burst_1": {
+          "n": 40,
+          "average_ms": 23.294,
+          "p50_ms": 23.381,
+          "p95_ms": 25.056,
+          "batch_average_ms": 23.303
+        },
+        "burst_4": {
+          "n": 40,
+          "average_ms": 50.161,
+          "p50_ms": 45.067,
+          "p95_ms": 93.857,
+          "batch_average_ms": 20.128
+        },
+        "burst_8": {
+          "n": 40,
+          "average_ms": 29.794,
+          "p50_ms": 27.55,
+          "p95_ms": 53.365,
+          "batch_average_ms": 6.612
+        }
+      }
+    },
+    {
+      "corpus_size": 1000,
+      "heap_delta_mb": 39.91,
+      "rss_delta_mb": 4.39,
+      "requests": {
+        "burst_1": {
+          "n": 40,
+          "average_ms": 29.59,
+          "p50_ms": 15.04,
+          "p95_ms": 72.448,
+          "batch_average_ms": 29.599
+        },
+        "burst_4": {
+          "n": 40,
+          "average_ms": 36.592,
+          "p50_ms": 37.855,
+          "p95_ms": 65.554,
+          "batch_average_ms": 14.628
+        },
+        "burst_8": {
+          "n": 40,
+          "average_ms": 64.745,
+          "p50_ms": 63.121,
+          "p95_ms": 121.796,
+          "batch_average_ms": 14.718
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "status": "BLOCKED",
+  "environment": "isolated Neon unavailable; provider-only synthetic embedding probe used .env.local",
+  "embeddingProbe": {
+    "status": "PASS",
+    "provider": "OpenRouter",
+    "syntheticOnly": true,
+    "dimensions": 4096,
+    "durationMs": 1494
+  },
+  "liveRetrievalQueriesExecuted": 0,
+  "recallAt1": null,
+  "recallAt3": null,
+  "recallAt5": null,
+  "mrrAt5": null,
+  "databaseLatencyMs": null,
+  "embeddingLatencyMs": null,
+  "rankingLatencyMs": null,
+  "endToEndLatencyMs": null,
+  "note": "No live retrieval measurement exists. Provider-only embedding is not evidence of database retrieval. Historical synthetic benchmark numbers are deliberately excluded."
+}

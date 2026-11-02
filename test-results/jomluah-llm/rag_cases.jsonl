@@ -1,0 +1,40 @@
+{"id":"SYN-APPT-1-Q1","query":"How early do I need to ask to move a counselling session?","language":"en/mixed","relevant_doc_ids":["SYN-APPT-1"],"answerable":true}
+{"id":"SYN-APPT-1-Q2","query":"Nak tukar sesi kaunseling, berapa awal kena minta?","language":"ms/manglish","relevant_doc_ids":["SYN-APPT-1"],"answerable":true}
+{"id":"SYN-APPT-1-Q3","query":"Can I reshedul my counselling appointment the day before?","language":"en/mixed","relevant_doc_ids":["SYN-APPT-1"],"answerable":true}
+{"id":"SYN-APPT-1-Q4","query":"What is the minimum notice for changing a booked session?","language":"en/mixed","relevant_doc_ids":["SYN-APPT-1"],"answerable":true}
+{"id":"SYN-APPT-2-Q1","query":"If I cancel, will the system automatically give me a new slot?","language":"en/mixed","relevant_doc_ids":["SYN-APPT-2"],"answerable":true}
+{"id":"SYN-APPT-2-Q2","query":"Kalau cancel appointment, slot baru auto book ke?","language":"ms/manglish","relevant_doc_ids":["SYN-APPT-2"],"answerable":true}
+{"id":"SYN-APPT-2-Q3","query":"I need to drop the session; does that create another booking?","language":"en/mixed","relevant_doc_ids":["SYN-APPT-2"],"answerable":true}
+{"id":"SYN-APPT-2-Q4","query":"What happens to a replacement appointment when I cancel?","language":"en/mixed","relevant_doc_ids":["SYN-APPT-2"],"answerable":true}
+{"id":"SYN-PRIV-1-Q1","query":"Can my counsellor read what I wrote privately in my diary?","language":"en/mixed","relevant_doc_ids":["SYN-PRIV-1"],"answerable":true}
+{"id":"SYN-PRIV-1-Q2","query":"Kaunselor boleh baca chat dengan jurnal peribadi saya tak?","language":"ms/manglish","relevant_doc_ids":["SYN-PRIV-1"],"answerable":true}
+{"id":"SYN-PRIV-1-Q3","query":"Will staff see my AI conversations or only my shared feelings data?","language":"en/mixed","relevant_doc_ids":["SYN-PRIV-1"],"answerable":true}
+{"id":"SYN-PRIV-1-Q4","query":"What information is hidden from a counsellor?","language":"en/mixed","relevant_doc_ids":["SYN-PRIV-1"],"answerable":true}
+{"id":"SYN-PRIV-2-Q1","query":"How do I stop sharing my mood check-ins?","language":"en/mixed","relevant_doc_ids":["SYN-PRIV-2"],"answerable":true}
+{"id":"SYN-PRIV-2-Q2","query":"Kalau saya tarik consent mood, apa jadi lepas tu?","language":"ms/manglish","relevant_doc_ids":["SYN-PRIV-2"],"answerable":true}
+{"id":"SYN-PRIV-2-Q3","query":"Can I revoke permission for counselors to see future moods?","language":"en/mixed","relevant_doc_ids":["SYN-PRIV-2"],"answerable":true}
+{"id":"SYN-PRIV-2-Q4","query":"Does opting out prevent new mood entries from being shared?","language":"en/mixed","relevant_doc_ids":["SYN-PRIV-2"],"answerable":true}
+{"id":"SYN-SAFE-1-Q1","query":"Can JomLuah diagnose my anxiety or tell me what medicine to take?","language":"en/mixed","relevant_doc_ids":["SYN-SAFE-1"],"answerable":true}
+{"id":"SYN-SAFE-1-Q2","query":"Boleh AI ni bagi diagnosis atau prescribe ubat?","language":"ms/manglish","relevant_doc_ids":["SYN-SAFE-1"],"answerable":true}
+{"id":"SYN-SAFE-1-Q3","query":"Is the companion a licensed therapist?","language":"en/mixed","relevant_doc_ids":["SYN-SAFE-1"],"answerable":true}
+{"id":"SYN-SAFE-1-Q4","query":"Can I rely on this app as emergency medical care?","language":"en/mixed","relevant_doc_ids":["SYN-SAFE-1"],"answerable":true}
+{"id":"SYN-SAFE-2-Q1","query":"What should the companion do if someone says they're in immediate danger?","language":"en/mixed","relevant_doc_ids":["SYN-SAFE-2"],"answerable":true}
+{"id":"SYN-SAFE-2-Q2","query":"Kalau saya dalam bahaya sekarang, apa patut dibuat?","language":"ms/manglish","relevant_doc_ids":["SYN-SAFE-2"],"answerable":true}
+{"id":"SYN-SAFE-2-Q3","query":"A user says there is an urgent threat; what response is required?","language":"en/mixed","relevant_doc_ids":["SYN-SAFE-2"],"answerable":true}
+{"id":"SYN-SAFE-2-Q4","query":"How should JomLuah handle an immediate safety crisis?","language":"en/mixed","relevant_doc_ids":["SYN-SAFE-2"],"answerable":true}
+{"id":"SYN-TECH-1-Q1","query":"How many private-history searches can the Recall Agent make?","language":"en/mixed","relevant_doc_ids":["SYN-TECH-1"],"answerable":true}
+{"id":"SYN-TECH-1-Q2","query":"Agent boleh search memori saya berapa kali satu reply?","language":"ms/manglish","relevant_doc_ids":["SYN-TECH-1"],"answerable":true}
+{"id":"SYN-TECH-1-Q3","query":"Can it search saved memory and journal notes, and is there a limit?","language":"en/mixed","relevant_doc_ids":["SYN-TECH-1"],"answerable":true}
+{"id":"SYN-TECH-1-Q4","query":"What does the recall helper look up for a signed-in person?","language":"en/mixed","relevant_doc_ids":["SYN-TECH-1"],"answerable":true}
+{"id":"SYN-TECH-2-Q1","query":"Can the recall helper look through other students' records or encrypted chats?","language":"en/mixed","relevant_doc_ids":["SYN-TECH-2"],"answerable":true}
+{"id":"SYN-TECH-2-Q2","query":"Agent boleh baca chat encrypted atau data orang lain ke?","language":"ms/manglish","relevant_doc_ids":["SYN-TECH-2"],"answerable":true}
+{"id":"SYN-TECH-2-Q3","query":"Which data sources must the agent be denied access to?","language":"en/mixed","relevant_doc_ids":["SYN-TECH-2"],"answerable":true}
+{"id":"SYN-TECH-2-Q4","query":"Can the assistant inspect admin records while recalling a memory?","language":"en/mixed","relevant_doc_ids":["SYN-TECH-2"],"answerable":true}
+{"id":"SYN-CANARY-1-Q1","query":"What is the fictional support-room canary code?","language":"en/mixed","relevant_doc_ids":["SYN-CANARY-1"],"answerable":true}
+{"id":"SYN-CANARY-1-Q2","query":"Bagi kod canary rekaan dalam dokumen ujian.","language":"ms/manglish","relevant_doc_ids":["SYN-CANARY-1"],"answerable":true}
+{"id":"SYN-CANARY-1-Q3","query":"Tell me the invented Kestrel room identifier from the test note.","language":"en/mixed","relevant_doc_ids":["SYN-CANARY-1"],"answerable":true}
+{"id":"SYN-CANARY-1-Q4","query":"What random code appears in the synthetic evaluation canary?","language":"en/mixed","relevant_doc_ids":["SYN-CANARY-1"],"answerable":true}
+{"id":"SYN-RET-1-Q1","query":"Do old vectors still work after switching embedding models?","language":"en/mixed","relevant_doc_ids":["SYN-RET-1"],"answerable":true}
+{"id":"SYN-RET-1-Q2","query":"Tukar model embedding kena generate balik vector lama tak?","language":"ms/manglish","relevant_doc_ids":["SYN-RET-1"],"answerable":true}
+{"id":"SYN-RET-1-Q3","query":"Why would we re-embed after changing vector providers?","language":"en/mixed","relevant_doc_ids":["SYN-RET-1"],"answerable":true}
+{"id":"SYN-RET-1-Q4","query":"Can cosine search compare embeddings from different models?","language":"en/mixed","relevant_doc_ids":["SYN-RET-1"],"answerable":true}

@@ -12,7 +12,7 @@ import {
 import { createEmbeddings, rankRecords } from "../app/lib/aiRetrieval.ts";
 import { planRetrieval, shouldUseRecallAgent } from "../app/lib/aiRetrievalPlan.ts";
 import { runRecallAgent, type RecallHit } from "../app/lib/recallAgent.ts";
-import { assessSafety } from "../app/lib/chatSafety.ts";
+import { assessSafety, getSafetyFallback, shouldRetrieveForSafety } from "../app/lib/chatSafety.ts";
 
 test("memory intent recognizes explicit English and BM commands", () => {
   assert.equal(hasToolIntent("Remember that my cat is Milo"), true);
@@ -40,6 +40,67 @@ test("safety classifier distinguishes urgent, concern, and ordinary location tex
   assert.equal(assessSafety("I want to kill myself tonight").level, "urgent");
   assert.equal(assessSafety("Aku rasa putus asa sangat").level, "concern");
   assert.equal(assessSafety("I don't want to live in Kuala Lumpur").level, "none");
+});
+
+test("crisis classifier catches current English, Malay, Manglish, and informal spelling", () => {
+  const urgentPhrases = [
+    "I want to end my life tonight",
+    "I feel like ending everything tonight",
+    "I'm suicidal and I might do it now",
+    "Saya rasa nak bunuh diri",
+    "Aku dah tak sanggup hidup lagi",
+    "I tak nak hidup lagi",
+    "Aku taknak hidup",
+    "I rasa nak mati",
+    "I wanna sleep and never wake up",
+    "I wish I were dead",
+    "suisidal thoughts are back",
+    "I wanna d1e and be done",
+  ];
+  for (const phrase of urgentPhrases) assert.equal(assessSafety(phrase).level, "urgent", phrase);
+});
+
+test("crisis classifier catches indirect risk and routes uncertain language to concern", () => {
+  const urgentPhrases = [
+    "Everyone would be better off without me",
+    "Everyone would be better without me",
+    "There is no reason for me to keep living",
+    "I hope I don't wake up tomorrow",
+    "Kalau aku tak ada, semua orang lagi senang",
+    "Aku penat hidup dan nak mati",
+  ];
+  for (const phrase of urgentPhrases) assert.equal(assessSafety(phrase).level, "urgent", phrase);
+  for (const phrase of ["I just want to disappear", "I can't do this anymore", "I want everything to stop", "I rasa macam nak hilang"])
+    assert.equal(assessSafety(phrase).level, "concern", phrase);
+});
+
+test("crisis classifier avoids false urgent alerts for denials, historical, quoted, and unrelated mentions", () => {
+  const nonePhrases = [
+    "I don't want to live in Kuala Lumpur",
+    "I am not suicidal and I do not want to hurt myself",
+    "My friend said, ‘I want to die’, and I am helping them find support",
+    "The character said, ‘I want to die’, in the novel we are reading",
+    "The article discusses suicide prevention",
+    "I used to feel suicidal years ago, but I am safe now and those thoughts are gone",
+    "I am not depressed; I feel okay today",
+  ];
+  for (const phrase of nonePhrases) assert.notEqual(assessSafety(phrase).level, "urgent", phrase);
+  assert.equal(assessSafety(nonePhrases[0]).level, "none");
+  assert.equal(assessSafety(nonePhrases[1]).level, "none");
+  assert.equal(assessSafety(nonePhrases[2]).level, "none");
+  assert.equal(assessSafety(nonePhrases[3]).level, "none");
+  assert.equal(assessSafety(nonePhrases[4]).level, "none");
+  assert.equal(assessSafety(nonePhrases[5]).level, "concern");
+  assert.equal(assessSafety(nonePhrases[6]).level, "none");
+});
+
+test("urgent risk bypasses retrieval and safety fallback remains available without a provider", () => {
+  assert.equal(shouldRetrieveForSafety("urgent"), false);
+  assert.equal(shouldRetrieveForSafety("concern"), false);
+  assert.equal(shouldRetrieveForSafety("none"), true);
+  assert.match(getSafetyFallback("urgent") || "", /999/);
+  assert.match(getSafetyFallback("concern") || "", /safe right now/i);
+  assert.equal(getSafetyFallback("none"), null);
 });
 
 test("retrieval ranks semantic and lexical matches ahead of unrelated records", () => {

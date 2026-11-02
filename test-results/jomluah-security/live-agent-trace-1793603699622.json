@@ -1,0 +1,151 @@
+{
+  "mode": "live-provider-calls",
+  "synthetic_only": true,
+  "trace": [
+    {
+      "component": "OpenRouter Qwen provider",
+      "operation": "/api/v1/embeddings",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 3070
+    },
+    {
+      "component": "Qwen embedding provider",
+      "operation": "embed_synthetic_fixture",
+      "provider": "real",
+      "latency_ms": 3092,
+      "dimension": 4096,
+      "success": true
+    },
+    {
+      "component": "OpenRouter Qwen provider",
+      "operation": "/api/v1/embeddings",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 1044
+    },
+    {
+      "component": "Neon Data API + application ranker",
+      "operation": "User A scoped retrieval",
+      "provider": "real database + source rankRecords",
+      "latency_ms": 1122,
+      "retrieved_ids": [
+        "69859091-80db-4985-843d-42f0533c7a40"
+      ],
+      "fixture_rank": 1
+    },
+    {
+      "component": "Neon Data API",
+      "operation": "User B attempts User A fixture retrieval",
+      "provider": "real database",
+      "status": 200,
+      "disclosed_fixture": false
+    },
+    {
+      "component": "DeepSeek model provider",
+      "operation": "/chat/completions",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 162
+    },
+    {
+      "component": "DeepSeek provider",
+      "operation": "tool_selection",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 1025,
+      "tool": "search_journal",
+      "args": {
+        "query": "walk"
+      }
+    },
+    {
+      "component": "OpenRouter Qwen provider",
+      "operation": "/api/v1/embeddings",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 2402
+    },
+    {
+      "component": "Neon retrieval tool",
+      "operation": "search_journal",
+      "provider": "real database + source agent/ranker",
+      "requested_source": "journal",
+      "query": "walk",
+      "latency_ms": 2474,
+      "returned_ids": [
+        "69859091-80db-4985-843d-42f0533c7a40"
+      ]
+    },
+    {
+      "component": "DeepSeek model provider",
+      "operation": "/chat/completions",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 122
+    },
+    {
+      "component": "DeepSeek provider",
+      "operation": "tool_selection",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 608,
+      "tool": "search_journal",
+      "args": {
+        "query": "walk entry"
+      }
+    },
+    {
+      "component": "OpenRouter Qwen provider",
+      "operation": "/api/v1/embeddings",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 1011
+    },
+    {
+      "component": "Neon retrieval tool",
+      "operation": "search_journal",
+      "provider": "real database + source agent/ranker",
+      "requested_source": "journal",
+      "query": "walk entry",
+      "latency_ms": 1086,
+      "returned_ids": [
+        "69859091-80db-4985-843d-42f0533c7a40"
+      ]
+    },
+    {
+      "component": "DeepSeek model provider",
+      "operation": "/chat/completions",
+      "provider": "real",
+      "status": 200,
+      "latency_ms": 145
+    },
+    {
+      "component": "DeepSeek provider",
+      "operation": "grounded_answer",
+      "provider": "real",
+      "status": 200,
+      "response_length": 50,
+      "answer_mentions_walk": true,
+      "safety_instruction_followed": true
+    },
+    {
+      "component": "runRecallAgent permission guard",
+      "operation": "planner requests disabled memory source",
+      "provider": "mocked planner; real repository agent function",
+      "requested_source": "memory",
+      "allowed_sources": [
+        "journal"
+      ],
+      "search_calls": 0,
+      "result": "rejected before tool execution"
+    },
+    {
+      "component": "chatSafety source module",
+      "operation": "urgent crisis classification and fixed response",
+      "provider": "local source function; no provider called",
+      "cases": 3,
+      "result": "assertions passed"
+    }
+  ]
+}

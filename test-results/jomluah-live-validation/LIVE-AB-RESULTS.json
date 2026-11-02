@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-02",
+  "command": "npm run test:live-ab:once",
+  "environment": "live Neon Auth and Data API, fictional generated identities and exact-ID journal fixtures",
+  "status": "PASS",
+  "testsPassed": 4,
+  "testsFailed": 0,
+  "testDurationMs": 1229.8125,
+  "repeatRun": {
+    "testsPassed": 4,
+    "testsFailed": 0,
+    "testDurationMs": 1290.5741
+  },
+  "checks": [
+    "own fictional journal create and read",
+    "cross-user read and owner-filtered embedding retrieval denied",
+    "cross-user insert, update, delete, and ownership transfer denied",
+    "own update and delete allowed; missing-bearer request rejected"
+  ],
+  "cleanup": {
+    "generatedAuthIdentitiesDeleted": 2,
+    "generatedAuthIdentitiesRemaining": 0,
+    "finalMatchingTestAccountCount": 0,
+    "fixtureRowsVerifiedGone": true
+  },
+  "limitations": "Data API journal boundary only; full Next route, RAG agent, and other tables were not tested."
+}

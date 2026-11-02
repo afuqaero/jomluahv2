@@ -1,0 +1,6 @@
+{
+  "status": "BLOCKED",
+  "realToolCallsExecuted": 0,
+  "traces": [],
+  "reason": "Isolated Neon test identities and test-only DeepSeek credentials were unavailable; no mock trace was substituted."
+}

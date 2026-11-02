@@ -1,0 +1,1 @@
+{"status":"NOT_TESTED","reason":"No test-only Neon tenant/database and no configured DEEPSEEK_API_KEY; live model-selected tools not executed","tool_call_traces":[],"tool_correctness":null,"fallback_behavior":null,"unit_tests":"pass (covered bounded two-search orchestration, source allow-list, repeat guard, stop behavior)","production_data_accessed":false}

@@ -8,6 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "test:backend": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.ts",
+    "preflight:isolated": "node scripts/preflight-isolated-tests.mjs",
+    "preflight:isolated:providers": "node scripts/preflight-isolated-tests.mjs --providers",
+    "preflight:live-ab": "node scripts/preflight-live-ab.mjs",
+    "test:live-ab": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/integration/live-ab-isolation.test.ts",
+    "test:live-ab:once": "node scripts/run-live-ab-once.mjs",
+    "test:isolated-security": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/integration/neon-isolation.test.ts",
+    "test:isolated-agent": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/integration/agentic-live.test.ts",
     "eval:chat": "node scripts/evaluate-chat.mjs"
   },
   "dependencies": {

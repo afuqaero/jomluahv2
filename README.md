@@ -69,6 +69,15 @@ This comprehensive documentation covers:
 
 ## Development Change Log
 
+### Monday, 2 November 2026 — Isolated AI conversation test
+
+* Set up a separate Neon test project with two made-up student accounts. Real student data and the production database were not used.
+* Ran a complete test conversation: the AI found User A's earlier fictional journal note about a walk and used it in the reply. User B's fictional note stayed private.
+* Also tested an unknown question, a journal note containing malicious instructions, a crisis message, and a request with no sign-in. All five chat-route checks passed.
+* Confirmed the AI selected its journal-search tool, and removed the temporary test journal entries afterward.
+* Saved the plain-language results in `test-results/jomluah-live-validation/ISOLATED-E2E-RUN-2026-11-02.md` and updated the main report at `test-results/jomluah-live-validation/REPORT.md`.
+* This is a small technical test, not proof that every situation is safe or clinically validated. Testing what happens when an AI provider is unavailable is still next.
+
 All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry stays first.
 
 ### Monday, 2 November 2026 — Adaptive retrieval

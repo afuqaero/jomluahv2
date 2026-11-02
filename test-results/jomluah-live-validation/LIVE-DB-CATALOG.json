@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-02",
+  "target": "live Neon database",
+  "transactionReadOnly": true,
+  "userDataQueried": false,
+  "tablesWithRlsEnabled": [
+    "chat_messages",
+    "chat_sessions",
+    "journal_entries",
+    "profiles",
+    "user_memories"
+  ],
+  "journalOwnerPolicies": [
+    "journal_entries_select_own",
+    "journal_entries_insert_own",
+    "journal_entries_update_own",
+    "journal_entries_delete_own"
+  ],
+  "migration006ProfileSelfInsertUserOnly": true,
+  "behavioralIsolationTestExecuted": false,
+  "note": "Catalog inspection proves deployed policy definitions, not actual cross-user enforcement."
+}
