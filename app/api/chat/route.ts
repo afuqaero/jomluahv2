@@ -13,7 +13,7 @@ import {
 import { assessSafety, getSafetyFallback, shouldRetrieveForSafety, urgentSafetyReply, type SafetyLevel } from "../../lib/chatSafety";
 import { runRecallAgent, type RecallHit, type RecallSearch, type RecallSource } from "../../lib/recallAgent";
 import { createRouteNeonClient } from "../../lib/serverNeon";
-import { callDeepSeek, deepSeekHeaders } from "../../lib/deepseekClient";
+import { callChatProvider, chatProviderConfig, chatProviderHeaders } from "../../lib/chatProviderClient";
 import { MIN_JOURNAL_RETRIEVAL_SCORE, retrieveJournalRecords, type JournalDatabase, type JournalRecord, type JournalRetrievalMetrics } from "../../lib/journalRetrieval";
 
 type IncomingMessage = { sender: "user" | "bot"; text: string };
@@ -36,13 +36,12 @@ type MemoryRecord = {
   embedding: unknown;
   updated_at: string;
 };
-type DeepSeekUsage = { prompt_tokens?: number; completion_tokens?: number };
+type ChatProviderUsage = { prompt_tokens?: number; completion_tokens?: number };
 type ModelTool = { type: "function"; function: { name: string; description: string; strict: boolean; parameters: unknown } };
 
 const MAX_RELEVANT_MEMORIES = 6;
 const MAX_RELEVANT_JOURNALS = 4;
-const DEEPSEEK_BASE_URL = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
-const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-flash";
+const { baseUrl: CHAT_PROVIDER_BASE_URL, model: CHAT_PROVIDER_MODEL } = chatProviderConfig();
 
 type ContextProfile = "quick" | "balanced" | "deep";
 type ContextBudget = {
@@ -260,35 +259,34 @@ function formatConversation(messages: IncomingMessage[]) {
   return messages.map((message) => `${message.sender === "user" ? "User" : "JomLuah"}: ${message.text}`).join("\n");
 }
 
-async function streamDeepSeek(
+async function streamChatProvider(
   messages: ModelMessage[],
   onDelta: (text: string) => void,
   signal: AbortSignal,
   maxTokens: number
-): Promise<DeepSeekUsage> {
-  const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
+): Promise<ChatProviderUsage> {
+  const response = await fetch(`${CHAT_PROVIDER_BASE_URL}/chat/completions`, {
     method: "POST",
-    headers: deepSeekHeaders(),
+    headers: chatProviderHeaders(),
     signal,
     body: JSON.stringify({
-      model: DEEPSEEK_MODEL,
+      model: CHAT_PROVIDER_MODEL,
       messages,
       stream: true,
       stream_options: { include_usage: true },
       max_tokens: maxTokens,
       temperature: 0.7,
       thinking: { type: "disabled" },
-      reasoning_effort: "none",
     }),
   });
   if (!response.ok || !response.body) {
-    throw new Error("DeepSeek is temporarily unavailable");
+    throw new Error("Chat provider is temporarily unavailable");
   }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
-  let usage: DeepSeekUsage = {};
+  let usage: ChatProviderUsage = {};
   while (true) {
     const { done, value } = await reader.read();
     buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
@@ -466,7 +464,7 @@ export async function POST(req: Request) {
         { role: "user", content: `Conversation turns to add:\n${formatConversation(messagesToSummarize)}` },
       ];
       try {
-        const summaryResponse = await callDeepSeek(
+        const summaryResponse = await callChatProvider(
           summaryInput,
           { purpose: "summary", maxTokens: contextBudget.summaryTokens },
           providerSignal
@@ -504,7 +502,7 @@ export async function POST(req: Request) {
               },
               { role: "user", content: `Current question: ${latestUserText}\nEarlier conversation summary: ${clipToEstimatedTokens(contextSummary, 400) || "None"}\nPrevious searches: ${JSON.stringify(step.searches)}\nPrevious results: ${JSON.stringify(step.hits)}` },
             ];
-            const response = await callDeepSeek(planningMessages, {
+            const response = await callChatProvider(planningMessages, {
               purpose: "recall", toolset: recallTools.filter((tool) => allowedSources.includes(tool.function.name === "search_memories" ? "memory" : "journal")),
               toolChoice: step.searches.length === 0 ? "required" : "auto", maxTokens: 240,
             }, providerSignal);
@@ -553,7 +551,7 @@ export async function POST(req: Request) {
 
     if (user && hasToolIntent(latestUserText) && !shouldUseRecallAgent(latestUserText) && safety.level === "none") {
       try {
-        const toolPlan = await callDeepSeek(modelMessages, { purpose: "tools", toolset: tools, toolChoice: "required" }, providerSignal);
+        const toolPlan = await callChatProvider(modelMessages, { purpose: "tools", toolset: tools, toolChoice: "required" }, providerSignal);
         const toolCalls = toolPlan.choices?.[0]?.message?.tool_calls || [];
         const toolResults: string[] = [];
         for (const toolCall of toolCalls.slice(0, 2)) {
@@ -650,7 +648,7 @@ export async function POST(req: Request) {
         send(controller, {
           type: "meta", contextSummary, summaryMessageCount,
           didSummarize: summaryMessageCount !== priorSummaryCount,
-          safetyLevel: safety.level, model: DEEPSEEK_MODEL,
+          safetyLevel: safety.level, model: CHAT_PROVIDER_MODEL,
           contextProfile, contextBudget: contextBudget.workingTokens,
           recallAgent: { used: useRecallAgent, searches: recallSearchCount, latencyMs: recallLatencyMs,
             planningTokens: recallPromptTokens + recallCompletionTokens },
@@ -658,12 +656,12 @@ export async function POST(req: Request) {
             ? { evaluationTrace: recallTrace }
             : {}),
         });
-        let usage: DeepSeekUsage = {};
+        let usage: ChatProviderUsage = {};
         let succeeded = true;
         let errorCode: string | null = null;
         try {
           if (safety.level === "urgent") send(controller, { type: "delta", text: urgentSafetyReply });
-          else usage = await streamDeepSeek(
+          else usage = await streamChatProvider(
             modelMessages,
             (text) => send(controller, { type: "delta", text }),
             providerSignal,
@@ -675,7 +673,7 @@ export async function POST(req: Request) {
           errorCode = req.signal.aborted
             ? "client_disconnected"
             : error instanceof Error ? "provider_stream_error" : "unknown_error";
-          console.error("DeepSeek streaming failed:", error);
+          console.error("Chat provider streaming failed:", error);
           if (!req.signal.aborted) {
             const safetyFallback = getSafetyFallback(safety.level);
             if (safetyFallback) {
@@ -693,7 +691,7 @@ export async function POST(req: Request) {
           if (user) {
             try {
               await neon.from("llm_events").insert({
-                user_id: user.id, session_id: sessionId, provider: "deepseek", model: DEEPSEEK_MODEL,
+                user_id: user.id, session_id: sessionId, provider: "fiqstore", model: CHAT_PROVIDER_MODEL,
                 purpose: "chat", latency_ms: Date.now() - startedAt,
                 prompt_tokens: (usage.prompt_tokens ?? 0) + recallPromptTokens,
                 completion_tokens: (usage.completion_tokens ?? 0) + recallCompletionTokens,

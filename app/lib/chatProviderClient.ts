@@ -1,17 +1,17 @@
-type DeepSeekMessage = {
+type ChatMessage = {
   role: string;
   content: string | null;
   [key: string]: unknown;
 };
 
-type DeepSeekOptions = {
+type ChatCompletionOptions = {
   purpose: "summary" | "tools" | "recall";
   toolset?: readonly unknown[];
   toolChoice?: "auto" | "required";
   maxTokens?: number;
 };
 
-type DeepSeekResponse = {
+type ChatCompletionResponse = {
   choices?: Array<{
     message?: {
       content?: string | null;
@@ -25,21 +25,25 @@ type DeepSeekResponse = {
   usage?: { prompt_tokens?: number; completion_tokens?: number };
 };
 
-export function deepSeekHeaders() {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) throw new Error("DeepSeek is not configured");
+export function chatProviderConfig() {
+  const baseUrl = (process.env.FIQSTORE_BASE_URL || "https://rootsys.cloud/v1").replace(/\/+$/, "");
+  const model = process.env.FIQSTORE_MODEL || "glm-5.3-flash";
+  return { baseUrl, model };
+}
+
+export function chatProviderHeaders() {
+  const apiKey = process.env.FIQSTORE_API_KEY;
+  if (!apiKey) throw new Error("Chat provider is not configured");
   return { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` };
 }
 
-export async function callDeepSeek(
-  messages: DeepSeekMessage[],
-  options: DeepSeekOptions,
+export async function callChatProvider(
+  messages: ChatMessage[],
+  options: ChatCompletionOptions,
   signal: AbortSignal,
-): Promise<DeepSeekResponse> {
-  const headers = deepSeekHeaders();
-
-  const baseUrl = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
-  const model = process.env.DEEPSEEK_MODEL || "deepseek-flash";
+): Promise<ChatCompletionResponse> {
+  const headers = chatProviderHeaders();
+  const { baseUrl, model } = chatProviderConfig();
 
   try {
     const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -53,7 +57,6 @@ export async function callDeepSeek(
         max_tokens: options.maxTokens ?? (options.purpose === "summary" ? 450 : 700),
         temperature: options.purpose === "summary" ? 0.1 : 0.4,
         thinking: { type: "disabled" },
-        reasoning_effort: "none",
         ...(options.toolset ? {
           tools: options.toolset,
           tool_choice: options.toolChoice ?? "auto",
@@ -62,10 +65,10 @@ export async function callDeepSeek(
       }),
     });
 
-    if (!response.ok) throw new Error("DeepSeek is temporarily unavailable");
-    return await response.json() as DeepSeekResponse;
+    if (!response.ok) throw new Error("Chat provider is temporarily unavailable");
+    return await response.json() as ChatCompletionResponse;
   } catch {
-    if (signal.aborted) throw new Error("DeepSeek request timed out");
-    throw new Error("DeepSeek is temporarily unavailable");
+    if (signal.aborted) throw new Error("Chat provider request timed out");
+    throw new Error("Chat provider is temporarily unavailable");
   }
 }

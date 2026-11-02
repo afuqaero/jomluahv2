@@ -15,8 +15,8 @@ export function readIsolatedConfig({ providers = false } = {}) {
   const missing = [...required, ...(providers ? [
     "JOMLUAH_ENABLE_LIVE_PROVIDER_TESTS",
     "JOMLUAH_TEST_QWEN_API_KEY",
-    "JOMLUAH_TEST_DEEPSEEK_API_KEY",
-    "JOMLUAH_TEST_DEEPSEEK_MODEL",
+    "JOMLUAH_TEST_CHAT_API_KEY",
+    "JOMLUAH_TEST_CHAT_MODEL",
   ] : [])].filter((name) => !process.env[name]);
   if (missing.length) throw new Error(`Isolated test prerequisites missing: ${missing.join(", ")}`);
   if (process.env.JOMLUAH_TEST_ENV_CONFIRM !== "ISOLATED_TEST_ONLY") {
@@ -58,15 +58,17 @@ export function readIsolatedConfig({ providers = false } = {}) {
 
 export function requireProviderHosts() {
   const embeddingUrl = new URL(process.env.JOMLUAH_TEST_EMBEDDING_URL || "https://openrouter.ai/api/v1/embeddings");
-  const deepseekUrl = new URL(process.env.JOMLUAH_TEST_DEEPSEEK_URL || "https://api.deepseek.com/chat/completions");
+  const chatUrl = new URL(process.env.JOMLUAH_TEST_CHAT_URL || "https://rootsys.cloud/v1/chat/completions");
   if (embeddingUrl.protocol !== "https:" || embeddingUrl.hostname !== "openrouter.ai" || embeddingUrl.pathname !== "/api/v1/embeddings") {
     throw new Error("Only the fixed OpenRouter embeddings endpoint is allowed in live tests.");
   }
-  const directDeepseek = deepseekUrl.hostname === "api.deepseek.com" && deepseekUrl.pathname === "/chat/completions";
-  const openRouterDeepseek = deepseekUrl.hostname === "openrouter.ai" && deepseekUrl.pathname === "/api/v1/chat/completions" &&
-    process.env.JOMLUAH_TEST_DEEPSEEK_MODEL?.startsWith("deepseek/");
-  if (deepseekUrl.protocol !== "https:" || (!directDeepseek && !openRouterDeepseek)) {
-    throw new Error("Only DeepSeek's fixed endpoint or an OpenRouter DeepSeek model is allowed in live tests.");
+  const directDeepseek = chatUrl.hostname === "api.deepseek.com" && chatUrl.pathname === "/chat/completions";
+  const openRouterDeepseek = chatUrl.hostname === "openrouter.ai" && chatUrl.pathname === "/api/v1/chat/completions" &&
+    process.env.JOMLUAH_TEST_CHAT_MODEL?.startsWith("deepseek/");
+  const fiqstoreGlm = chatUrl.hostname === "rootsys.cloud" && chatUrl.pathname === "/v1/chat/completions" &&
+    process.env.JOMLUAH_TEST_CHAT_MODEL === "glm-5.3-flash";
+  if (chatUrl.protocol !== "https:" || (!directDeepseek && !openRouterDeepseek && !fiqstoreGlm)) {
+    throw new Error("Only the fixed RootsSys GLM endpoint or explicitly configured legacy chat provider endpoint is allowed in live tests.");
   }
-  return { embeddingUrl: embeddingUrl.toString(), deepseekUrl: deepseekUrl.toString() };
+  return { embeddingUrl: embeddingUrl.toString(), chatUrl: chatUrl.toString() };
 }

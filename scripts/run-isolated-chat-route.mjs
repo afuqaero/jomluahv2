@@ -22,9 +22,9 @@ const environment = {
   JOMLUAH_TEST_QWEN_API_KEY: provider.EMBEDDING_API_KEY,
   JOMLUAH_TEST_QWEN_MODEL: provider.EMBEDDING_MODEL,
   JOMLUAH_TEST_EMBEDDING_URL: provider.EMBEDDING_API_URL,
-  JOMLUAH_TEST_DEEPSEEK_API_KEY: provider.DEEPSEEK_API_KEY,
-  JOMLUAH_TEST_DEEPSEEK_MODEL: provider.DEEPSEEK_GENERAL_MODEL,
-  JOMLUAH_TEST_DEEPSEEK_URL: `${(provider.DEEPSEEK_BASE_URL || "").replace(/\/$/, "")}/chat/completions`,
+  JOMLUAH_TEST_CHAT_API_KEY: provider.FIQSTORE_API_KEY,
+  JOMLUAH_TEST_CHAT_MODEL: provider.FIQSTORE_MODEL,
+  JOMLUAH_TEST_CHAT_URL: `${(provider.FIQSTORE_BASE_URL || "").replace(/\/+$/, "")}/chat/completions`,
 };
 const preflight = spawnSync(process.execPath, ["scripts/preflight-isolated-tests.mjs", "--providers"], {
   env: environment,
@@ -36,8 +36,8 @@ const { readIsolatedConfig } = await import("./isolated-test-guards.mjs");
 Object.assign(process.env, testKeys, {
   JOMLUAH_ENABLE_LIVE_PROVIDER_TESTS: environment.JOMLUAH_ENABLE_LIVE_PROVIDER_TESTS,
   JOMLUAH_TEST_QWEN_API_KEY: environment.JOMLUAH_TEST_QWEN_API_KEY,
-  JOMLUAH_TEST_DEEPSEEK_API_KEY: environment.JOMLUAH_TEST_DEEPSEEK_API_KEY,
-  JOMLUAH_TEST_DEEPSEEK_MODEL: environment.JOMLUAH_TEST_DEEPSEEK_MODEL,
+  JOMLUAH_TEST_CHAT_API_KEY: environment.JOMLUAH_TEST_CHAT_API_KEY,
+  JOMLUAH_TEST_CHAT_MODEL: environment.JOMLUAH_TEST_CHAT_MODEL,
   EMBEDDING_API_URL: environment.JOMLUAH_TEST_EMBEDDING_URL,
   EMBEDDING_API_KEY: environment.JOMLUAH_TEST_QWEN_API_KEY,
   EMBEDDING_MODEL: environment.JOMLUAH_TEST_QWEN_MODEL,
@@ -194,9 +194,9 @@ try {
     EMBEDDING_API_URL: provider.EMBEDDING_API_URL,
     EMBEDDING_API_KEY: provider.EMBEDDING_API_KEY,
     EMBEDDING_MODEL: provider.EMBEDDING_MODEL,
-    DEEPSEEK_API_KEY: provider.DEEPSEEK_API_KEY,
-    DEEPSEEK_BASE_URL: provider.DEEPSEEK_BASE_URL,
-    DEEPSEEK_MODEL: provider.DEEPSEEK_GENERAL_MODEL,
+    FIQSTORE_API_KEY: provider.FIQSTORE_API_KEY,
+    FIQSTORE_BASE_URL: provider.FIQSTORE_BASE_URL,
+    FIQSTORE_MODEL: provider.FIQSTORE_MODEL,
     RECALL_AGENT_ENABLED: "true",
     JOMLUAH_TEST_TRACE_AGENT: "true",
     JOMLUAH_TEST_TRACE_FILE: providerTraceFile,
@@ -256,9 +256,9 @@ try {
     return [category, { total: cases.length, retrievalCorrect: cases.filter((item) => item.checks.correctRetrieval).length,
       grounded: cases.filter((item) => item.checks.groundedAnswer && item.checks.noForbiddenClaim).length }];
   }));
-  const toolCalls = evidence.providerTrace.filter((item) => item.provider === "deepseek" && item.operation === "tool_planning");
+  const toolCalls = evidence.providerTrace.filter((item) => item.provider === "fiqstore" && item.operation === "tool_planning");
   const qwenCalls = evidence.providerTrace.filter((item) => item.provider === "qwen");
-  const answerCalls = evidence.providerTrace.filter((item) => item.provider === "deepseek" && item.operation === "answer_stream");
+  const answerCalls = evidence.providerTrace.filter((item) => item.provider === "fiqstore" && item.operation === "answer_stream");
   evidence.summary = { completedConversations: evidence.conversations.length, passed, failed: evidence.conversations.length - passed,
     positiveRecall: { correct: positiveCases.filter((item) => item.checks.correctRetrieval).length, total: positiveCases.length,
       rate: positiveCases.filter((item) => item.checks.correctRetrieval).length / positiveCases.length },
@@ -268,7 +268,7 @@ try {
     groundedAnswerRate: evidence.conversations.filter((item) => item.checks.groundedAnswer && item.checks.noForbiddenClaim).length / evidence.conversations.length,
     unsupportedPersonalMemoryClaims: evidence.conversations.filter((item) => !item.checks.noUnsupportedAbsenceClaim).length,
     noAnswer: evidence.conversations.filter((item) => item.category === "no_answer").map((item) => ({ id: item.id, uncertaintyAcknowledged: item.checks.groundedAnswer, retrievedCount: item.retrievedIds.length })),
-    providerCalls: { qwenEmbeddingRequests: qwenCalls.length, deepseekToolPlanningRequests: toolCalls.length, deepseekAnswerRequests: answerCalls.length,
+    providerCalls: { qwenEmbeddingRequests: qwenCalls.length, fiqstoreToolPlanningRequests: toolCalls.length, fiqstoreAnswerRequests: answerCalls.length,
       toolPlanningUsage: toolCalls.map((item) => item.usage), finalAnswerUsage: evidence.conversations.map((item) => item.finalUsage) },
     latencyMs: { p50: percentile(evidence.conversations.map((item) => item.latencyMs), 0.5), p95: percentile(evidence.conversations.map((item) => item.latencyMs), 0.95), max: Math.max(...evidence.conversations.map((item) => item.latencyMs)) } };
   if (passed !== conversations.length) process.exitCode = 1;
@@ -277,7 +277,7 @@ try {
   console.error("Isolated route test failed:", evidence.failure);
   if (serverLog) {
     const sanitized = serverLog.replaceAll(provider.EMBEDDING_API_KEY || "[absent]", "[redacted]")
-      .replaceAll(provider.DEEPSEEK_API_KEY || "[absent]", "[redacted]");
+      .replaceAll(provider.FIQSTORE_API_KEY || "[absent]", "[redacted]");
     console.error("Isolated server diagnostic:", sanitized.slice(0, 1200), sanitized.slice(-1200));
   }
   process.exitCode = 1;
@@ -312,7 +312,7 @@ try {
   mkdirSync(evidenceDir, { recursive: true });
   const evidencePath = join(evidenceDir, "DEEPSEEK-RAG-12-RESULTS.json");
   writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
-  const markdown = `# DeepSeek RAG 12-Conversation Evaluation\n\n- Isolated project: \`${evidence.isolatedProject}\`\n- Completed conversations: ${evidence.conversations.length}\n- Harness result: ${evidence.summary?.passed ?? 0} PASS, ${evidence.summary?.failed ?? 0} FAIL\n- Positive retrieval: ${evidence.summary?.positiveRecall?.correct ?? 0}/${evidence.summary?.positiveRecall?.total ?? 0} (${evidence.summary ? `${(evidence.summary.positiveRecall.rate * 100).toFixed(1)}%` : "not completed"})\n- No-answer rejection: ${evidence.summary?.noAnswerRejection?.correct ?? 0}/${evidence.summary?.noAnswerRejection?.total ?? 0}\n- Grounded answers: ${evidence.summary ? `${(evidence.summary.groundedAnswerRate * 100).toFixed(1)}%` : "not completed"}\n- Unsupported personal-memory claims: ${evidence.summary?.unsupportedPersonalMemoryClaims ?? "not measured"}\n- Per-category results: ${JSON.stringify(evidence.summary?.categoryMetrics || {})}\n- Provider requests: Qwen ${evidence.summary?.providerCalls.qwenEmbeddingRequests ?? 0}; DeepSeek planning ${evidence.summary?.providerCalls.deepseekToolPlanningRequests ?? 0}; DeepSeek answers ${evidence.summary?.providerCalls.deepseekAnswerRequests ?? 0}\n- Conversation latency (ms): p50 ${evidence.summary?.latencyMs.p50 ?? "n/a"}, p95 ${evidence.summary?.latencyMs.p95 ?? "n/a"}, max ${evidence.summary?.latencyMs.max ?? "n/a"}\n- Fixture cleanup verified: ${cleanup.verified ? "yes" : "no / incomplete"}\n- Per-case evidence and sanitized provider traces: [DEEPSEEK-RAG-12-RESULTS.json](./DEEPSEEK-RAG-12-RESULTS.json)\n`;
+  const markdown = `# FiqStore GLM RAG 12-Conversation Evaluation\n\n- Isolated project: \`${evidence.isolatedProject}\`\n- Completed conversations: ${evidence.conversations.length}\n- Harness result: ${evidence.summary?.passed ?? 0} PASS, ${evidence.summary?.failed ?? 0} FAIL\n- Positive retrieval: ${evidence.summary?.positiveRecall?.correct ?? 0}/${evidence.summary?.positiveRecall?.total ?? 0} (${evidence.summary ? `${(evidence.summary.positiveRecall.rate * 100).toFixed(1)}%` : "not completed"})\n- No-answer rejection: ${evidence.summary?.noAnswerRejection?.correct ?? 0}/${evidence.summary?.noAnswerRejection?.total ?? 0}\n- Grounded answers: ${evidence.summary ? `${(evidence.summary.groundedAnswerRate * 100).toFixed(1)}%` : "not completed"}\n- Unsupported personal-memory claims: ${evidence.summary?.unsupportedPersonalMemoryClaims ?? "not measured"}\n- Per-category results: ${JSON.stringify(evidence.summary?.categoryMetrics || {})}\n- Provider requests: Qwen ${evidence.summary?.providerCalls.qwenEmbeddingRequests ?? 0}; FiqStore planning ${evidence.summary?.providerCalls.fiqstoreToolPlanningRequests ?? 0}; FiqStore answers ${evidence.summary?.providerCalls.fiqstoreAnswerRequests ?? 0}\n- Conversation latency (ms): p50 ${evidence.summary?.latencyMs.p50 ?? "n/a"}, p95 ${evidence.summary?.latencyMs.p95 ?? "n/a"}, max ${evidence.summary?.latencyMs.max ?? "n/a"}\n- Fixture cleanup verified: ${cleanup.verified ? "yes" : "no / incomplete"}\n- Per-case evidence and sanitized provider traces: [DEEPSEEK-RAG-12-RESULTS.json](./DEEPSEEK-RAG-12-RESULTS.json)\n`;
   writeFileSync(join(evidenceDir, "DEEPSEEK-RAG-12-RESULTS.md"), markdown);
   console.log("Sanitized 12-conversation evidence saved.");
 }

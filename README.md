@@ -21,7 +21,7 @@ JomLuah acts as a digital complement to human counselling, giving students a saf
 *   **Frontend**: Next.js 16.4.2 (App Router), React 19, TypeScript, Tailwind CSS 4.
 *   **Backend & Database**: Neon Postgres, Neon Auth, and Neon Data API.
 *   **Retrieval**: Adaptive memory/journal routing searches private history only when a message refers to saved information, journal content, or earlier conversations. Provider-neutral embeddings are stored in PostgreSQL JSONB with cosine ranking and lexical fallback; a pgvector migration remains a future scale optimization.
-*   **LLM Integration**: DeepSeek V4 Pro with token streaming, strict tool calling, saved memory, journal retrieval, and a separate safety layer.
+*   **LLM Integration**: FiqStore API using the GLM-5.3-Flash model, with token streaming, tool calling, saved memory, journal retrieval, and a separate safety layer. A bounded live smoke check confirmed a text response when GLM reasoning is disabled in the request.
 
 ### JomLuah Recall Agent
 
@@ -29,7 +29,7 @@ JomLuah acts as a digital complement to human counselling, giving students a saf
 
 **Why it belongs in the RAG system:** Adaptive routing decides *whether* past information is needed. The Recall Agent decides *what to search next* when recall is difficult. Each search still uses JomLuah's existing semantic-plus-keyword ranking (or keyword-only fallback); this does not add BM25 or a separate vector database.
 
-The agent uses the existing `DEEPSEEK_API_KEY` and model configuration, not a new provider key. It has only read-only `search_memories` and `search_journal` tools, is limited to two searches per reply, and can access only the signed-in student's records permitted by their memory/journal settings. Urgent-safety replies bypass it. It cannot search browser-encrypted chat history, view counselor/admin records, or change user data. Searches currently inspect at most the 100 most recent records per source; older records need a future indexed-search design.
+The agent uses the `FIQSTORE_API_KEY`, `FIQSTORE_BASE_URL`, and `FIQSTORE_MODEL` settings. Its current model is `glm-5.3-flash`. It has only read-only `search_memories` and `search_journal` tools, is limited to two searches per reply, and can access only the signed-in student's records permitted by their memory/journal settings. Urgent-safety replies bypass it. It cannot search browser-encrypted chat history, view counselor/admin records, or change user data. Searches currently inspect at most the 100 most recent records per source; older records need a future indexed-search design.
 
 The agent runs by default in local development. Production uses the existing adaptive retrieval path until `RECALL_AGENT_ENABLED=true` is set after consented live evaluation. Automated tests cover routing, search limits, disabled sources, and irrelevant-result rejection; real-model recall quality, citation accuracy, latency, cost, and user-isolation testing against Neon still require validation before enabling production.
 
@@ -190,7 +190,14 @@ All entries use Malaysia Time (`Asia/Kuala_Lumpur`, UTC+08:00). Newest entry sta
 * Deploy the client-side chat-encryption code, then test key creation, unlock, and existing-history encryption with a user account.
 * Inspect and refine the dashboard UI/UX.
 * Inspect and refine the Companion AI chat UI/UX.
-* Replace DeepSeek with Fiqstore using a new API key. Configure the key privately in local and deployment environment settings, then verify chat streaming, tool calls, and safety behavior before switching production traffic. Never commit the key to Git.
+* Provider switch: the local backend now uses FiqStore with GLM-5.3-Flash. Configure `FIQSTORE_API_KEY`, `FIQSTORE_BASE_URL`, and `FIQSTORE_MODEL` in each deployment environment before deploying; never commit provider keys.
+
+### Monday, 2 November 2026 — FiqStore chat provider
+
+* Switched local AI chat and recall-agent requests from the direct DeepSeek API to FiqStore's GLM-5.3-Flash model. The provider key stays in ignored local environment settings and is not included in Git.
+* Disabled GLM's internal reasoning for chat requests so it returns visible reply text within the app's output limits.
+* Verified a live text response and streaming response, then ran the isolated fictional-data agent checks: 4/4 passed. Deterministic backend checks passed 36/36 and TypeScript passed.
+* The production deployment has not been switched; add the FiqStore settings to deployment configuration and run an authenticated `/api/chat` check before deploying.
 
 ### Monday, 19 October 2026 — 12:41 MYT
 

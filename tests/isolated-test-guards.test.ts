@@ -8,8 +8,8 @@ const testVariables = [
   "JOMLUAH_TEST_USER_A_EMAIL", "JOMLUAH_TEST_USER_A_PASSWORD",
   "JOMLUAH_TEST_USER_B_EMAIL", "JOMLUAH_TEST_USER_B_PASSWORD",
   "JOMLUAH_ENABLE_LIVE_PROVIDER_TESTS", "JOMLUAH_TEST_QWEN_API_KEY",
-  "JOMLUAH_TEST_DEEPSEEK_API_KEY", "JOMLUAH_TEST_DEEPSEEK_MODEL",
-  "JOMLUAH_TEST_EMBEDDING_URL", "JOMLUAH_TEST_DEEPSEEK_URL",
+  "JOMLUAH_TEST_CHAT_API_KEY", "JOMLUAH_TEST_CHAT_MODEL",
+  "JOMLUAH_TEST_EMBEDDING_URL", "JOMLUAH_TEST_CHAT_URL",
 ];
 
 function withIsolatedEnvironment(run: () => void) {
@@ -61,16 +61,19 @@ test("provider calls require explicit opt-in, test credentials, and fixed provid
     assert.throws(() => readIsolatedConfig({ providers: true }), /prerequisites missing/);
     process.env.JOMLUAH_ENABLE_LIVE_PROVIDER_TESTS = "YES_I_EXPECT_SYNTHETIC_PAID_CALLS";
     process.env.JOMLUAH_TEST_QWEN_API_KEY = "synthetic-test-key";
-    process.env.JOMLUAH_TEST_DEEPSEEK_API_KEY = "synthetic-test-key";
-    process.env.JOMLUAH_TEST_DEEPSEEK_MODEL = "test-model";
+    process.env.JOMLUAH_TEST_CHAT_API_KEY = "synthetic-test-key";
+    process.env.JOMLUAH_TEST_CHAT_MODEL = "glm-5.3-flash";
     assert.equal(readIsolatedConfig({ providers: true }).providers, true);
     assert.equal(requireProviderHosts().embeddingUrl, "https://openrouter.ai/api/v1/embeddings");
-    process.env.JOMLUAH_TEST_DEEPSEEK_MODEL = "deepseek/deepseek-chat";
-    process.env.JOMLUAH_TEST_DEEPSEEK_URL = "https://openrouter.ai/api/v1/chat/completions";
-    assert.equal(requireProviderHosts().deepseekUrl, "https://openrouter.ai/api/v1/chat/completions");
-    process.env.JOMLUAH_TEST_DEEPSEEK_MODEL = "unrelated/model";
-    assert.throws(() => requireProviderHosts(), /OpenRouter DeepSeek/);
-    process.env.JOMLUAH_TEST_DEEPSEEK_URL = "https://attacker.example/chat/completions";
-    assert.throws(() => requireProviderHosts(), /OpenRouter DeepSeek/);
+    process.env.JOMLUAH_TEST_CHAT_MODEL = "deepseek/deepseek-chat";
+    process.env.JOMLUAH_TEST_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
+    assert.equal(requireProviderHosts().chatUrl, "https://openrouter.ai/api/v1/chat/completions");
+    process.env.JOMLUAH_TEST_CHAT_MODEL = "glm-5.3-flash";
+    process.env.JOMLUAH_TEST_CHAT_URL = "https://rootsys.cloud/v1/chat/completions";
+    assert.equal(requireProviderHosts().chatUrl, "https://rootsys.cloud/v1/chat/completions");
+    process.env.JOMLUAH_TEST_CHAT_MODEL = "unrelated/model";
+    assert.throws(() => requireProviderHosts(), /fixed RootsSys GLM endpoint/);
+    process.env.JOMLUAH_TEST_CHAT_URL = "https://attacker.example/chat/completions";
+    assert.throws(() => requireProviderHosts(), /fixed RootsSys GLM endpoint/);
   });
 });

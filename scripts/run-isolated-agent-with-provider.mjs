@@ -19,12 +19,12 @@ const environment = {
   JOMLUAH_TEST_QWEN_API_KEY: provider.EMBEDDING_API_KEY,
   JOMLUAH_TEST_QWEN_MODEL: provider.EMBEDDING_MODEL,
   JOMLUAH_TEST_EMBEDDING_URL: provider.EMBEDDING_API_URL,
-  JOMLUAH_TEST_DEEPSEEK_API_KEY: provider.DEEPSEEK_API_KEY,
-  JOMLUAH_TEST_DEEPSEEK_MODEL: provider.DEEPSEEK_GENERAL_MODEL,
-  JOMLUAH_TEST_DEEPSEEK_URL: `${(provider.DEEPSEEK_BASE_URL || "").replace(/\/$/, "")}/chat/completions`,
+  JOMLUAH_TEST_CHAT_API_KEY: provider.FIQSTORE_API_KEY,
+  JOMLUAH_TEST_CHAT_MODEL: provider.FIQSTORE_MODEL,
+  JOMLUAH_TEST_CHAT_URL: `${(provider.FIQSTORE_BASE_URL || "").replace(/\/+$/, "")}/chat/completions`,
 };
 
-if (!environment.JOMLUAH_TEST_QWEN_API_KEY || !environment.JOMLUAH_TEST_DEEPSEEK_API_KEY) {
+if (!environment.JOMLUAH_TEST_QWEN_API_KEY || !environment.JOMLUAH_TEST_CHAT_API_KEY) {
   throw new Error("Provider keys are missing; no live calls were made.");
 }
 

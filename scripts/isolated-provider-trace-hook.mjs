@@ -8,8 +8,8 @@ if (tracePath) {
     const url = new URL(typeof input === "string" || input instanceof URL ? input.toString() : input.url);
     const provider = url.hostname === "openrouter.ai" && url.pathname.endsWith("/embeddings")
       ? "qwen"
-      : url.hostname === "openrouter.ai" && url.pathname.includes("/chat/completions")
-        ? "deepseek"
+      : url.hostname === "rootsys.cloud" && url.pathname.includes("/chat/completions")
+        ? "fiqstore"
       : url.hostname === "api.deepseek.com" ? "deepseek" : null;
     if (!provider) return originalFetch(input, init);
 
@@ -25,7 +25,7 @@ if (tracePath) {
         latency_ms: Math.round(performance.now() - started),
         input_count: provider === "qwen" && Array.isArray(requestBody.input) ? requestBody.input.length : undefined,
       };
-      if (provider === "deepseek" && !requestBody.stream && response.ok) {
+      if ((provider === "deepseek" || provider === "fiqstore") && !requestBody.stream && response.ok) {
         const payload = await response.clone().json().catch(() => ({}));
         const toolCalls = payload.choices?.[0]?.message?.tool_calls || [];
         trace.usage = payload.usage || null;
